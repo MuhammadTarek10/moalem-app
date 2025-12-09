@@ -3,6 +3,7 @@ import 'package:moalem/core/constants/app_keys.dart';
 import 'package:moalem/core/entities/user.dart';
 import 'package:moalem/core/services/storage_service.dart';
 import 'package:moalem/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:moalem/features/auth/data/models/user_mapper.dart';
 import 'package:moalem/features/auth/domain/repositories/auth_repository.dart';
 
 @LazySingleton(as: AuthRepository)
@@ -18,7 +19,7 @@ class AuthRepositoryImpl implements AuthRepository {
     // Cache user data or token
     await _storageService.setString(AppKeys.userId, userModel.id);
     await _storageService.setBool(AppKeys.isLoggedIn, true);
-    return userModel;
+    return userModel.toDomain();
   }
 
   @override
@@ -27,7 +28,7 @@ class AuthRepositoryImpl implements AuthRepository {
     // Cache user data or token
     await _storageService.setString(AppKeys.userId, userModel.id);
     await _storageService.setBool(AppKeys.isLoggedIn, true);
-    return userModel;
+    return userModel.toDomain();
   }
 
   @override

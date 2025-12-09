@@ -1,4 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
 
 // **************************************************************************
 // InjectableConfigGenerator
@@ -8,6 +9,7 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:dio/dio.dart' as _i361;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
@@ -18,7 +20,9 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart'
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
 import '../../features/auth/domain/usecases/signin_usecase.dart' as _i435;
 import '../../features/auth/domain/usecases/signup_usecase.dart' as _i57;
+import 'api_service.dart' as _i738;
 import 'database_service.dart' as _i748;
+import 'network_module.dart' as _i567;
 import 'secure_storage_service.dart' as _i1018;
 import 'storage_service.dart' as _i285;
 
@@ -29,7 +33,9 @@ extension GetItInjectableX on _i174.GetIt {
     _i526.EnvironmentFilter? environmentFilter,
   }) async {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
+    final networkModule = _$NetworkModule();
     gh.singleton<_i748.DatabaseService>(() => _i748.DatabaseService());
+    gh.singleton<_i361.Dio>(() => networkModule.dio);
     gh.singleton<_i1018.SecureStorageService>(
       () => _i1018.SecureStorageService(),
     );
@@ -40,18 +46,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i107.AuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSourceImpl(),
     );
+    gh.singleton<_i738.ApiService>(
+      () => networkModule.getApiService(gh<_i361.Dio>()),
+    );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
         gh<_i107.AuthRemoteDataSource>(),
         gh<_i285.StorageService>(),
       ),
     );
-    gh.factory<_i57.SignUpUseCase>(
-      () => _i57.SignUpUseCase(gh<_i787.AuthRepository>()),
-    );
     gh.factory<_i435.SignInUseCase>(
       () => _i435.SignInUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i57.SignUpUseCase>(
+      () => _i57.SignUpUseCase(gh<_i787.AuthRepository>()),
     );
     return this;
   }
 }
+
+class _$NetworkModule extends _i567.NetworkModule {}
