@@ -46,3 +46,6 @@ app.*.map.json
 
 # vscode
 .vscode
+
+# playwright
+.playwright*
