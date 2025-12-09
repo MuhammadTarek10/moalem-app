@@ -1,4 +1,18 @@
 {
-  "app_title": "مساعد",
-  "welcome": "أهلاً بك"
+  "app_title": "معلم",
+  "app_tagline": "رفيقك التعليمي الأمثل",
+  "welcome": "أهلاً بك",
+  "sign_in_title": "تسجيل الدخول",
+  "email_label": "البريد الإلكتروني",
+  "password_label": "كلمة المرور",
+  "sign_in_button": "دخول",
+  "forgot_password": "نسيت كلمة المرور؟",
+  "sign_up_prompt": "ليس لديك حساب؟",
+  "sign_up_link": "سجل الآن",
+  "required_field": "هذا الحقل مطلوب",
+  "sign_up_title": "إنشاء حساب",
+  "name_label": "الاسم الكامل",
+  "sign_up_button": "إنشاء حساب",
+  "have_account_prompt": "لديك حساب بالفعل؟",
+  "sign_in_link": "سجل دخول"
 }

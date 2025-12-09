@@ -1,0 +1,8 @@
+  flutter_native_splash:
+    color: "#6C63FF"
+    # image: assets/images/logo.png # Uncomment and add your logo here
+    # branding: assets/images/branding.png # Optional: branding image at bottom
+    android_12:
+      # image: assets/images/logo.png
+      color: "#6C63FF"
+    web: false

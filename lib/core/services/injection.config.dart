@@ -11,6 +11,13 @@
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
+import '../../features/auth/data/datasources/auth_remote_data_source.dart'
+    as _i107;
+import '../../features/auth/data/repositories/auth_repository_impl.dart'
+    as _i153;
+import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
+import '../../features/auth/domain/usecases/signin_usecase.dart' as _i435;
+import '../../features/auth/domain/usecases/signup_usecase.dart' as _i57;
 import 'database_service.dart' as _i748;
 import 'secure_storage_service.dart' as _i1018;
 import 'storage_service.dart' as _i285;
@@ -30,6 +37,21 @@ extension GetItInjectableX on _i174.GetIt {
       final i = _i285.StorageService();
       return i.init().then((_) => i);
     }, preResolve: true);
+    gh.lazySingleton<_i107.AuthRemoteDataSource>(
+      () => _i107.AuthRemoteDataSourceImpl(),
+    );
+    gh.lazySingleton<_i787.AuthRepository>(
+      () => _i153.AuthRepositoryImpl(
+        gh<_i107.AuthRemoteDataSource>(),
+        gh<_i285.StorageService>(),
+      ),
+    );
+    gh.factory<_i57.SignUpUseCase>(
+      () => _i57.SignUpUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i435.SignInUseCase>(
+      () => _i435.SignInUseCase(gh<_i787.AuthRepository>()),
+    );
     return this;
   }
 }
