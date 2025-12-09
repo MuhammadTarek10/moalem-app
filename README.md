@@ -1,7 +1,5 @@
 # Moalem
 
-s
-
 A new Flutter project.
 
 ## Getting Started
