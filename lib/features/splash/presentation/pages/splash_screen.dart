@@ -80,7 +80,6 @@ class _SplashScreenState extends State<SplashScreen> {
             Text(
               AppStrings.appTitle.tr(),
               style: TextStyle(
-                fontFamily: 'Cairo',
                 fontSize: 32.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -93,7 +92,6 @@ class _SplashScreenState extends State<SplashScreen> {
             Text(
               AppStrings.appTagline.tr(),
               style: TextStyle(
-                fontFamily: 'Cairo',
                 fontSize: 16.sp,
                 color: Colors.white.withValues(alpha: 0.8),
               ),

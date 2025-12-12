@@ -32,7 +32,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> logout() async {
+  Future<void> signOut() async {
     await _storageService.remove(AppKeys.userId);
     await _storageService.setBool(AppKeys.isLoggedIn, false);
   }

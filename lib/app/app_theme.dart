@@ -14,8 +14,7 @@ class AppTheme {
         error: AppColors.error,
       ),
       scaffoldBackgroundColor: AppColors.background,
-      fontFamily:
-          'Cairo', // Common Arabic font, we might need to add this asset later
+      fontFamily: 'AdobeArabic',
       appBarTheme: AppBarTheme(
         centerTitle: true,
         backgroundColor: AppColors.primary,

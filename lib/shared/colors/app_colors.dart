@@ -9,4 +9,7 @@ class AppColors {
 
   static const Color textPrimary = Color(0xFF000000);
   static const Color textSecondary = Color(0xFF757575);
+
+  // Content Preview BG
+  static const Color contentPreviewBg = Color(0xFFFFFFFF);
 }
