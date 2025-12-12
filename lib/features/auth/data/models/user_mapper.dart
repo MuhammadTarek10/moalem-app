@@ -6,3 +6,9 @@ extension UserMapper on UserModel {
     return User(id: id, email: email, name: name);
   }
 }
+
+extension UserMapperToModel on User {
+  UserModel toModel() {
+    return UserModel(id: id, email: email, name: name);
+  }
+}

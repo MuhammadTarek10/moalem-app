@@ -15,9 +15,14 @@ import 'package:injectable/injectable.dart' as _i526;
 
 import '../../features/auth/data/datasources/auth_remote_data_source.dart'
     as _i107;
+import '../../features/auth/data/datasources/user_remote_data_source.dart'
+    as _i886;
 import '../../features/auth/data/repositories/auth_repository_impl.dart'
     as _i153;
+import '../../features/auth/data/repositories/user_repository_impl.dart'
+    as _i687;
 import '../../features/auth/domain/repositories/auth_repository.dart' as _i787;
+import '../../features/auth/domain/repositories/user_repository.dart' as _i926;
 import '../../features/auth/domain/usecases/signin_usecase.dart' as _i435;
 import '../../features/auth/domain/usecases/signout_usecase.dart' as _i611;
 import '../../features/auth/domain/usecases/signup_usecase.dart' as _i57;
@@ -71,6 +76,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i738.ApiService>(
       () => networkModule.apiService(gh<_i361.Dio>()),
+    );
+    gh.lazySingleton<_i886.UserRemoteDataSource>(
+      () => _i886.UserRemoteDataSourceImpl(gh<_i738.ApiService>()),
+    );
+    gh.lazySingleton<_i926.UserRepository>(
+      () => _i687.UserRepositoryImpl(
+        gh<_i886.UserRemoteDataSource>(),
+        gh<_i285.StorageService>(),
+      ),
     );
     return this;
   }

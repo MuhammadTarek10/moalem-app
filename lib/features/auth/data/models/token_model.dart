@@ -5,10 +5,8 @@ part 'token_model.g.dart';
 
 @freezed
 abstract class TokenModel with _$TokenModel {
-  const factory TokenModel({
-    required String accessToken,
-    required String refreshToken,
-  }) = _TokenModel;
+  const factory TokenModel({String? accessToken, String? refreshToken}) =
+      _TokenModel;
 
   factory TokenModel.fromJson(Map<String, dynamic> json) =>
       _$TokenModelFromJson(json);
