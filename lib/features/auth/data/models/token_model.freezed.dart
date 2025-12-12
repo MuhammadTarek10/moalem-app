@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TokenModel {
 
- String? get accessToken; String? get refreshToken;
+@JsonKey(name: 'access_token') String? get accessToken;@JsonKey(name: 'refresh_token') String? get refreshToken;
 /// Create a copy of TokenModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $TokenModelCopyWith<$Res>  {
   factory $TokenModelCopyWith(TokenModel value, $Res Function(TokenModel) _then) = _$TokenModelCopyWithImpl;
 @useResult
 $Res call({
- String? accessToken, String? refreshToken
+@JsonKey(name: 'access_token') String? accessToken,@JsonKey(name: 'refresh_token') String? refreshToken
 });
 
 
@@ -154,7 +154,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? accessToken,  String? refreshToken)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'access_token')  String? accessToken, @JsonKey(name: 'refresh_token')  String? refreshToken)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TokenModel() when $default != null:
 return $default(_that.accessToken,_that.refreshToken);case _:
@@ -175,7 +175,7 @@ return $default(_that.accessToken,_that.refreshToken);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? accessToken,  String? refreshToken)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'access_token')  String? accessToken, @JsonKey(name: 'refresh_token')  String? refreshToken)  $default,) {final _that = this;
 switch (_that) {
 case _TokenModel():
 return $default(_that.accessToken,_that.refreshToken);case _:
@@ -195,7 +195,7 @@ return $default(_that.accessToken,_that.refreshToken);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? accessToken,  String? refreshToken)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'access_token')  String? accessToken, @JsonKey(name: 'refresh_token')  String? refreshToken)?  $default,) {final _that = this;
 switch (_that) {
 case _TokenModel() when $default != null:
 return $default(_that.accessToken,_that.refreshToken);case _:
@@ -210,11 +210,11 @@ return $default(_that.accessToken,_that.refreshToken);case _:
 @JsonSerializable()
 
 class _TokenModel implements TokenModel {
-  const _TokenModel({this.accessToken, this.refreshToken});
+  const _TokenModel({@JsonKey(name: 'access_token') this.accessToken, @JsonKey(name: 'refresh_token') this.refreshToken});
   factory _TokenModel.fromJson(Map<String, dynamic> json) => _$TokenModelFromJson(json);
 
-@override final  String? accessToken;
-@override final  String? refreshToken;
+@override@JsonKey(name: 'access_token') final  String? accessToken;
+@override@JsonKey(name: 'refresh_token') final  String? refreshToken;
 
 /// Create a copy of TokenModel
 /// with the given fields replaced by the non-null parameter values.
@@ -249,7 +249,7 @@ abstract mixin class _$TokenModelCopyWith<$Res> implements $TokenModelCopyWith<$
   factory _$TokenModelCopyWith(_TokenModel value, $Res Function(_TokenModel) _then) = __$TokenModelCopyWithImpl;
 @override @useResult
 $Res call({
- String? accessToken, String? refreshToken
+@JsonKey(name: 'access_token') String? accessToken,@JsonKey(name: 'refresh_token') String? refreshToken
 });
 
 

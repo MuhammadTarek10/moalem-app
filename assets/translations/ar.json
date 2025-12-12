@@ -26,5 +26,21 @@
   "name_label": "الاسم الكامل",
   "sign_up_button": "إنشاء حساب",
   "have_account_prompt": "لديك حساب بالفعل؟",
-  "sign_in_link": "تسجيل الدخول"
+  "sign_in_link": "تسجيل الدخول",
+  "full_name_label": "الاسم بالكامل",
+  "full_name_hint": "أدخل اسمك بالكامل ...",
+  "subject_label": "المادة الدراسية",
+  "subject_hint": "المادة الدراسية ..",
+  "whatsapp_label": "رقم الواتساب",
+  "whatsapp_hint": "أدخل رقم الواتساب ...",
+  "governorate_label": "المحافظة",
+  "administration_label": "الإدارة التعليمية",
+  "school_label": "اسم المدرسة",
+  "school_hint": "أدخل مدرستك",
+  "grade_label": "الصف الدراسى",
+  "grade_hint": "الصف الدراسى",
+  "next_button": "التالى",
+  "back_button": "السابق",
+  "agree_terms": "أوافق على الشروط و الأحكام",
+  "agree_terms_required": "يجب الموافقة على الشروط و الأحكام"
 }

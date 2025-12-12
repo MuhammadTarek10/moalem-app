@@ -3,12 +3,32 @@ import 'package:moalem/features/auth/data/models/user_model.dart';
 
 extension UserMapper on UserModel {
   User toDomain() {
-    return User(id: id, email: email, name: name);
+    return User(
+      id: id,
+      email: email,
+      name: name,
+      whatsappNumber: whatsappNumber,
+      subjects: subjects,
+      governorate: governorate,
+      educationalAdministration: educationalAdministration,
+      schools: schools,
+      grades: grades,
+    );
   }
 }
 
 extension UserMapperToModel on User {
   UserModel toModel() {
-    return UserModel(id: id, email: email, name: name);
+    return UserModel(
+      id: id,
+      email: email,
+      name: name,
+      whatsappNumber: whatsappNumber,
+      subjects: subjects,
+      governorate: governorate,
+      educationalAdministration: educationalAdministration,
+      schools: schools,
+      grades: grades,
+    );
   }
 }

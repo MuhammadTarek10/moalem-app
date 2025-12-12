@@ -10,6 +10,18 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   id: json['id'] as String?,
   email: json['email'] as String?,
   name: json['name'] as String?,
+  whatsappNumber: json['whatsapp_number'] as String?,
+  subjects:
+      (json['subjects'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
+  governorate: json['governorate'] as String?,
+  educationalAdministration: json['educational_administration'] as String?,
+  schools:
+      (json['schools'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
+  grades:
+      (json['grades'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
@@ -17,4 +29,10 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'id': instance.id,
       'email': instance.email,
       'name': instance.name,
+      'whatsapp_number': instance.whatsappNumber,
+      'subjects': instance.subjects,
+      'governorate': instance.governorate,
+      'educational_administration': instance.educationalAdministration,
+      'schools': instance.schools,
+      'grades': instance.grades,
     };

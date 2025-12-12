@@ -49,30 +49,11 @@ extension GetItInjectableX on _i174.GetIt {
       final i = _i285.StorageService();
       return i.init().then((_) => i);
     }, preResolve: true);
-    gh.lazySingleton<_i107.AuthRemoteDataSource>(
-      () => _i107.AuthRemoteDataSourceImpl(),
-    );
-    gh.lazySingleton<_i787.AuthRepository>(
-      () => _i153.AuthRepositoryImpl(
-        gh<_i107.AuthRemoteDataSource>(),
-        gh<_i285.StorageService>(),
-        gh<_i1018.SecureStorageService>(),
-      ),
-    );
     gh.singleton<_i1009.AuthInterceptor>(
       () => _i1009.AuthInterceptor(gh<_i1018.SecureStorageService>()),
     );
     gh.lazySingleton<_i361.Dio>(
       () => networkModule.dio(gh<_i1009.AuthInterceptor>()),
-    );
-    gh.factory<_i435.SignInUseCase>(
-      () => _i435.SignInUseCase(gh<_i787.AuthRepository>()),
-    );
-    gh.factory<_i611.SignOutUseCase>(
-      () => _i611.SignOutUseCase(gh<_i787.AuthRepository>()),
-    );
-    gh.factory<_i57.SignUpUseCase>(
-      () => _i57.SignUpUseCase(gh<_i787.AuthRepository>()),
     );
     gh.lazySingleton<_i738.ApiService>(
       () => networkModule.apiService(gh<_i361.Dio>()),
@@ -85,6 +66,25 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i886.UserRemoteDataSource>(),
         gh<_i285.StorageService>(),
       ),
+    );
+    gh.lazySingleton<_i107.AuthRemoteDataSource>(
+      () => _i107.AuthRemoteDataSourceImpl(gh<_i738.ApiService>()),
+    );
+    gh.lazySingleton<_i787.AuthRepository>(
+      () => _i153.AuthRepositoryImpl(
+        gh<_i107.AuthRemoteDataSource>(),
+        gh<_i285.StorageService>(),
+        gh<_i1018.SecureStorageService>(),
+      ),
+    );
+    gh.factory<_i435.SignInUseCase>(
+      () => _i435.SignInUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i611.SignOutUseCase>(
+      () => _i611.SignOutUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i57.SignUpUseCase>(
+      () => _i57.SignUpUseCase(gh<_i787.AuthRepository>()),
     );
     return this;
   }

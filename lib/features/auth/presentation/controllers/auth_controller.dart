@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moalem/core/entities/tokens.dart';
 import 'package:moalem/core/services/injection.dart';
+import 'package:moalem/features/auth/data/models/signup_request.dart';
 import 'package:moalem/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:moalem/features/auth/domain/usecases/signout_usecase.dart';
 import 'package:moalem/features/auth/domain/usecases/signup_usecase.dart';
@@ -32,10 +33,10 @@ class AuthController extends StateNotifier<AsyncValue<Tokens?>> {
     }
   }
 
-  Future<void> signUp(String name, String email, String password) async {
+  Future<void> signUp(SignupRequest request) async {
     state = const AsyncValue.loading();
     try {
-      final tokens = await _signUpUseCase(name, email, password);
+      final tokens = await _signUpUseCase(request);
       state = AsyncValue.data(tokens);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

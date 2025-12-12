@@ -19,3 +19,7 @@ linter:
   #   - no-empty-block
   #   - avoid-returning-widgets
   #   - prefer-const-border-radius
+
+analyzer:
+  errors: 
+    invalid_annotation_target: ignore

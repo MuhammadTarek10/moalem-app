@@ -33,4 +33,31 @@ extension SnackBarExtension on BuildContext {
   void showTextSnackBar(String message) {
     scaffoldMessenger.showSnackBar(SnackBar(content: Text(message)));
   }
+
+  void showErrorSnackBar(String message) {
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  void showSuccessSnackBar(String message) {
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void showInfoSnackBar(String message) {
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue,
+      ),
+    );
+  }
 }

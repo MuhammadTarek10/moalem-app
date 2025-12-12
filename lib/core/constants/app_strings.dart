@@ -27,4 +27,22 @@ class AppStrings {
   static const String signUpButton = 'sign_up_button';
   static const String haveAccountPrompt = 'have_account_prompt';
   static const String signInLink = 'sign_in_link';
+
+  // Multi-step signup strings
+  static const String fullNameLabel = 'full_name_label';
+  static const String fullNameHint = 'full_name_hint';
+  static const String subjectLabel = 'subject_label';
+  static const String subjectHint = 'subject_hint';
+  static const String whatsappLabel = 'whatsapp_label';
+  static const String whatsappHint = 'whatsapp_hint';
+  static const String governorateLabel = 'governorate_label';
+  static const String administrationLabel = 'administration_label';
+  static const String schoolLabel = 'school_label';
+  static const String schoolHint = 'school_hint';
+  static const String gradeLabel = 'grade_label';
+  static const String gradeHint = 'grade_hint';
+  static const String nextButton = 'next_button';
+  static const String backButton = 'back_button';
+  static const String agreeTerms = 'agree_terms';
+  static const String agreeTermsRequired = 'agree_terms_required';
 }

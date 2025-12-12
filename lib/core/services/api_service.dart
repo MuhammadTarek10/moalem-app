@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:moalem/features/auth/data/models/token_model.dart';
 import 'package:moalem/features/auth/data/models/user_model.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -10,10 +11,10 @@ abstract class ApiService {
 
   // * Auth
   @POST('/auth/sign-in')
-  Future<UserModel> signIn(@Body() Map<String, dynamic> body);
+  Future<TokenModel> signIn(@Body() Map<String, dynamic> body);
 
   @POST('/auth/sign-up')
-  Future<UserModel> signUp(@Body() Map<String, dynamic> body);
+  Future<TokenModel> signUp(@Body() Map<String, dynamic> body);
 
   // * User
   @GET('/profile')

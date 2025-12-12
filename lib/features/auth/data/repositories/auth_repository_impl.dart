@@ -4,6 +4,7 @@ import 'package:moalem/core/entities/tokens.dart';
 import 'package:moalem/core/services/secure_storage_service.dart';
 import 'package:moalem/core/services/storage_service.dart';
 import 'package:moalem/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:moalem/features/auth/data/models/signup_request.dart';
 import 'package:moalem/features/auth/data/models/token_mapper.dart';
 import 'package:moalem/features/auth/domain/repositories/auth_repository.dart';
 
@@ -36,8 +37,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Tokens> signUp(String name, String email, String password) async {
-    final tokenModel = await _remoteDataSource.signUp(name, email, password);
+  Future<Tokens> signUp(SignupRequest request) async {
+    final tokenModel = await _remoteDataSource.signUp(request);
     // Cache user data or token
     await _secureStorageService.write(
       key: AppKeys.accessToken,

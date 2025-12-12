@@ -37,3 +37,17 @@ String? confirmPasswordValidator(String? value, String password) {
   }
   return null;
 }
+
+String? requiredValidator(String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return AppStrings.requiredField.tr();
+  }
+  return null;
+}
+
+String? listValidator(List<String>? value) {
+  if (value == null || value.isEmpty) {
+    return AppStrings.requiredField.tr();
+  }
+  return null;
+}
