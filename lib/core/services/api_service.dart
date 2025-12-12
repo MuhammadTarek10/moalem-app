@@ -5,7 +5,7 @@ import 'package:retrofit/retrofit.dart';
 
 part 'api_service.g.dart';
 
-@RestApi(baseUrl: 'https://mock-api.com/v1/')
+@RestApi(baseUrl: 'https://moalem-api.vercel.app/api/v1')
 abstract class ApiService {
   factory ApiService(Dio dio, {String baseUrl}) = _ApiService;
 
@@ -17,12 +17,12 @@ abstract class ApiService {
   Future<TokenModel> signUp(@Body() Map<String, dynamic> body);
 
   // * User
-  @GET('/profile')
+  @GET('/users/profile')
   Future<UserModel> getUser();
 
-  @PATCH('/profile')
+  @PATCH('/users/profile')
   Future<UserModel> updateUser(@Body() UserModel user);
 
-  @DELETE('/profile')
+  @DELETE('/users/profile')
   Future<void> deleteUser();
 }

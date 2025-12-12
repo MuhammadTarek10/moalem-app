@@ -12,7 +12,7 @@ part of 'api_service.dart';
 
 class _ApiService implements ApiService {
   _ApiService(this._dio, {this.baseUrl, this.errorLogger}) {
-    baseUrl ??= 'https://mock-api.com/v1/';
+    baseUrl ??= 'https://moalem-api.vercel.app/api/v1';
   }
 
   final Dio _dio;
@@ -87,7 +87,7 @@ class _ApiService implements ApiService {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/profile',
+            '/users/profile',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -114,7 +114,7 @@ class _ApiService implements ApiService {
       Options(method: 'PATCH', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/profile',
+            '/users/profile',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -141,7 +141,7 @@ class _ApiService implements ApiService {
       Options(method: 'DELETE', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/profile',
+            '/users/profile',
             queryParameters: queryParameters,
             data: _data,
           )

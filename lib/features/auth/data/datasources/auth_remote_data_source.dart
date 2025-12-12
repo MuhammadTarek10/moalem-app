@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:injectable/injectable.dart';
 import 'package:moalem/core/services/api_service.dart';
 import 'package:moalem/features/auth/data/models/signup_request.dart';
@@ -23,8 +21,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<TokenModel> signUp(SignupRequest request) async {
-    await Future.delayed(const Duration(seconds: 10));
-    log('signUp request: ${request.toJson()}');
     return _apiService.signUp(request.toJson());
   }
 }
