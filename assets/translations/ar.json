@@ -7,8 +7,13 @@
   "sign_in_description": "من فضلك أدخل بريدك الإلكتروني وكلمة المرور للمتابعة",
   "email_label": "البريد الإلكتروني",
   "email_hint": "أدخل بريدك الإلكتروني ...",
+  "invalid_email": "البريد الإلكتروني غير صالح",
   "password_label": "كلمة المرور",
   "password_hint": "إدخل كلمة المرور ...",
+  "password_too_short": "كلمة المرور قصيرة جداً",
+  "confirm_password_label": "تأكيد كلمة المرور",
+  "confirm_password_hint": "أدخل كلمة المرور مرة أخرى ...",
+  "confirm_password_mismatch": "كلمة المرور غير مطابقة",
   "sign_in_button": "تسجيل الدخول",
   "create_new_account": "إنشاء حساب جديد",
   "or": "أو",
@@ -21,5 +26,5 @@
   "name_label": "الاسم الكامل",
   "sign_up_button": "إنشاء حساب",
   "have_account_prompt": "لديك حساب بالفعل؟",
-  "sign_in_link": "سجل دخول"
+  "sign_in_link": "تسجيل الدخول"
 }
