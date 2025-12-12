@@ -12,6 +12,7 @@ class AppTheme {
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.error,
+        onPrimary: AppColors.onPrimary,
       ),
       scaffoldBackgroundColor: AppColors.background,
       fontFamily: 'AdobeArabic',
@@ -29,6 +30,38 @@ class AppTheme {
             borderRadius: BorderRadius.circular(12.r),
           ),
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        ),
+      ),
+      textTheme: TextTheme(
+        headlineLarge: TextStyle(
+          fontSize: 40.sp,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 32.sp,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
+        headlineSmall: TextStyle(
+          fontSize: 28.sp,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 24.sp,
+          fontWeight: FontWeight.normal,
+          color: AppColors.textPrimary,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 21.sp,
+          fontWeight: FontWeight.normal,
+          color: AppColors.textSecondary,
+        ),
+        bodySmall: TextStyle(
+          fontSize: 20.sp,
+          fontWeight: FontWeight.normal,
+          color: AppColors.textSubtitle,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

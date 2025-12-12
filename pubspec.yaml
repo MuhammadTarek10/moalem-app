@@ -30,6 +30,7 @@ dependencies:
   freezed: ^3.2.3
   freezed_annotation: ^3.1.0
   pretty_dio_logger: ^1.4.0
+  flutter_svg: ^2.2.3
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +51,7 @@ flutter:
   assets:
     - assets/translations/
     - assets/images/
+    - assets/icons/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

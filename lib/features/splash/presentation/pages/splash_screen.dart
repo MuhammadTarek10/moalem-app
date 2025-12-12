@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_keys.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
@@ -33,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (isLoggedIn) {
         context.go(AppRoutes.home);
       } else {
-        context.go(AppRoutes.signIn);
+        context.go(AppRoutes.auth);
       }
     }
   }
@@ -51,7 +52,6 @@ class _SplashScreenState extends State<SplashScreen> {
               width: 120.w,
               height: 120.w,
               decoration: BoxDecoration(
-                color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -61,11 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ],
               ),
-              child: Icon(
-                Icons.school_rounded,
-                size: 60.w,
-                color: AppColors.primary,
-              ),
+              child: Image.asset(AppAssets.images.logo, fit: BoxFit.cover),
             ).scaleShimmerShake(
               duration: 600,
               color: Colors.white.withValues(alpha: 0.5),
@@ -80,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Text(
               AppStrings.appTitle.tr(),
               style: TextStyle(
-                fontSize: 32.sp,
+                fontSize: 48.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
@@ -92,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Text(
               AppStrings.appTagline.tr(),
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: 32.sp,
                 color: Colors.white.withValues(alpha: 0.8),
               ),
             ).fadeIn(duration: 600, delay: 800),
