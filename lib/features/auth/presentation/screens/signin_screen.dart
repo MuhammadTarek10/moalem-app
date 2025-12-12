@@ -13,7 +13,7 @@ import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/utils/validators.dart';
 import 'package:moalem/shared/widgets/buttons.dart';
 import 'package:moalem/shared/widgets/hyperlinks.dart';
-import 'package:moalem/shared/widgets/inputs.dart';
+import 'package:moalem/shared/widgets/text_input.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -24,23 +24,16 @@ class SignInScreen extends ConsumerStatefulWidget {
 
 class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  String _email = '';
+  String _password = '';
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
 
   void _onSignIn() {
     if (_formKey.currentState!.validate()) {
       ref
           .read(authControllerProvider.notifier)
-          .signIn(_emailController.text.trim(), _passwordController.text);
+          .signIn(_email.trim(), _password);
     }
   }
 
@@ -103,7 +96,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   InputLabel(label: AppStrings.emailLabel.tr()),
                   SizedBox(height: 8.h),
                   AppTextFormField(
-                    controller: _emailController,
+                    onChanged: (value) => _email = value,
                     keyboardType: TextInputType.emailAddress,
                     label: AppStrings.emailLabel.tr(),
                     hint: AppStrings.emailHint.tr(),
@@ -115,7 +108,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   InputLabel(label: AppStrings.passwordLabel.tr()),
                   SizedBox(height: 8.h),
                   AppTextFormField(
-                    controller: _passwordController,
+                    onChanged: (value) => _password = value,
                     obscureText: !_isPasswordVisible,
                     hint: AppStrings.passwordHint.tr(),
                     validator: passwordValidator,

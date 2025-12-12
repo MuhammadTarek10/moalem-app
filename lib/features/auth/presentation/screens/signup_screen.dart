@@ -10,7 +10,7 @@ import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/shared/utils/validators.dart';
 import 'package:moalem/shared/widgets/buttons.dart';
 import 'package:moalem/shared/widgets/hyperlinks.dart';
-import 'package:moalem/shared/widgets/inputs.dart';
+import 'package:moalem/shared/widgets/text_input.dart';
 
 import '../controllers/auth_controller.dart';
 
@@ -23,28 +23,16 @@ class SignUpScreen extends ConsumerStatefulWidget {
 
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  String _email = '';
+  String _password = '';
+  String _confirmPassword = '';
   bool _isPasswordVisible = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
 
   void _onSignUp() {
     if (_formKey.currentState!.validate()) {
       ref
           .read(authControllerProvider.notifier)
-          .signUp(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
-            _confirmPasswordController.text.trim(),
-          );
+          .signUp(_email.trim(), _password.trim(), _confirmPassword.trim());
     }
   }
 
@@ -102,11 +90,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   InputLabel(label: AppStrings.emailLabel.tr()),
                   SizedBox(height: 8.h),
                   AppTextFormField(
-                    controller: _emailController,
+                    onChanged: (value) => _email = value,
                     keyboardType: TextInputType.emailAddress,
                     label: AppStrings.emailLabel.tr(),
                     hint: AppStrings.emailHint.tr(),
-                    prefixIcon: const Icon(Icons.email_outlined),
                     validator: emailValidator,
                   ),
                   SizedBox(height: 16.h),
@@ -114,10 +101,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   InputLabel(label: AppStrings.passwordLabel.tr()),
                   SizedBox(height: 8.h),
                   AppTextFormField(
-                    controller: _passwordController,
+                    onChanged: (value) => _password = value,
                     hint: AppStrings.passwordLabel.tr(),
                     obscureText: !_isPasswordVisible,
-                    prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: SvgPicture.asset(
                         _isPasswordVisible
@@ -141,10 +127,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   InputLabel(label: AppStrings.confirmPasswordLabel.tr()),
                   SizedBox(height: 8.h),
                   AppTextFormField(
-                    controller: _confirmPasswordController,
+                    onChanged: (value) => _confirmPassword = value,
                     hint: AppStrings.confirmPasswordHint.tr(),
                     obscureText: !_isPasswordVisible,
-                    prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: SvgPicture.asset(
                         _isPasswordVisible
@@ -161,10 +146,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         });
                       },
                     ),
-                    validator: (value) => confirmPasswordValidator(
-                      value,
-                      _passwordController.text.trim(),
-                    ),
+                    validator: (value) =>
+                        confirmPasswordValidator(value, _password),
                   ),
                   SizedBox(height: 24.h),
                   // Sign Up Button

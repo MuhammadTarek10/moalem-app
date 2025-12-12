@@ -18,21 +18,23 @@ class InputLabel extends StatelessWidget {
   }
 }
 
-class AppTextFormField extends StatelessWidget {
+class AppTextFormField extends StatefulWidget {
   const AppTextFormField({
     super.key,
-    required this.controller,
+    this.initialValue,
+    required this.onChanged,
     this.keyboardType,
     this.label,
     this.hint,
-    required this.validator,
+    this.validator,
     this.obscureText = false,
     this.prefixIcon,
     this.suffixIcon,
     this.isPassword = false,
   });
 
-  final TextEditingController controller;
+  final String? initialValue;
+  final ValueChanged<String> onChanged;
   final TextInputType? keyboardType;
   final String? label;
   final String? hint;
@@ -43,19 +45,44 @@ class AppTextFormField extends StatelessWidget {
   final bool isPassword;
 
   @override
+  State<AppTextFormField> createState() => _AppTextFormFieldState();
+}
+
+class _AppTextFormFieldState extends State<AppTextFormField> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+    _controller.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    widget.onChanged(_controller.text);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      validator: validator,
+      controller: _controller,
+      keyboardType: widget.keyboardType,
+      obscureText: widget.obscureText,
+      validator: widget.validator,
       decoration: InputDecoration(
-        labelText: hint,
+        labelText: widget.hint,
         labelStyle: context.bodySmall.copyWith(color: Colors.black),
-        hintText: hint,
+        hintText: widget.hint,
         hintStyle: context.bodySmall.copyWith(color: Colors.grey),
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
+        prefixIcon: widget.prefixIcon,
+        suffixIcon: widget.suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide(color: Colors.grey.shade300),
