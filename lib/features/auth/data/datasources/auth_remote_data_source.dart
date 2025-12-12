@@ -1,9 +1,9 @@
 import 'package:injectable/injectable.dart';
-import 'package:moalem/features/auth/data/models/user_model.dart';
+import 'package:moalem/features/auth/data/models/token_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<UserModel> signIn(String email, String password);
-  Future<UserModel> signUp(String name, String email, String password);
+  Future<TokenModel> signIn(String email, String password);
+  Future<TokenModel> signUp(String name, String email, String password);
 }
 
 @LazySingleton(as: AuthRemoteDataSource)
@@ -13,7 +13,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   // AuthRemoteDataSourceImpl(this._apiService);
 
   @override
-  Future<UserModel> signIn(String email, String password) async {
+  Future<TokenModel> signIn(String email, String password) async {
     // For now, since we don't have a real API, we can keep the mock logic
     // OR we can try to call the API service which will fail if the URL is invalid.
     // Let's implement the API call but keep the mock as fallback/commented out for dev.
@@ -23,10 +23,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     // Keeping Mock for now until real API is ready
     await Future.delayed(const Duration(seconds: 2));
     if (email == 'test@test.com' && password == 'password') {
-      return const UserModel(
-        id: '1',
-        email: 'test@test.com',
-        name: 'Test User',
+      return const TokenModel(
+        accessToken: 'access_token',
+        refreshToken: 'refresh_token',
       );
     } else {
       throw Exception('Invalid credentials');
@@ -34,15 +33,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<UserModel> signUp(String name, String email, String password) async {
+  Future<TokenModel> signUp(String name, String email, String password) async {
     // return _apiService.signUp({'name': name, 'email': email, 'password': password});
 
     // Keeping Mock
     await Future.delayed(const Duration(seconds: 2));
-    return UserModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      email: email,
-      name: name,
+    return TokenModel(
+      accessToken: 'access_token',
+      refreshToken: 'refresh_token',
     );
   }
 }

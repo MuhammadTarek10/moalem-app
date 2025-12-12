@@ -22,6 +22,7 @@ import '../../features/auth/domain/usecases/signin_usecase.dart' as _i435;
 import '../../features/auth/domain/usecases/signout_usecase.dart' as _i611;
 import '../../features/auth/domain/usecases/signup_usecase.dart' as _i57;
 import 'api_service.dart' as _i738;
+import 'auth_interceptor.dart' as _i1009;
 import 'database_service.dart' as _i748;
 import 'network_module.dart' as _i567;
 import 'secure_storage_service.dart' as _i1018;
@@ -36,7 +37,6 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final networkModule = _$NetworkModule();
     gh.singleton<_i748.DatabaseService>(() => _i748.DatabaseService());
-    gh.singleton<_i361.Dio>(() => networkModule.dio);
     gh.singleton<_i1018.SecureStorageService>(
       () => _i1018.SecureStorageService(),
     );
@@ -47,14 +47,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i107.AuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSourceImpl(),
     );
-    gh.singleton<_i738.ApiService>(
-      () => networkModule.getApiService(gh<_i361.Dio>()),
-    );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
         gh<_i107.AuthRemoteDataSource>(),
         gh<_i285.StorageService>(),
+        gh<_i1018.SecureStorageService>(),
       ),
+    );
+    gh.singleton<_i1009.AuthInterceptor>(
+      () => _i1009.AuthInterceptor(gh<_i1018.SecureStorageService>()),
+    );
+    gh.lazySingleton<_i361.Dio>(
+      () => networkModule.dio(gh<_i1009.AuthInterceptor>()),
     );
     gh.factory<_i435.SignInUseCase>(
       () => _i435.SignInUseCase(gh<_i787.AuthRepository>()),
@@ -64,6 +68,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i57.SignUpUseCase>(
       () => _i57.SignUpUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.lazySingleton<_i738.ApiService>(
+      () => networkModule.apiService(gh<_i361.Dio>()),
     );
     return this;
   }

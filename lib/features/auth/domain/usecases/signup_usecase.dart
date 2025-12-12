@@ -1,6 +1,6 @@
 import 'package:injectable/injectable.dart';
+import 'package:moalem/core/entities/tokens.dart';
 
-import '../../../../core/entities/user.dart';
 import '../repositories/auth_repository.dart';
 
 @injectable
@@ -9,7 +9,7 @@ class SignUpUseCase {
 
   SignUpUseCase(this._repository);
 
-  Future<User> call(String name, String email, String password) {
+  Future<Tokens> call(String name, String email, String password) {
     return _repository.signUp(name, email, password);
   }
 }
