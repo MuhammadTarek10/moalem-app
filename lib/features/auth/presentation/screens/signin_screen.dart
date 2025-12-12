@@ -11,7 +11,7 @@ import 'package:moalem/features/auth/presentation/controllers/auth_controller.da
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/utils/validators.dart';
-import 'package:moalem/shared/widgets/buttons.dart';
+import 'package:moalem/shared/widgets/primary_button.dart';
 import 'package:moalem/shared/widgets/hyperlinks.dart';
 import 'package:moalem/shared/widgets/text_input.dart';
 

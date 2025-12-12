@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,8 +9,8 @@ import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/auth/data/models/signup_request.dart';
 import 'package:moalem/shared/extensions/context.dart';
-import 'package:moalem/shared/widgets/buttons.dart';
 import 'package:moalem/shared/widgets/hyperlinks.dart';
+import 'package:moalem/shared/widgets/primary_button.dart';
 
 import '../controllers/auth_controller.dart';
 import '../models/signup_form_data.dart';
@@ -140,7 +142,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ? AppBar(
               leading: IconButton(
                 onPressed: _previousStep,
-                icon: const Icon(Icons.arrow_back),
+                icon: Icon(
+                  Platform.isIOS ? Icons.arrow_back_ios_new : Icons.arrow_back,
+                ),
               ),
             )
           : null,

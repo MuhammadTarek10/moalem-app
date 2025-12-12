@@ -18,6 +18,7 @@ class AppIcons {
 
   String get activitiesMarks => '$_iconsPath/activities-marks.svg';
   String get add => '$_iconsPath/add.svg';
+  String get backArrow => '$_iconsPath/back-arrow.svg';
   String get arrowDown => '$_iconsPath/arrow-down.svg';
   String get arrowLeft => '$_iconsPath/arrow-left.svg';
   String get arrowRight => '$_iconsPath/arrow-right.svg';

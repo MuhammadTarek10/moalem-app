@@ -51,3 +51,13 @@ String? listValidator(List<String>? value) {
   }
   return null;
 }
+
+String? phoneNumberValidator(String? value) {
+  if (value == null || value.isEmpty) {
+    return AppStrings.requiredField.tr();
+  }
+  if (!RegExp(r'^01\d{9}$').hasMatch(value) || value.length != 11) {
+    return AppStrings.invalidPhoneNumber.tr();
+  }
+  return null;
+}

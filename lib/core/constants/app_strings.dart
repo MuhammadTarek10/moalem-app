@@ -8,6 +8,7 @@ class AppStrings {
   static const String emailLabel = 'email_label';
   static const String emailHint = 'email_hint';
   static const String invalidEmail = 'invalid_email';
+  static const String invalidPhoneNumber = 'invalid_phone_number';
   static const String passwordLabel = 'password_label';
   static const String passwordHint = 'password_hint';
   static const String passwordTooShort = 'password_too_short';

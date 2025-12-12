@@ -23,6 +23,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<TokenModel> signUp(SignupRequest request) async {
+    await Future.delayed(const Duration(seconds: 10));
     log('signUp request: ${request.toJson()}');
     return _apiService.signUp(request.toJson());
   }

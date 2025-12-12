@@ -1,5 +1,5 @@
 {
-  "app_title": "مُساعِد",
+  "app_title": "معلم",
   "app_tagline": "رفيقك التعليمي الأمثل",
   "auth_subtitle": "منصة مساعدة للمعلم",
   "welcome": "أهلاً بك",
@@ -8,6 +8,7 @@
   "email_label": "البريد الإلكتروني",
   "email_hint": "أدخل بريدك الإلكتروني ...",
   "invalid_email": "البريد الإلكتروني غير صالح",
+  "invalid_phone_number": "رقم الهاتف غير صالح",
   "password_label": "كلمة المرور",
   "password_hint": "إدخل كلمة المرور ...",
   "password_too_short": "كلمة المرور قصيرة جداً",

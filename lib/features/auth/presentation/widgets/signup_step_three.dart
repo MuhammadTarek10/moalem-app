@@ -6,6 +6,7 @@ import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/auth/data/static/egypt_regions.dart';
 import 'package:moalem/shared/utils/validators.dart';
 import 'package:moalem/shared/widgets/chip_input.dart';
+import 'package:moalem/shared/widgets/dropdown_field.dart';
 import 'package:moalem/shared/widgets/text_input.dart';
 
 import '../models/signup_form_data.dart';

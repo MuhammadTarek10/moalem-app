@@ -6,7 +6,7 @@ import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
-import 'package:moalem/shared/widgets/buttons.dart';
+import 'package:moalem/shared/widgets/primary_button.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});

@@ -20,15 +20,13 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
+      key: ValueKey(isLoading),
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
+        disabledBackgroundColor: AppColors.disabled,
         foregroundColor: outlined ? AppColors.primary : Colors.white,
         elevation: outlined ? 0 : null,
-        backgroundColor: isLoading
-            ? AppColors.disabled
-            : outlined
-            ? Colors.transparent
-            : AppColors.primary,
+        backgroundColor: outlined ? Colors.transparent : AppColors.primary,
         side: outlined
             ? const BorderSide(color: AppColors.primary)
             : BorderSide.none,

@@ -83,7 +83,7 @@ class SignupStepTwo extends StatelessWidget {
             },
             keyboardType: TextInputType.phone,
             hint: AppStrings.whatsappHint.tr(),
-            validator: requiredValidator,
+            validator: phoneNumberValidator,
           ),
         ],
       ),
