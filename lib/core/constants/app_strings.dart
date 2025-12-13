@@ -46,4 +46,19 @@ class AppStrings {
   static const String backButton = 'back_button';
   static const String agreeTerms = 'agree_terms';
   static const String agreeTermsRequired = 'agree_terms_required';
+
+  // Activation screen strings
+  static const String activationDescription = 'activation_description';
+  static const String yourIdLabel = 'your_id_label';
+  static const String enterCodeLabel = 'enter_code_label';
+  static const String enterCodeHint = 'enter_code_hint';
+  static const String contactForCode = 'contact_for_code';
+  static const String submitButton = 'submit_button';
+  static const String contactWhatsapp = 'contact_whatsapp';
+  static const String codeCopied = 'code_copied';
+  static const String activationSuccess = 'activation_success';
+  static const String invalidCode = 'invalid_code';
+  static const String whatsappActivationMessageWithId =
+      'whatsapp_activation_message_with_id';
+  static const String whatsappActivationMessage = 'whatsapp_activation_message';
 }

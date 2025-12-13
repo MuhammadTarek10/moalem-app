@@ -8,6 +8,7 @@ import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/services/injection.dart';
 import 'package:moalem/core/services/storage_service.dart';
+import 'package:moalem/core/utils/license_checker.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/animations.dart';
 
@@ -31,8 +32,16 @@ class _SplashScreenState extends State<SplashScreen> {
     if (mounted) {
       final storage = getIt<StorageService>();
       final isLoggedIn = storage.getBool(AppKeys.isLoggedIn) ?? false;
+
       if (isLoggedIn) {
-        context.go(AppRoutes.home);
+        // Check if user has a valid license
+        final licenseExpiresAt = storage.getString(AppKeys.licenseExpiresAt);
+        if (LicenseChecker.isLicenseValid(licenseExpiresAt)) {
+          context.go(AppRoutes.home);
+        } else {
+          // User is logged in but license is expired or not set
+          context.go(AppRoutes.activation);
+        }
       } else {
         context.go(AppRoutes.auth);
       }

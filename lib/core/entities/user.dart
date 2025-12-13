@@ -8,6 +8,7 @@ class User {
   final String? educationalAdministration;
   final List<String> schools;
   final List<String> grades;
+  final String? licenseExpiresAt;
 
   const User({
     this.id,
@@ -19,5 +20,6 @@ class User {
     this.educationalAdministration,
     this.schools = const [],
     this.grades = const [],
+    this.licenseExpiresAt,
   });
 }

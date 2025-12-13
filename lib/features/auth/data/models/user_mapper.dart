@@ -13,6 +13,7 @@ extension UserMapper on UserModel {
       educationalAdministration: educationalAdministration,
       schools: schools,
       grades: grades,
+      licenseExpiresAt: licenseExpiresAt,
     );
   }
 }
@@ -29,6 +30,7 @@ extension UserMapperToModel on User {
       educationalAdministration: educationalAdministration,
       schools: schools,
       grades: grades,
+      licenseExpiresAt: licenseExpiresAt,
     );
   }
 }

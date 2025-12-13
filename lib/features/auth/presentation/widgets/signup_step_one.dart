@@ -58,22 +58,17 @@ class _SignupStepOneState extends State<SignupStepOne> {
           ),
           SizedBox(height: 40.h),
           // Email Field
-          InputLabel(label: AppStrings.emailLabel.tr()),
-          SizedBox(height: 8.h),
           AppTextFormField(
             initialValue: widget.formData.email,
             onChanged: (value) {
               widget.onDataChanged(widget.formData.copyWith(email: value));
             },
             keyboardType: TextInputType.emailAddress,
-            label: AppStrings.emailLabel.tr(),
-            hint: AppStrings.emailHint.tr(),
+            hint: AppStrings.emailLabel.tr(),
             validator: emailValidator,
           ),
           SizedBox(height: 16.h),
           // Password Field
-          InputLabel(label: AppStrings.passwordLabel.tr()),
-          SizedBox(height: 8.h),
           AppTextFormField(
             initialValue: widget.formData.password,
             onChanged: (value) {
@@ -101,8 +96,6 @@ class _SignupStepOneState extends State<SignupStepOne> {
           ),
           SizedBox(height: 16.h),
           // Confirm Password Field
-          InputLabel(label: AppStrings.confirmPasswordLabel.tr()),
-          SizedBox(height: 8.h),
           AppTextFormField(
             initialValue: widget.formData.confirmPassword,
             onChanged: (value) {
@@ -110,7 +103,7 @@ class _SignupStepOneState extends State<SignupStepOne> {
                 widget.formData.copyWith(confirmPassword: value),
               );
             },
-            hint: AppStrings.confirmPasswordHint.tr(),
+            hint: AppStrings.confirmPasswordLabel.tr(),
             obscureText: !_isPasswordVisible,
             suffixIcon: IconButton(
               icon: SvgPicture.asset(

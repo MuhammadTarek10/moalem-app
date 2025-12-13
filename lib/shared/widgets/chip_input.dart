@@ -60,29 +60,17 @@ class _ChipInputFieldState extends State<ChipInputField> {
                 // Input field with add button
                 Expanded(
                   child: Container(
-                    height: 56.h,
+                    height: 44.h,
                     decoration: BoxDecoration(
                       border: Border.all(color: Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Row(
                       children: [
-                        IconButton(
-                          onPressed: _addItem,
-                          icon: SvgPicture.asset(
-                            AppAssets.icons.add,
-                            width: 24.w,
-                            height: 24.h,
-                            colorFilter: const ColorFilter.mode(
-                              Colors.grey,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                        ),
                         Expanded(
                           child: TextField(
                             controller: _textController,
-                            textAlign: TextAlign.end,
+                            textAlign: TextAlign.start,
                             textDirection: TextDirection.rtl,
                             decoration: InputDecoration(
                               hintText: widget.hint,
@@ -95,6 +83,18 @@ class _ChipInputFieldState extends State<ChipInputField> {
                               ),
                             ),
                             onSubmitted: (_) => _addItem(),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _addItem,
+                          icon: SvgPicture.asset(
+                            AppAssets.icons.add,
+                            width: 24.w,
+                            height: 24.h,
+                            colorFilter: const ColorFilter.mode(
+                              Colors.grey,
+                              BlendMode.srcIn,
+                            ),
                           ),
                         ),
                       ],
@@ -155,7 +155,7 @@ class SelectableChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 56.h,
+        height: 44.h,
         padding: EdgeInsets.symmetric(horizontal: 16.w),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,

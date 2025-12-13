@@ -5,6 +5,7 @@ import 'package:moalem/features/auth/data/models/signup_request.dart';
 import 'package:moalem/features/auth/domain/usecases/signin_usecase.dart';
 import 'package:moalem/features/auth/domain/usecases/signout_usecase.dart';
 import 'package:moalem/features/auth/domain/usecases/signup_usecase.dart';
+import 'package:moalem/features/home/domain/usecases/fetch_and_store_user_usecase.dart';
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AsyncValue<Tokens?>>((ref) {
@@ -12,6 +13,7 @@ final authControllerProvider =
         getIt<SignInUseCase>(),
         getIt<SignUpUseCase>(),
         getIt<SignOutUseCase>(),
+        getIt<FetchAndStoreUserUseCase>(),
       );
     });
 
@@ -19,14 +21,20 @@ class AuthController extends StateNotifier<AsyncValue<Tokens?>> {
   final SignInUseCase _signInUseCase;
   final SignUpUseCase _signUpUseCase;
   final SignOutUseCase _signOutUseCase;
+  final FetchAndStoreUserUseCase _fetchAndStoreUserUseCase;
 
-  AuthController(this._signInUseCase, this._signUpUseCase, this._signOutUseCase)
-    : super(const AsyncValue.data(null));
+  AuthController(
+    this._signInUseCase,
+    this._signUpUseCase,
+    this._signOutUseCase,
+    this._fetchAndStoreUserUseCase,
+  ) : super(const AsyncValue.data(null));
 
   Future<void> signIn(String email, String password) async {
     state = const AsyncValue.loading();
     try {
       final tokens = await _signInUseCase(email, password);
+      await _fetchAndStoreUserUseCase();
       state = AsyncValue.data(tokens);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
@@ -37,6 +45,7 @@ class AuthController extends StateNotifier<AsyncValue<Tokens?>> {
     state = const AsyncValue.loading();
     try {
       final tokens = await _signUpUseCase(request);
+      await _fetchAndStoreUserUseCase();
       state = AsyncValue.data(tokens);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);

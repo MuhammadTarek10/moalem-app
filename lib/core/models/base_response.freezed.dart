@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$BaseResponse<T> {
 
- bool get status; String get message; T? get data;
+ String get status; String get message; T? get data;
 /// Create a copy of BaseResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $BaseResponseCopyWith<T,$Res>  {
   factory $BaseResponseCopyWith(BaseResponse<T> value, $Res Function(BaseResponse<T>) _then) = _$BaseResponseCopyWithImpl;
 @useResult
 $Res call({
- bool status, String message, T? data
+ String status, String message, T? data
 });
 
 
@@ -68,7 +68,7 @@ class _$BaseResponseCopyWithImpl<T,$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? message = null,Object? data = freezed,}) {
   return _then(_self.copyWith(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as bool,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as T?,
   ));
@@ -155,7 +155,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool status,  String message,  T? data)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String status,  String message,  T? data)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BaseResponse() when $default != null:
 return $default(_that.status,_that.message,_that.data);case _:
@@ -176,7 +176,7 @@ return $default(_that.status,_that.message,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool status,  String message,  T? data)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String status,  String message,  T? data)  $default,) {final _that = this;
 switch (_that) {
 case _BaseResponse():
 return $default(_that.status,_that.message,_that.data);case _:
@@ -196,7 +196,7 @@ return $default(_that.status,_that.message,_that.data);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool status,  String message,  T? data)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String status,  String message,  T? data)?  $default,) {final _that = this;
 switch (_that) {
 case _BaseResponse() when $default != null:
 return $default(_that.status,_that.message,_that.data);case _:
@@ -214,7 +214,7 @@ class _BaseResponse<T> implements BaseResponse<T> {
   const _BaseResponse({required this.status, required this.message, this.data});
   factory _BaseResponse.fromJson(Map<String, dynamic> json,T Function(Object?) fromJsonT) => _$BaseResponseFromJson(json,fromJsonT);
 
-@override final  bool status;
+@override final  String status;
 @override final  String message;
 @override final  T? data;
 
@@ -251,7 +251,7 @@ abstract mixin class _$BaseResponseCopyWith<T,$Res> implements $BaseResponseCopy
   factory _$BaseResponseCopyWith(_BaseResponse<T> value, $Res Function(_BaseResponse<T>) _then) = __$BaseResponseCopyWithImpl;
 @override @useResult
 $Res call({
- bool status, String message, T? data
+ String status, String message, T? data
 });
 
 
@@ -271,7 +271,7 @@ class __$BaseResponseCopyWithImpl<T,$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? message = null,Object? data = freezed,}) {
   return _then(_BaseResponse<T>(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as bool,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as T?,
   ));

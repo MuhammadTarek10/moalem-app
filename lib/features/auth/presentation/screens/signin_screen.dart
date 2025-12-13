@@ -5,14 +5,19 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_assets.dart';
+import 'package:moalem/core/constants/app_keys.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
+import 'package:moalem/core/services/injection.dart';
+import 'package:moalem/core/services/storage_service.dart';
+import 'package:moalem/core/utils/error_handler.dart';
+import 'package:moalem/core/utils/license_checker.dart';
 import 'package:moalem/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/utils/validators.dart';
-import 'package:moalem/shared/widgets/primary_button.dart';
 import 'package:moalem/shared/widgets/hyperlinks.dart';
+import 'package:moalem/shared/widgets/primary_button.dart';
 import 'package:moalem/shared/widgets/text_input.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -44,11 +49,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       next.when(
         data: (tokens) {
           if (tokens != null) {
-            context.go(AppRoutes.home);
+            final storage = getIt<StorageService>();
+            final licenseExpiresAt = storage.getString(
+              AppKeys.licenseExpiresAt,
+            );
+            if (LicenseChecker.isLicenseValid(licenseExpiresAt)) {
+              context.go(AppRoutes.home);
+            } else {
+              context.go(AppRoutes.activation);
+            }
           }
         },
         error: (error, stack) {
-          context.showTextSnackBar(error.toString());
+          context.showErrorSnackBar(ErrorHandler.getErrorMessage(error));
         },
         loading: () {},
       );
@@ -93,26 +106,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   ),
                   SizedBox(height: 40.h),
                   // Email Field
-                  InputLabel(label: AppStrings.emailLabel.tr()),
-                  SizedBox(height: 8.h),
                   AppTextFormField(
                     onChanged: (value) => _email = value,
                     keyboardType: TextInputType.emailAddress,
-                    label: AppStrings.emailLabel.tr(),
-                    hint: AppStrings.emailHint.tr(),
-                    prefixIcon: const Icon(Icons.email_outlined),
+                    hint: AppStrings.emailLabel.tr(),
                     validator: emailValidator,
                   ),
                   SizedBox(height: 20.h),
                   // Password Field
-                  InputLabel(label: AppStrings.passwordLabel.tr()),
-                  SizedBox(height: 8.h),
                   AppTextFormField(
                     onChanged: (value) => _password = value,
                     obscureText: !_isPasswordVisible,
-                    hint: AppStrings.passwordHint.tr(),
+                    hint: AppStrings.passwordLabel.tr(),
                     validator: passwordValidator,
-                    prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: SvgPicture.asset(
                         _isPasswordVisible

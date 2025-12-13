@@ -22,13 +22,13 @@ class _ApiService implements ApiService {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<TokenModel> signIn(Map<String, dynamic> body) async {
+  Future<BaseResponse<TokenModel>> signIn(Map<String, dynamic> body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<TokenModel>(
+    final _options = _setStreamType<BaseResponse<TokenModel>>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -39,9 +39,12 @@ class _ApiService implements ApiService {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late TokenModel _value;
+    late BaseResponse<TokenModel> _value;
     try {
-      _value = TokenModel.fromJson(_result.data!);
+      _value = BaseResponse<TokenModel>.fromJson(
+        _result.data!,
+        (json) => TokenModel.fromJson(json as Map<String, dynamic>),
+      );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, _result);
       rethrow;
@@ -50,12 +53,12 @@ class _ApiService implements ApiService {
   }
 
   @override
-  Future<TokenModel> signUp(SignupRequest body) async {
+  Future<BaseResponse<TokenModel>> signUp(SignupRequest body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = body;
-    final _options = _setStreamType<TokenModel>(
+    final _options = _setStreamType<BaseResponse<TokenModel>>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -66,9 +69,12 @@ class _ApiService implements ApiService {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late TokenModel _value;
+    late BaseResponse<TokenModel> _value;
     try {
-      _value = TokenModel.fromJson(_result.data!);
+      _value = BaseResponse<TokenModel>.fromJson(
+        _result.data!,
+        (json) => TokenModel.fromJson(json as Map<String, dynamic>),
+      );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, _result);
       rethrow;
@@ -77,25 +83,28 @@ class _ApiService implements ApiService {
   }
 
   @override
-  Future<CouponModel> applyCoupon(CouponRequest body) async {
+  Future<BaseResponse<CouponModel>> applyCoupon(CouponRequest body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = body;
-    final _options = _setStreamType<CouponModel>(
+    final _options = _setStreamType<BaseResponse<CouponModel>>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'license/redeem-license',
+            '/license/redeem-coupon',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late CouponModel _value;
+    late BaseResponse<CouponModel> _value;
     try {
-      _value = CouponModel.fromJson(_result.data!);
+      _value = BaseResponse<CouponModel>.fromJson(
+        _result.data!,
+        (json) => CouponModel.fromJson(json as Map<String, dynamic>),
+      );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, _result);
       rethrow;
@@ -104,12 +113,12 @@ class _ApiService implements ApiService {
   }
 
   @override
-  Future<UserModel> getUser() async {
+  Future<BaseResponse<UserModel>> getUser() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<UserModel>(
+    final _options = _setStreamType<BaseResponse<UserModel>>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -120,9 +129,12 @@ class _ApiService implements ApiService {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late UserModel _value;
+    late BaseResponse<UserModel> _value;
     try {
-      _value = UserModel.fromJson(_result.data!);
+      _value = BaseResponse<UserModel>.fromJson(
+        _result.data!,
+        (json) => UserModel.fromJson(json as Map<String, dynamic>),
+      );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, _result);
       rethrow;
@@ -131,12 +143,12 @@ class _ApiService implements ApiService {
   }
 
   @override
-  Future<UserModel> updateUser(UserModel user) async {
+  Future<BaseResponse<UserModel>> updateUser(UserModel user) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = user;
-    final _options = _setStreamType<UserModel>(
+    final _options = _setStreamType<BaseResponse<UserModel>>(
       Options(method: 'PATCH', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -147,9 +159,12 @@ class _ApiService implements ApiService {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late UserModel _value;
+    late BaseResponse<UserModel> _value;
     try {
-      _value = UserModel.fromJson(_result.data!);
+      _value = BaseResponse<UserModel>.fromJson(
+        _result.data!,
+        (json) => UserModel.fromJson(json as Map<String, dynamic>),
+      );
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, _result);
       rethrow;
@@ -158,12 +173,12 @@ class _ApiService implements ApiService {
   }
 
   @override
-  Future<void> deleteUser() async {
+  Future<BaseResponse<dynamic>> deleteUser() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<void>(
+    final _options = _setStreamType<BaseResponse<dynamic>>(
       Options(method: 'DELETE', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -173,7 +188,18 @@ class _ApiService implements ApiService {
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
-    await _dio.fetch<void>(_options);
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late BaseResponse<dynamic> _value;
+    try {
+      _value = BaseResponse<dynamic>.fromJson(
+        _result.data!,
+        (json) => json as dynamic,
+      );
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, _result);
+      rethrow;
+    }
+    return _value;
   }
 
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {

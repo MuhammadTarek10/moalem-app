@@ -23,6 +23,7 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
       (json['grades'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
   licenseExpiresAt: json['license_expires_at'] as String?,
+  sessionId: json['sessionId'] as String?,
 );
 
 Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
@@ -37,4 +38,5 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'schools': instance.schools,
       'grades': instance.grades,
       'license_expires_at': instance.licenseExpiresAt,
+      'sessionId': instance.sessionId,
     };

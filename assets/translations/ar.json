@@ -43,5 +43,17 @@
   "next_button": "التالى",
   "back_button": "السابق",
   "agree_terms": "أوافق على الشروط و الأحكام",
-  "agree_terms_required": "يجب الموافقة على الشروط و الأحكام"
+  "agree_terms_required": "يجب الموافقة على الشروط و الأحكام",
+  "activation_description": "لإكمال عملية التسجيل انسخ الرمز التعريفى و ارسلة لنا عبر الواتساب بالاسفل",
+  "your_id_label": "الرمز التعريفى -الخاص بك (ID)",
+  "enter_code_label": "ضع الكود الخاص بك هنا:",
+  "enter_code_hint": "أدخل الكود ...",
+  "contact_for_code": "تواصل معنا للحصول على الكود الخاص بك",
+  "submit_button": "إرسال",
+  "contact_whatsapp": "تواصل عبر واتساب",
+  "code_copied": "تم نسخ الكود",
+  "activation_success": "تم تفعيل الحساب بنجاح",
+  "invalid_code": "الكود غير صالح",
+  "whatsapp_activation_message_with_id": "مرحباً، أريد تفعيل حسابي. الرمز التعريفي الخاص بي هو: {}",
+  "whatsapp_activation_message": "مرحباً، أريد تفعيل حسابي."
 }

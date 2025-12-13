@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
+import 'package:moalem/features/activation/presentation/screens/activation_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/auth_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/signin_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/signup_screen.dart';
@@ -24,6 +25,10 @@ final router = GoRouter(
     GoRoute(
       path: AppRoutes.signUp,
       builder: (context, state) => const SignUpScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.activation,
+      builder: (context, state) => const ActivationScreen(),
     ),
     GoRoute(
       path: AppRoutes.home,

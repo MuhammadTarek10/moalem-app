@@ -124,7 +124,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       next.when(
         data: (user) {
           if (user != null) {
-            context.go(AppRoutes.home);
+            // New users always go to activation screen
+            context.go(AppRoutes.activation);
           }
         },
         error: (error, stack) {

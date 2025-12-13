@@ -4,4 +4,6 @@ class AppKeys {
   static const String accessToken = 'access_token';
   static const String refreshToken = 'refresh_token';
   static const String user = 'user';
+  static const String license = 'license';
+  static const String licenseExpiresAt = 'license_expires_at';
 }

@@ -17,6 +17,7 @@ abstract class UserModel with _$UserModel {
     @Default([]) List<String> schools,
     @Default([]) List<String> grades,
     @JsonKey(name: 'license_expires_at') String? licenseExpiresAt,
+    String? sessionId,
   }) = _UserModel;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>

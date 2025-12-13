@@ -17,4 +17,6 @@ class AppColors {
 
   // Content Preview BG
   static const Color contentPreviewBg = Color(0xFFFFFFFF);
+
+  static const Color whatsapp = Color(0xFF25D366);
 }

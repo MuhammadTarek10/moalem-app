@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserModel {
 
-@JsonKey(name: '_id') String? get id; String? get email; String? get name;@JsonKey(name: 'whatsapp_number') String? get whatsappNumber; List<String> get subjects; String? get governorate;@JsonKey(name: 'educational_administration') String? get educationalAdministration; List<String> get schools; List<String> get grades;@JsonKey(name: 'license_expires_at') String? get licenseExpiresAt;
+@JsonKey(name: '_id') String? get id; String? get email; String? get name;@JsonKey(name: 'whatsapp_number') String? get whatsappNumber; List<String> get subjects; String? get governorate;@JsonKey(name: 'educational_administration') String? get educationalAdministration; List<String> get schools; List<String> get grades;@JsonKey(name: 'license_expires_at') String? get licenseExpiresAt; String? get sessionId;
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $UserModelCopyWith<UserModel> get copyWith => _$UserModelCopyWithImpl<UserModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.whatsappNumber, whatsappNumber) || other.whatsappNumber == whatsappNumber)&&const DeepCollectionEquality().equals(other.subjects, subjects)&&(identical(other.governorate, governorate) || other.governorate == governorate)&&(identical(other.educationalAdministration, educationalAdministration) || other.educationalAdministration == educationalAdministration)&&const DeepCollectionEquality().equals(other.schools, schools)&&const DeepCollectionEquality().equals(other.grades, grades)&&(identical(other.licenseExpiresAt, licenseExpiresAt) || other.licenseExpiresAt == licenseExpiresAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.whatsappNumber, whatsappNumber) || other.whatsappNumber == whatsappNumber)&&const DeepCollectionEquality().equals(other.subjects, subjects)&&(identical(other.governorate, governorate) || other.governorate == governorate)&&(identical(other.educationalAdministration, educationalAdministration) || other.educationalAdministration == educationalAdministration)&&const DeepCollectionEquality().equals(other.schools, schools)&&const DeepCollectionEquality().equals(other.grades, grades)&&(identical(other.licenseExpiresAt, licenseExpiresAt) || other.licenseExpiresAt == licenseExpiresAt)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,name,whatsappNumber,const DeepCollectionEquality().hash(subjects),governorate,educationalAdministration,const DeepCollectionEquality().hash(schools),const DeepCollectionEquality().hash(grades),licenseExpiresAt);
+int get hashCode => Object.hash(runtimeType,id,email,name,whatsappNumber,const DeepCollectionEquality().hash(subjects),governorate,educationalAdministration,const DeepCollectionEquality().hash(schools),const DeepCollectionEquality().hash(grades),licenseExpiresAt,sessionId);
 
 @override
 String toString() {
-  return 'UserModel(id: $id, email: $email, name: $name, whatsappNumber: $whatsappNumber, subjects: $subjects, governorate: $governorate, educationalAdministration: $educationalAdministration, schools: $schools, grades: $grades, licenseExpiresAt: $licenseExpiresAt)';
+  return 'UserModel(id: $id, email: $email, name: $name, whatsappNumber: $whatsappNumber, subjects: $subjects, governorate: $governorate, educationalAdministration: $educationalAdministration, schools: $schools, grades: $grades, licenseExpiresAt: $licenseExpiresAt, sessionId: $sessionId)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $UserModelCopyWith<$Res>  {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) _then) = _$UserModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: '_id') String? id, String? email, String? name,@JsonKey(name: 'whatsapp_number') String? whatsappNumber, List<String> subjects, String? governorate,@JsonKey(name: 'educational_administration') String? educationalAdministration, List<String> schools, List<String> grades,@JsonKey(name: 'license_expires_at') String? licenseExpiresAt
+@JsonKey(name: '_id') String? id, String? email, String? name,@JsonKey(name: 'whatsapp_number') String? whatsappNumber, List<String> subjects, String? governorate,@JsonKey(name: 'educational_administration') String? educationalAdministration, List<String> schools, List<String> grades,@JsonKey(name: 'license_expires_at') String? licenseExpiresAt, String? sessionId
 });
 
 
@@ -65,7 +65,7 @@ class _$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? email = freezed,Object? name = freezed,Object? whatsappNumber = freezed,Object? subjects = null,Object? governorate = freezed,Object? educationalAdministration = freezed,Object? schools = null,Object? grades = null,Object? licenseExpiresAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? email = freezed,Object? name = freezed,Object? whatsappNumber = freezed,Object? subjects = null,Object? governorate = freezed,Object? educationalAdministration = freezed,Object? schools = null,Object? grades = null,Object? licenseExpiresAt = freezed,Object? sessionId = freezed,}) {
   return _then(_self.copyWith(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -77,6 +77,7 @@ as String?,educationalAdministration: freezed == educationalAdministration ? _se
 as String?,schools: null == schools ? _self.schools : schools // ignore: cast_nullable_to_non_nullable
 as List<String>,grades: null == grades ? _self.grades : grades // ignore: cast_nullable_to_non_nullable
 as List<String>,licenseExpiresAt: freezed == licenseExpiresAt ? _self.licenseExpiresAt : licenseExpiresAt // ignore: cast_nullable_to_non_nullable
+as String?,sessionId: freezed == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -162,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: '_id')  String? id,  String? email,  String? name, @JsonKey(name: 'whatsapp_number')  String? whatsappNumber,  List<String> subjects,  String? governorate, @JsonKey(name: 'educational_administration')  String? educationalAdministration,  List<String> schools,  List<String> grades, @JsonKey(name: 'license_expires_at')  String? licenseExpiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: '_id')  String? id,  String? email,  String? name, @JsonKey(name: 'whatsapp_number')  String? whatsappNumber,  List<String> subjects,  String? governorate, @JsonKey(name: 'educational_administration')  String? educationalAdministration,  List<String> schools,  List<String> grades, @JsonKey(name: 'license_expires_at')  String? licenseExpiresAt,  String? sessionId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subjects,_that.governorate,_that.educationalAdministration,_that.schools,_that.grades,_that.licenseExpiresAt);case _:
+return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subjects,_that.governorate,_that.educationalAdministration,_that.schools,_that.grades,_that.licenseExpiresAt,_that.sessionId);case _:
   return orElse();
 
 }
@@ -183,10 +184,10 @@ return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subje
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: '_id')  String? id,  String? email,  String? name, @JsonKey(name: 'whatsapp_number')  String? whatsappNumber,  List<String> subjects,  String? governorate, @JsonKey(name: 'educational_administration')  String? educationalAdministration,  List<String> schools,  List<String> grades, @JsonKey(name: 'license_expires_at')  String? licenseExpiresAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: '_id')  String? id,  String? email,  String? name, @JsonKey(name: 'whatsapp_number')  String? whatsappNumber,  List<String> subjects,  String? governorate, @JsonKey(name: 'educational_administration')  String? educationalAdministration,  List<String> schools,  List<String> grades, @JsonKey(name: 'license_expires_at')  String? licenseExpiresAt,  String? sessionId)  $default,) {final _that = this;
 switch (_that) {
 case _UserModel():
-return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subjects,_that.governorate,_that.educationalAdministration,_that.schools,_that.grades,_that.licenseExpiresAt);case _:
+return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subjects,_that.governorate,_that.educationalAdministration,_that.schools,_that.grades,_that.licenseExpiresAt,_that.sessionId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +204,10 @@ return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subje
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: '_id')  String? id,  String? email,  String? name, @JsonKey(name: 'whatsapp_number')  String? whatsappNumber,  List<String> subjects,  String? governorate, @JsonKey(name: 'educational_administration')  String? educationalAdministration,  List<String> schools,  List<String> grades, @JsonKey(name: 'license_expires_at')  String? licenseExpiresAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: '_id')  String? id,  String? email,  String? name, @JsonKey(name: 'whatsapp_number')  String? whatsappNumber,  List<String> subjects,  String? governorate, @JsonKey(name: 'educational_administration')  String? educationalAdministration,  List<String> schools,  List<String> grades, @JsonKey(name: 'license_expires_at')  String? licenseExpiresAt,  String? sessionId)?  $default,) {final _that = this;
 switch (_that) {
 case _UserModel() when $default != null:
-return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subjects,_that.governorate,_that.educationalAdministration,_that.schools,_that.grades,_that.licenseExpiresAt);case _:
+return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subjects,_that.governorate,_that.educationalAdministration,_that.schools,_that.grades,_that.licenseExpiresAt,_that.sessionId);case _:
   return null;
 
 }
@@ -218,7 +219,7 @@ return $default(_that.id,_that.email,_that.name,_that.whatsappNumber,_that.subje
 @JsonSerializable()
 
 class _UserModel implements UserModel {
-  const _UserModel({@JsonKey(name: '_id') this.id, this.email, this.name, @JsonKey(name: 'whatsapp_number') this.whatsappNumber, final  List<String> subjects = const [], this.governorate, @JsonKey(name: 'educational_administration') this.educationalAdministration, final  List<String> schools = const [], final  List<String> grades = const [], @JsonKey(name: 'license_expires_at') this.licenseExpiresAt}): _subjects = subjects,_schools = schools,_grades = grades;
+  const _UserModel({@JsonKey(name: '_id') this.id, this.email, this.name, @JsonKey(name: 'whatsapp_number') this.whatsappNumber, final  List<String> subjects = const [], this.governorate, @JsonKey(name: 'educational_administration') this.educationalAdministration, final  List<String> schools = const [], final  List<String> grades = const [], @JsonKey(name: 'license_expires_at') this.licenseExpiresAt, this.sessionId}): _subjects = subjects,_schools = schools,_grades = grades;
   factory _UserModel.fromJson(Map<String, dynamic> json) => _$UserModelFromJson(json);
 
 @override@JsonKey(name: '_id') final  String? id;
@@ -249,6 +250,7 @@ class _UserModel implements UserModel {
 }
 
 @override@JsonKey(name: 'license_expires_at') final  String? licenseExpiresAt;
+@override final  String? sessionId;
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
@@ -263,16 +265,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.whatsappNumber, whatsappNumber) || other.whatsappNumber == whatsappNumber)&&const DeepCollectionEquality().equals(other._subjects, _subjects)&&(identical(other.governorate, governorate) || other.governorate == governorate)&&(identical(other.educationalAdministration, educationalAdministration) || other.educationalAdministration == educationalAdministration)&&const DeepCollectionEquality().equals(other._schools, _schools)&&const DeepCollectionEquality().equals(other._grades, _grades)&&(identical(other.licenseExpiresAt, licenseExpiresAt) || other.licenseExpiresAt == licenseExpiresAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserModel&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.name, name) || other.name == name)&&(identical(other.whatsappNumber, whatsappNumber) || other.whatsappNumber == whatsappNumber)&&const DeepCollectionEquality().equals(other._subjects, _subjects)&&(identical(other.governorate, governorate) || other.governorate == governorate)&&(identical(other.educationalAdministration, educationalAdministration) || other.educationalAdministration == educationalAdministration)&&const DeepCollectionEquality().equals(other._schools, _schools)&&const DeepCollectionEquality().equals(other._grades, _grades)&&(identical(other.licenseExpiresAt, licenseExpiresAt) || other.licenseExpiresAt == licenseExpiresAt)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,name,whatsappNumber,const DeepCollectionEquality().hash(_subjects),governorate,educationalAdministration,const DeepCollectionEquality().hash(_schools),const DeepCollectionEquality().hash(_grades),licenseExpiresAt);
+int get hashCode => Object.hash(runtimeType,id,email,name,whatsappNumber,const DeepCollectionEquality().hash(_subjects),governorate,educationalAdministration,const DeepCollectionEquality().hash(_schools),const DeepCollectionEquality().hash(_grades),licenseExpiresAt,sessionId);
 
 @override
 String toString() {
-  return 'UserModel(id: $id, email: $email, name: $name, whatsappNumber: $whatsappNumber, subjects: $subjects, governorate: $governorate, educationalAdministration: $educationalAdministration, schools: $schools, grades: $grades, licenseExpiresAt: $licenseExpiresAt)';
+  return 'UserModel(id: $id, email: $email, name: $name, whatsappNumber: $whatsappNumber, subjects: $subjects, governorate: $governorate, educationalAdministration: $educationalAdministration, schools: $schools, grades: $grades, licenseExpiresAt: $licenseExpiresAt, sessionId: $sessionId)';
 }
 
 
@@ -283,7 +285,7 @@ abstract mixin class _$UserModelCopyWith<$Res> implements $UserModelCopyWith<$Re
   factory _$UserModelCopyWith(_UserModel value, $Res Function(_UserModel) _then) = __$UserModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: '_id') String? id, String? email, String? name,@JsonKey(name: 'whatsapp_number') String? whatsappNumber, List<String> subjects, String? governorate,@JsonKey(name: 'educational_administration') String? educationalAdministration, List<String> schools, List<String> grades,@JsonKey(name: 'license_expires_at') String? licenseExpiresAt
+@JsonKey(name: '_id') String? id, String? email, String? name,@JsonKey(name: 'whatsapp_number') String? whatsappNumber, List<String> subjects, String? governorate,@JsonKey(name: 'educational_administration') String? educationalAdministration, List<String> schools, List<String> grades,@JsonKey(name: 'license_expires_at') String? licenseExpiresAt, String? sessionId
 });
 
 
@@ -300,7 +302,7 @@ class __$UserModelCopyWithImpl<$Res>
 
 /// Create a copy of UserModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? email = freezed,Object? name = freezed,Object? whatsappNumber = freezed,Object? subjects = null,Object? governorate = freezed,Object? educationalAdministration = freezed,Object? schools = null,Object? grades = null,Object? licenseExpiresAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = freezed,Object? email = freezed,Object? name = freezed,Object? whatsappNumber = freezed,Object? subjects = null,Object? governorate = freezed,Object? educationalAdministration = freezed,Object? schools = null,Object? grades = null,Object? licenseExpiresAt = freezed,Object? sessionId = freezed,}) {
   return _then(_UserModel(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -312,6 +314,7 @@ as String?,educationalAdministration: freezed == educationalAdministration ? _se
 as String?,schools: null == schools ? _self._schools : schools // ignore: cast_nullable_to_non_nullable
 as List<String>,grades: null == grades ? _self._grades : grades // ignore: cast_nullable_to_non_nullable
 as List<String>,licenseExpiresAt: freezed == licenseExpiresAt ? _self.licenseExpiresAt : licenseExpiresAt // ignore: cast_nullable_to_non_nullable
+as String?,sessionId: freezed == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

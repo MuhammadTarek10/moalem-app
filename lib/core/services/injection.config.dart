@@ -13,6 +13,14 @@ import 'package:dio/dio.dart' as _i361;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
+import '../../features/activation/data/datasources/license_remote_data_source.dart'
+    as _i315;
+import '../../features/activation/data/repositories/license_repository_impl.dart'
+    as _i167;
+import '../../features/activation/domain/repositories/license_repository.dart'
+    as _i1066;
+import '../../features/activation/domain/usecases/redeem_coupon_usecase.dart'
+    as _i253;
 import '../../features/auth/data/datasources/auth_remote_data_source.dart'
     as _i107;
 import '../../features/auth/data/datasources/user_remote_data_source.dart'
@@ -26,6 +34,8 @@ import '../../features/auth/domain/repositories/user_repository.dart' as _i926;
 import '../../features/auth/domain/usecases/signin_usecase.dart' as _i435;
 import '../../features/auth/domain/usecases/signout_usecase.dart' as _i611;
 import '../../features/auth/domain/usecases/signup_usecase.dart' as _i57;
+import '../../features/home/domain/usecases/fetch_and_store_user_usecase.dart'
+    as _i82;
 import 'api_service.dart' as _i738;
 import 'auth_interceptor.dart' as _i1009;
 import 'database_service.dart' as _i748;
@@ -70,9 +80,26 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i107.AuthRemoteDataSource>(
       () => _i107.AuthRemoteDataSourceImpl(gh<_i738.ApiService>()),
     );
+    gh.lazySingleton<_i315.LicenseRemoteDataSource>(
+      () => _i315.LicenseRemoteDataSourceImpl(gh<_i738.ApiService>()),
+    );
     gh.lazySingleton<_i787.AuthRepository>(
       () => _i153.AuthRepositoryImpl(
         gh<_i107.AuthRemoteDataSource>(),
+        gh<_i285.StorageService>(),
+        gh<_i1018.SecureStorageService>(),
+      ),
+    );
+    gh.factory<_i82.FetchAndStoreUserUseCase>(
+      () => _i82.FetchAndStoreUserUseCase(
+        gh<_i926.UserRepository>(),
+        gh<_i1018.SecureStorageService>(),
+        gh<_i285.StorageService>(),
+      ),
+    );
+    gh.lazySingleton<_i1066.LicenseRepository>(
+      () => _i167.LicenseRepositoryImpl(
+        gh<_i315.LicenseRemoteDataSource>(),
         gh<_i285.StorageService>(),
         gh<_i1018.SecureStorageService>(),
       ),
@@ -85,6 +112,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i57.SignUpUseCase>(
       () => _i57.SignUpUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.factory<_i253.RedeemCouponUseCase>(
+      () => _i253.RedeemCouponUseCase(gh<_i1066.LicenseRepository>()),
     );
     return this;
   }

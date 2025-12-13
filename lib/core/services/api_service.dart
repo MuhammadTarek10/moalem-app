@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:moalem/core/models/base_response.dart';
 import 'package:moalem/features/auth/data/models/coupon_model.dart';
 import 'package:moalem/features/auth/data/models/coupon_request.dart';
 import 'package:moalem/features/auth/data/models/signup_request.dart';
@@ -14,22 +15,22 @@ abstract class ApiService {
 
   // * Auth
   @POST('/auth/sign-in')
-  Future<TokenModel> signIn(@Body() Map<String, dynamic> body);
+  Future<BaseResponse<TokenModel>> signIn(@Body() Map<String, dynamic> body);
 
   @POST('/auth/sign-up')
-  Future<TokenModel> signUp(@Body() SignupRequest body);
+  Future<BaseResponse<TokenModel>> signUp(@Body() SignupRequest body);
 
   // * Coupon
-  @POST('license/redeem-license')
-  Future<CouponModel> applyCoupon(@Body() CouponRequest body);
+  @POST('/license/redeem-coupon')
+  Future<BaseResponse<CouponModel>> applyCoupon(@Body() CouponRequest body);
 
   // * User
   @GET('/users/profile')
-  Future<UserModel> getUser();
+  Future<BaseResponse<UserModel>> getUser();
 
   @PATCH('/users/profile')
-  Future<UserModel> updateUser(@Body() UserModel user);
+  Future<BaseResponse<UserModel>> updateUser(@Body() UserModel user);
 
   @DELETE('/users/profile')
-  Future<void> deleteUser();
+  Future<BaseResponse<dynamic>> deleteUser();
 }
