@@ -7,7 +7,7 @@ part of 'user_model.dart';
 // **************************************************************************
 
 _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
-  id: json['id'] as String?,
+  id: json['_id'] as String?,
   email: json['email'] as String?,
   name: json['name'] as String?,
   whatsappNumber: json['whatsapp_number'] as String?,
@@ -22,11 +22,12 @@ _UserModel _$UserModelFromJson(Map<String, dynamic> json) => _UserModel(
   grades:
       (json['grades'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
+  licenseExpiresAt: json['license_expires_at'] as String?,
 );
 
 Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      '_id': instance.id,
       'email': instance.email,
       'name': instance.name,
       'whatsapp_number': instance.whatsappNumber,
@@ -35,4 +36,5 @@ Map<String, dynamic> _$UserModelToJson(_UserModel instance) =>
       'educational_administration': instance.educationalAdministration,
       'schools': instance.schools,
       'grades': instance.grades,
+      'license_expires_at': instance.licenseExpiresAt,
     };

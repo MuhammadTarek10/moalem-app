@@ -49,3 +49,6 @@ app.*.map.json
 
 # playwright
 .playwright*
+
+# docs
+/docs

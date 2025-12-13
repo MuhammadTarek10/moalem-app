@@ -6,7 +6,7 @@ part 'user_model.g.dart';
 @freezed
 abstract class UserModel with _$UserModel {
   const factory UserModel({
-    String? id,
+    @JsonKey(name: '_id') String? id,
     String? email,
     String? name,
     @JsonKey(name: 'whatsapp_number') String? whatsappNumber,
@@ -16,6 +16,7 @@ abstract class UserModel with _$UserModel {
     String? educationalAdministration,
     @Default([]) List<String> schools,
     @Default([]) List<String> grades,
+    @JsonKey(name: 'license_expires_at') String? licenseExpiresAt,
   }) = _UserModel;
 
   factory UserModel.fromJson(Map<String, dynamic> json) =>

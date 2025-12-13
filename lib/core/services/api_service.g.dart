@@ -50,12 +50,11 @@ class _ApiService implements ApiService {
   }
 
   @override
-  Future<TokenModel> signUp(Map<String, dynamic> body) async {
+  Future<TokenModel> signUp(SignupRequest body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body);
+    final _data = body;
     final _options = _setStreamType<TokenModel>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
@@ -70,6 +69,33 @@ class _ApiService implements ApiService {
     late TokenModel _value;
     try {
       _value = TokenModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<CouponModel> applyCoupon(CouponRequest body) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = body;
+    final _options = _setStreamType<CouponModel>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            'license/redeem-license',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late CouponModel _value;
+    try {
+      _value = CouponModel.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, _result);
       rethrow;
