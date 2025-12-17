@@ -60,5 +60,10 @@
   "nav_classes": "الفصول",
   "nav_print": "طباعة",
   "nav_reports": "التقارير",
-  "nav_profile": "الملف شخصي"
+  "nav_profile": "الملف شخصي",
+  "profile_menu_profile": "الملف الشخصي",
+  "profile_menu_advanced_settings": "الإعدادات المتقدمة",
+  "profile_menu_rate_us": "قيمنا",
+  "profile_menu_contact_us": "تواصل معنا",
+  "profile_menu_logout": "تسجيل الخروج"
 }

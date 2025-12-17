@@ -6,7 +6,7 @@ import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
-import 'package:moalem/shared/widgets/primary_button.dart';
+import 'package:moalem/shared/widgets/app_button.dart';
 
 class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
@@ -62,12 +62,12 @@ class AuthScreen extends StatelessWidget {
                 separatorBuilder: (context, index) => SizedBox(height: 16.h),
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    return PrimaryButton(
+                    return AppButton(
                       onPressed: () => context.push(AppRoutes.signUp),
                       text: AppStrings.createNewAccount.tr(),
                     );
                   }
-                  return PrimaryButton(
+                  return AppButton(
                     outlined: true,
                     onPressed: () => context.push(AppRoutes.signIn),
                     text: AppStrings.signInButton.tr(),

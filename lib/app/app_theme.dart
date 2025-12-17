@@ -24,6 +24,10 @@ class AppTheme {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         toolbarHeight: 40.h,
+        titleTextStyle: TextStyle(
+          fontSize: 24.sp,
+          color: AppColors.textPrimary,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

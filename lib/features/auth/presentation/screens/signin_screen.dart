@@ -16,8 +16,8 @@ import 'package:moalem/features/auth/presentation/controllers/auth_controller.da
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/utils/validators.dart';
+import 'package:moalem/shared/widgets/app_button.dart';
 import 'package:moalem/shared/widgets/hyperlinks.dart';
-import 'package:moalem/shared/widgets/primary_button.dart';
 import 'package:moalem/shared/widgets/text_input.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
@@ -177,7 +177,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   ),
                   SizedBox(height: 32.h),
                   // Sign In Button
-                  PrimaryButton(
+                  AppButton(
                     text: AppStrings.signInButton.tr(),
                     onPressed: _onSignIn,
                     isLoading: isLoading,

@@ -6,7 +6,7 @@ import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
-import 'package:moalem/shared/widgets/primary_button.dart';
+import 'package:moalem/shared/widgets/app_button.dart';
 
 class WhatsAppButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -15,7 +15,7 @@ class WhatsAppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PrimaryButton(
+    return AppButton(
       onPressed: onPressed,
       text: AppStrings.contactWhatsapp.tr(),
       backgroundColor: AppColors.whatsapp,

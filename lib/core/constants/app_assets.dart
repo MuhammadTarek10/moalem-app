@@ -28,8 +28,11 @@ class AppIcons {
   String get classesActive => '$_iconsPath/classes-active.svg';
   String get classesInactive => '$_iconsPath/classes-inactive.svg';
   String get contactUs => '$_iconsPath/contact-us.svg';
+  String get callUs => '$_iconsPath/call-us.svg';
   String get download => '$_iconsPath/download.svg';
   String get edit => '$_iconsPath/edit.svg';
+  String get settings => '$_iconsPath/settings.svg';
+  String get star => '$_iconsPath/star.svg';
   String get homeInactive => '$_iconsPath/home-inactive.svg';
   String get homeworkMarks => '$_iconsPath/homework-marks.svg';
   String get inquiry => '$_iconsPath/inquiry.svg';

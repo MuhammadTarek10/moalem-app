@@ -9,8 +9,8 @@ import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/auth/data/models/signup_request.dart';
 import 'package:moalem/shared/extensions/context.dart';
+import 'package:moalem/shared/widgets/app_button.dart';
 import 'package:moalem/shared/widgets/hyperlinks.dart';
-import 'package:moalem/shared/widgets/primary_button.dart';
 
 import '../controllers/auth_controller.dart';
 import '../models/signup_form_data.dart';
@@ -199,7 +199,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  PrimaryButton(
+                  AppButton(
                     text: _currentStep < _totalSteps - 1
                         ? AppStrings.nextButton.tr()
                         : AppStrings.signUpButton.tr(),

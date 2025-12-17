@@ -68,4 +68,12 @@ class AppStrings {
   static const String navPrint = 'nav_print';
   static const String navReports = 'nav_reports';
   static const String navProfile = 'nav_profile';
+
+  // Profile Screen
+  static const String profileMenuProfile = 'profile_menu_profile';
+  static const String profileMenuAdvancedSettings =
+      'profile_menu_advanced_settings';
+  static const String profileMenuRateUs = 'profile_menu_rate_us';
+  static const String profileMenuContactUs = 'profile_menu_contact_us';
+  static const String profileMenuLogout = 'profile_menu_logout';
 }

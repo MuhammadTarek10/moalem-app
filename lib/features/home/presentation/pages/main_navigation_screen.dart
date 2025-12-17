@@ -1,12 +1,10 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
-import 'package:moalem/core/constants/app_strings.dart';
-import 'package:moalem/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:moalem/features/classes/presentation/screens/classes_screen.dart';
 import 'package:moalem/features/home/presentation/controllers/home_controller.dart';
+import 'package:moalem/features/home/presentation/pages/home_screen.dart';
 import 'package:moalem/features/print/presentation/screens/print_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/profile_screen.dart';
 import 'package:moalem/features/reports/presentation/screens/reports_screen.dart';
@@ -57,7 +55,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
         return AppBottomNavigationBar(
           controller: _controller,
           screens: [
-            _buildHomeScreen(),
+            const HomeScreen(),
             const ClassesScreen(),
             const PrintScreen(),
             const ReportsScreen(),
@@ -65,25 +63,6 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildHomeScreen() {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.navHome.tr()),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              ref.read(authControllerProvider.notifier).signOut();
-              context.go(AppRoutes.signIn);
-            },
-          ),
-        ],
-      ),
-      body: Center(child: Text(AppStrings.navHome.tr())),
     );
   }
 }

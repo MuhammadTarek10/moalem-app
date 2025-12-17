@@ -9,7 +9,7 @@ import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/activation/presentation/controllers/activation_controller.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
-import 'package:moalem/shared/widgets/primary_button.dart';
+import 'package:moalem/shared/widgets/app_button.dart';
 import 'package:moalem/shared/widgets/text_input.dart';
 import 'package:moalem/shared/widgets/whatsapp_button.dart';
 
@@ -185,7 +185,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                     SizedBox(width: 16.w),
                     // Submit Button
                     Expanded(
-                      child: PrimaryButton(
+                      child: AppButton(
                         text: AppStrings.submitButton.tr(),
                         onPressed: _onSubmit,
                         isLoading: isLoading,
