@@ -2,6 +2,8 @@ import 'package:injectable/injectable.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'database_schema.dart';
+
 @singleton
 class DatabaseService {
   static const String _dbName = 'moalem.db';
@@ -24,19 +26,18 @@ class DatabaseService {
       version: _dbVersion,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
+      onConfigure: _onConfigure,
     );
   }
 
+  Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
+
   Future<void> _createDB(Database db, int version) async {
-    // Implement table creation here
-    // Example:
-    // await db.execute('''
-    //   CREATE TABLE users (
-    //     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    //     name TEXT,
-    //     email TEXT
-    //   )
-    // ''');
+    for (final query in DatabaseSchema.createTableQueries) {
+      await db.execute(query);
+    }
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {

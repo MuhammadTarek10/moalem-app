@@ -55,5 +55,10 @@
   "activation_success": "تم تفعيل الحساب بنجاح",
   "invalid_code": "الكود غير صالح",
   "whatsapp_activation_message_with_id": "مرحباً، أريد تفعيل حسابي. الرمز التعريفي الخاص بي هو: {}",
-  "whatsapp_activation_message": "مرحباً، أريد تفعيل حسابي."
+  "whatsapp_activation_message": "مرحباً، أريد تفعيل حسابي.",
+  "nav_home": "الرئيسية",
+  "nav_classes": "الفصول",
+  "nav_print": "طباعة",
+  "nav_reports": "التقارير",
+  "nav_profile": "الملف شخصي"
 }

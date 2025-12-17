@@ -14,6 +14,7 @@ class AppColors {
   static const Color textSubtitle = Color(0xFF666567);
 
   static const Color disabled = Color(0xFFD9D9D9);
+  static const Color inactive = Color(0xFFBDBDBD);
 
   // Content Preview BG
   static const Color contentPreviewBg = Color(0xFFFFFFFF);

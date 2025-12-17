@@ -61,4 +61,11 @@ class AppStrings {
   static const String whatsappActivationMessageWithId =
       'whatsapp_activation_message_with_id';
   static const String whatsappActivationMessage = 'whatsapp_activation_message';
+
+  // Navigation bar strings
+  static const String navHome = 'nav_home';
+  static const String navClasses = 'nav_classes';
+  static const String navPrint = 'nav_print';
+  static const String navReports = 'nav_reports';
+  static const String navProfile = 'nav_profile';
 }

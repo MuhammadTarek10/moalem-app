@@ -185,7 +185,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                     SizedBox(width: 16.w),
                     // Submit Button
                     Expanded(
-                      child: AppButton(
+                      child: PrimaryButton(
                         text: AppStrings.submitButton.tr(),
                         onPressed: _onSubmit,
                         isLoading: isLoading,

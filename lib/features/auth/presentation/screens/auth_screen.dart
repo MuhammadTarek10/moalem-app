@@ -62,12 +62,12 @@ class AuthScreen extends StatelessWidget {
                 separatorBuilder: (context, index) => SizedBox(height: 16.h),
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    return AppButton(
+                    return PrimaryButton(
                       onPressed: () => context.push(AppRoutes.signUp),
                       text: AppStrings.createNewAccount.tr(),
                     );
                   }
-                  return AppButton(
+                  return PrimaryButton(
                     outlined: true,
                     onPressed: () => context.push(AppRoutes.signIn),
                     text: AppStrings.signInButton.tr(),

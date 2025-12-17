@@ -15,7 +15,7 @@ class WhatsAppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppButton(
+    return PrimaryButton(
       onPressed: onPressed,
       text: AppStrings.contactWhatsapp.tr(),
       backgroundColor: AppColors.whatsapp,

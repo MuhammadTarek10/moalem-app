@@ -199,7 +199,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AppButton(
+                  PrimaryButton(
                     text: _currentStep < _totalSteps - 1
                         ? AppStrings.nextButton.tr()
                         : AppStrings.signUpButton.tr(),

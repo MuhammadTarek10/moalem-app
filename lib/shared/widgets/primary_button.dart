@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 
-class AppButton extends StatelessWidget {
+class PrimaryButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final String text;
   final bool isLoading;
@@ -13,7 +13,7 @@ class AppButton extends StatelessWidget {
   final Widget? icon;
   final TextStyle? textStyle;
 
-  const AppButton({
+  const PrimaryButton({
     super.key,
     required this.onPressed,
     required this.text,

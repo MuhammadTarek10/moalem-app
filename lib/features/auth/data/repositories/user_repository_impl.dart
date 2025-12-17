@@ -6,6 +6,7 @@ import 'package:moalem/core/entities/user.dart';
 import 'package:moalem/core/services/storage_service.dart';
 import 'package:moalem/features/auth/data/datasources/user_remote_data_source.dart';
 import 'package:moalem/features/auth/data/models/user_mapper.dart';
+import 'package:moalem/features/auth/data/models/user_model.dart';
 import 'package:moalem/features/auth/domain/repositories/user_repository.dart';
 
 @LazySingleton(as: UserRepository)
@@ -17,6 +18,10 @@ class UserRepositoryImpl implements UserRepository {
 
   @override
   Future<User> getUser() async {
+    final user = _storageService.getString(AppKeys.user);
+    if (user != null) {
+      return UserModel.fromJson(jsonDecode(user)).toDomain();
+    }
     final userModel = await _remoteDataSource.getUser();
     await _storageService.setString(
       AppKeys.user,

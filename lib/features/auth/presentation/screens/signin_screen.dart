@@ -177,7 +177,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   ),
                   SizedBox(height: 32.h),
                   // Sign In Button
-                  AppButton(
+                  PrimaryButton(
                     text: AppStrings.signInButton.tr(),
                     onPressed: _onSignIn,
                     isLoading: isLoading,

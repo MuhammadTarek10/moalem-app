@@ -4,7 +4,7 @@ import 'package:moalem/features/activation/presentation/screens/activation_scree
 import 'package:moalem/features/auth/presentation/screens/auth_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/signin_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/signup_screen.dart';
-import 'package:moalem/features/home/presentation/pages/home_screen.dart';
+import 'package:moalem/features/home/presentation/pages/main_navigation_screen.dart';
 import 'package:moalem/features/splash/presentation/pages/splash_screen.dart';
 
 final router = GoRouter(
@@ -32,7 +32,7 @@ final router = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.home,
-      builder: (context, state) => const HomeScreen(),
+      builder: (context, state) => const MainNavigationScreen(),
     ),
   ],
 );
