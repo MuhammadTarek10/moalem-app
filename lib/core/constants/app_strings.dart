@@ -1,6 +1,18 @@
 class AppStrings {
+  // App Strings
   static const String appTitle = 'app_title';
   static const String appTagline = 'app_tagline';
+  static const String saveButton = 'save_button';
+  static const String cancelButton = 'cancel_button';
+  static const String deleteButton = 'delete_button';
+  static const String editButton = 'edit_button';
+  static const String viewButton = 'view_button';
+  static const String addButton = 'add_button';
+  static const String removeButton = 'remove_button';
+  static const String closeButton = 'close_button';
+  static const String confirmButton = 'confirm_button';
+
+  // Auth Screen
   static const String authSubtitle = 'auth_subtitle';
   static const String welcome = 'welcome';
   static const String signInTitle = 'sign_in_title';
@@ -90,4 +102,42 @@ class AppStrings {
 
   // Loading Screen
   static const String loadingMessage = 'loading_message';
+
+  // Classes Screen
+  static const String classesTitle = 'classes_title';
+  static const String evaluationAspects = 'evaluation_aspects';
+  static const String viewAll = 'view_all';
+  static const String classroomsList = 'classrooms_list';
+  static const String viewStudents = 'view_students';
+  static const String studentCount = 'student_count';
+  static const String addClass = 'add_class';
+
+  // Evaluation Aspects
+  static const String attendanceAndDiligence = 'attendance_and_diligence';
+  static const String skillTasks = 'skill_tasks';
+  static const String oralTasks = 'oral_tasks';
+  static const String weeklyReview = 'weekly_review';
+  static const String activityBook = 'activity_book';
+  static const String homeworkBook = 'homework_book';
+  static const String classroomPerformance = 'classroom_performance';
+
+  // Empty State
+  static const String noClassesTitle = 'no_classes_title';
+  static const String noClassesSubtitle = 'no_classes_subtitle';
+  static const String addClassManually = 'add_class_manually';
+  static const String attachExcelFile = 'attach_excel_file';
+
+  // Add/Edit Class Form
+  static const String addClassTitle = 'add_class_title';
+  static const String editClassTitle = 'edit_class_title';
+  static const String educationalStageLabel = 'educational_stage_label';
+  static const String educationalStageHint = 'educational_stage_hint';
+  static const String classNameLabel = 'class_name_label';
+  static const String classNameHint = 'class_name_hint';
+  static const String subjectFieldLabel = 'subject_field_label';
+  static const String subjectFieldHint = 'subject_field_hint';
+  static const String semesterLabel = 'semester_label';
+  static const String semesterHint = 'semester_hint';
+  static const String schoolFieldLabel = 'school_field_label';
+  static const String schoolFieldHint = 'school_field_hint';
 }

@@ -23,6 +23,16 @@ class AppBottomNavigationBar extends StatelessWidget {
       context,
       controller: controller,
       screens: screens,
+      animationSettings: NavBarAnimationSettings(
+        navBarItemAnimation: ItemAnimationSettings(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        ),
+        screenTransitionAnimation: ScreenTransitionAnimationSettings(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        ),
+      ),
       items: _navBarItems(),
       backgroundColor: AppColors.surface,
       handleAndroidBackButtonPress: true,

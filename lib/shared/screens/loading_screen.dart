@@ -6,11 +6,91 @@ import 'package:moalem/shared/extensions/animations.dart';
 
 class LoadingScreen extends StatelessWidget {
   final String? message;
+  final bool isFullScreen;
 
-  const LoadingScreen({super.key, this.message});
+  const LoadingScreen({super.key, this.message, this.isFullScreen = true});
 
   @override
   Widget build(BuildContext context) {
+    // Inline loading (used inside existing Scaffold)
+    if (!isFullScreen) {
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: AppColors.background,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Animated Logo Container
+            Container(
+              width: 100.w,
+              height: 100.w,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.1),
+                    AppColors.secondary.withValues(alpha: 0.2),
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  width: 70.w,
+                  height: 70.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(12.w),
+                    child: Image.asset(
+                      AppAssets.images.logo,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+            ).scaleShimmerShake(
+              duration: 1000,
+              color: AppColors.primary.withValues(alpha: 0.3),
+              hz: 2,
+              curve: Curves.easeInOut,
+              delay: 300,
+            ),
+
+            SizedBox(height: 32.h),
+
+            // Loading Indicator
+            _LoadingDots(isInline: true).fadeIn(duration: 600, delay: 400),
+
+            if (message != null) ...[
+              SizedBox(height: 20.h),
+              Text(
+                message!,
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  color: AppColors.textSubtitle,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ).fadeIn(duration: 600, delay: 600),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Full screen loading
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -83,6 +163,10 @@ class LoadingScreen extends StatelessWidget {
 }
 
 class _LoadingDots extends StatefulWidget {
+  final bool isInline;
+
+  const _LoadingDots({this.isInline = false});
+
   @override
   State<_LoadingDots> createState() => _LoadingDotsState();
 }
@@ -132,6 +216,11 @@ class _LoadingDotsState extends State<_LoadingDots>
 
   @override
   Widget build(BuildContext context) {
+    final dotColor = widget.isInline ? AppColors.primary : Colors.white;
+    final glowColor = widget.isInline
+        ? AppColors.primary.withValues(alpha: 0.3)
+        : Colors.white.withValues(alpha: 0.5);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(3, (index) {
@@ -146,13 +235,9 @@ class _LoadingDotsState extends State<_LoadingDots>
                 height: 14.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white,
+                  color: dotColor,
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
+                    BoxShadow(color: glowColor, blurRadius: 8, spreadRadius: 2),
                   ],
                 ),
               ),

@@ -13,6 +13,7 @@ import 'package:moalem/features/profile/presentation/controllers/profile_control
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/screens/error_screen.dart';
+import 'package:moalem/shared/screens/loading_screen.dart';
 import 'package:moalem/shared/widgets/app_button.dart';
 import 'package:moalem/shared/widgets/profile_menu_button.dart';
 
@@ -91,7 +92,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const LoadingScreen(isFullScreen: false),
         error: (error, stack) => ErrorScreen(
           isFullScreen: false,
           message: ErrorHandler.getErrorMessage(error),

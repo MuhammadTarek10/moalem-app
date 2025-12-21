@@ -7,6 +7,7 @@ import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/utils/error_handler.dart';
 import 'package:moalem/features/home/presentation/controllers/home_controller.dart';
 import 'package:moalem/shared/screens/error_screen.dart';
+import 'package:moalem/shared/screens/loading_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -35,8 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final state = ref.watch(homeControllerProvider);
 
     return state.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const LoadingScreen(),
       error: (err, stack) => ErrorScreen(
         message: ErrorHandler.getErrorMessage(err),
         onRetry: () =>

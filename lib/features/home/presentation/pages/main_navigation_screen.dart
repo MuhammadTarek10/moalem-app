@@ -10,6 +10,7 @@ import 'package:moalem/features/print/presentation/screens/print_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/profile_screen.dart';
 import 'package:moalem/features/reports/presentation/screens/reports_screen.dart';
 import 'package:moalem/shared/screens/error_screen.dart';
+import 'package:moalem/shared/screens/loading_screen.dart';
 import 'package:moalem/shared/widgets/bottom_navigation_bar.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 
@@ -50,8 +51,7 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
     final state = ref.watch(homeControllerProvider);
 
     return state.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => const LoadingScreen(),
       error: (err, stack) => ErrorScreen(
         message: ErrorHandler.getErrorMessage(err),
         onRetry: () =>

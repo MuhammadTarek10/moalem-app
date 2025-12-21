@@ -26,7 +26,8 @@ class AppTheme {
         toolbarHeight: 40.h,
         titleTextStyle: TextStyle(
           fontSize: 24.sp,
-          color: AppColors.textPrimary,
+          color: AppColors.primary,
+          fontWeight: FontWeight.bold,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(

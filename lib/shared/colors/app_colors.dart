@@ -20,4 +20,16 @@ class AppColors {
   static const Color contentPreviewBg = Color(0xFFFFFFFF);
 
   static const Color whatsapp = Color(0xFF25D366);
+
+  // Classes Screen Colors
+  static const Color textMain = Color(0xFF1A1A1A);
+  static const Color textLight = Color(0xFFA09FA2);
+  static const Color primaryLight = Color(0xFFE0D2EA);
+  static const Color primaryLighter = Color(0xFFEDE9F1);
+  static const Color primaryLightest = Color(0xFFF5F3F7);
+  static const Color inactiveBorder = Color(0xFFE0E0E0);
+
+  // Gradient colors for classes screen background
+  static const Color gradientStart = Color(0xFFF2E4FF);
+  static const Color gradientEnd = Color(0xFFFFFFFF);
 }
