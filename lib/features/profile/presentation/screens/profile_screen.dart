@@ -7,10 +7,12 @@ import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/entities/user.dart';
+import 'package:moalem/core/utils/error_handler.dart';
 import 'package:moalem/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:moalem/features/profile/presentation/controllers/profile_controller.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
+import 'package:moalem/shared/screens/error_screen.dart';
 import 'package:moalem/shared/widgets/app_button.dart';
 import 'package:moalem/shared/widgets/profile_menu_button.dart';
 
@@ -55,22 +57,22 @@ class ProfileScreen extends ConsumerWidget {
                 ProfileMenuButton(
                   title: AppStrings.profileMenuProfile.tr(),
                   icon: AppAssets.icons.profileActive,
-                  onTap: () {},
+                  onTap: () => context.push(AppRoutes.profile),
                 ),
                 ProfileMenuButton(
                   title: AppStrings.profileMenuAdvancedSettings.tr(),
                   icon: AppAssets.icons.settings,
-                  onTap: () {},
+                  onTap: () => context.push(AppRoutes.advancedSettings),
                 ),
                 ProfileMenuButton(
                   title: AppStrings.profileMenuRateUs.tr(),
                   icon: AppAssets.icons.star,
-                  onTap: () {},
+                  onTap: () => context.push(AppRoutes.rateUs),
                 ),
                 ProfileMenuButton(
                   title: AppStrings.profileMenuContactUs.tr(),
                   icon: AppAssets.icons.callUs,
-                  onTap: () {},
+                  onTap: () => context.push(AppRoutes.contactUs),
                 ),
 
                 SizedBox(height: 32.h),
@@ -90,11 +92,10 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text(
-            'Error loading profile', // Should be localized
-            style: TextStyle(color: AppColors.error),
-          ),
+        error: (error, stack) => ErrorScreen(
+          isFullScreen: false,
+          message: ErrorHandler.getErrorMessage(error),
+          onRetry: () => ref.read(profileControllerProvider.notifier).getUser(),
         ),
       ),
     );

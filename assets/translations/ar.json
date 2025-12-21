@@ -65,5 +65,13 @@
   "profile_menu_advanced_settings": "الإعدادات المتقدمة",
   "profile_menu_rate_us": "قيمنا",
   "profile_menu_contact_us": "تواصل معنا",
-  "profile_menu_logout": "تسجيل الخروج"
+  "profile_menu_logout": "تسجيل الخروج",
+  "coming_soon_title": "قريباً",
+  "coming_soon_subtitle": "نعمل بجد لإحضار هذه الميزة لك. ترقبوا التحديثات!",
+  "coming_soon_progress": "جاري التطوير",
+  "error_title": "حدث خطأ!",
+  "error_message": "عذراً، حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+  "error_retry": "إعادة المحاولة",
+  "error_go_back": "العودة",
+  "loading_message": "جاري التحميل..."
 }

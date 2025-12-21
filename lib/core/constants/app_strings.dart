@@ -76,4 +76,18 @@ class AppStrings {
   static const String profileMenuRateUs = 'profile_menu_rate_us';
   static const String profileMenuContactUs = 'profile_menu_contact_us';
   static const String profileMenuLogout = 'profile_menu_logout';
+
+  // Coming Soon Screen
+  static const String comingSoonTitle = 'coming_soon_title';
+  static const String comingSoonSubtitle = 'coming_soon_subtitle';
+  static const String comingSoonProgress = 'coming_soon_progress';
+
+  // Error Screen
+  static const String errorTitle = 'error_title';
+  static const String errorMessage = 'error_message';
+  static const String errorRetry = 'error_retry';
+  static const String errorGoBack = 'error_go_back';
+
+  // Loading Screen
+  static const String loadingMessage = 'loading_message';
 }
