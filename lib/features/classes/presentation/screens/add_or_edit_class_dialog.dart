@@ -120,7 +120,6 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(height: 8.h),
 

@@ -11,4 +11,10 @@ class AppRoutes {
   static const String advancedSettings = '/advanced-settings';
   static const String rateUs = '/rate-us';
   static const String contactUs = '/contact-us';
+
+  // Classes Screen
+  static const String classes = '/classes';
+
+  /// Builds the path for class details with the given [id]
+  static String classDetailsPath(String id) => '/classes/$id';
 }

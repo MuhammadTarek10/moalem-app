@@ -112,5 +112,15 @@
   "semester_label": "الفصل الدراسى",
   "semester_hint": "اختر الفصل الدراسى الأول",
   "school_field_label": "المدرسة",
-  "school_field_hint": "اكتب اسم المدرسة ..."
+  "school_field_hint": "اكتب اسم المدرسة ...",
+  "no_students_title": "لا يوجد طلاب",
+  "no_students_subtitle": "قم بإضافة طلاب للبدء في إدارة فصلك الدراسي",
+  "add_student_manually": "إضافة طالب يدوياً",
+  "add_students_excel": "إرفاق ملف إكسيل",
+  "add_student_title": "إضافة طالب جديد",
+  "edit_student_title": "تعديل بيانات الطالب",
+  "student_name_label": "اسم الطالب",
+  "student_name_hint": "اسم الطالب ...",
+  "student_id_label": "الرقم التعريفى",
+  "student_id_hint": "الرقم ....."
 }

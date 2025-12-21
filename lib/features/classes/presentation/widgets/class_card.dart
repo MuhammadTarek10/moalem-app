@@ -1,10 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
+import 'package:moalem/shared/extensions/context.dart';
 
 class ClassCard extends StatelessWidget {
   final String id;
@@ -12,7 +11,8 @@ class ClassCard extends StatelessWidget {
   final String section;
   final int studentCount;
   final VoidCallback? onViewStudents;
-  final VoidCallback? onOptions;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const ClassCard({
     super.key,
@@ -21,7 +21,8 @@ class ClassCard extends StatelessWidget {
     required this.section,
     required this.studentCount,
     this.onViewStudents,
-    this.onOptions,
+    this.onEdit,
+    this.onDelete,
   });
 
   @override
@@ -59,20 +60,47 @@ class ClassCard extends StatelessWidget {
                   children: [
                     Text(
                       className,
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        fontSize: 18.sp,
+                      style: context.bodyMedium.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textMain,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: onOptions,
-                      child: SvgPicture.asset(
-                        AppAssets.icons.options,
-                        width: 20.w,
-                        height: 20.w,
-                      ),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          onEdit?.call();
+                        } else if (value == 'delete') {
+                          onDelete?.call();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit, size: 20),
+                              SizedBox(width: 8.w),
+                              Text(AppStrings.editButton.tr()),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.delete,
+                                size: 20,
+                                color: Colors.red,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                AppStrings.deleteButton.tr(),
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

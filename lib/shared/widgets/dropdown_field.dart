@@ -29,7 +29,6 @@ class DropdownField extends StatelessWidget {
         validator: validator,
         builder: (FormFieldState<String> state) {
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
                 onTap: () {

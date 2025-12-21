@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/features/activation/presentation/screens/activation_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/auth_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/signin_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/signup_screen.dart';
+import 'package:moalem/features/classes/presentation/screens/class_details_screen.dart';
+import 'package:moalem/features/classes/presentation/screens/classes_screen.dart';
 import 'package:moalem/features/home/presentation/pages/main_navigation_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/advanced_settings_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/contact_us_screen.dart';
@@ -18,10 +19,10 @@ final router = GoRouter(
   errorBuilder: (context, state) => ErrorScreen(
     message: state.error?.message,
     onGoBack: () {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (context.canPop()) {
+        context.pop();
       } else {
-        GoRouter.of(context).go(AppRoutes.splash);
+        context.go(AppRoutes.splash);
       }
     },
   ),
@@ -65,6 +66,17 @@ final router = GoRouter(
     GoRoute(
       path: AppRoutes.contactUs,
       builder: (context, state) => const ContactUsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.classes,
+      builder: (context, state) => const ClassesScreen(),
+      routes: [
+        GoRoute(
+          path: ':id',
+          builder: (context, state) =>
+              ClassDetailsScreen(id: state.pathParameters['id']!),
+        ),
+      ],
     ),
   ],
 );

@@ -1,4 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+
+extension NavigatorExtension on BuildContext {
+  void pushNewScreen(Widget screen) {
+    PersistentNavBarNavigator.pushNewScreen(
+      this,
+      screen: screen,
+      withNavBar: true,
+    );
+  }
+}
 
 extension TextThemeExtension on BuildContext {
   TextStyle get headlineLarge => Theme.of(this).textTheme.headlineLarge!;

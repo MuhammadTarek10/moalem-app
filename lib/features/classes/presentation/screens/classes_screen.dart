@@ -2,17 +2,19 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
 import 'package:moalem/features/classes/presentation/models/add_class_form_data.dart';
 import 'package:moalem/features/classes/presentation/screens/add_or_edit_class_dialog.dart';
+import 'package:moalem/features/classes/presentation/screens/class_details_screen.dart';
 import 'package:moalem/features/classes/presentation/widgets/class_card.dart';
 import 'package:moalem/features/classes/presentation/widgets/classes_empty_state.dart';
 import 'package:moalem/features/classes/presentation/widgets/evaluation_aspect_item.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
+import 'package:moalem/shared/extensions/context.dart';
+import 'package:moalem/shared/widgets/app_floating_action_button.dart';
 
 class ClassesScreen extends ConsumerWidget {
   const ClassesScreen({super.key});
@@ -104,17 +106,12 @@ class ClassesScreen extends ConsumerWidget {
       ),
       floatingActionButton: classesState.maybeWhen(
         data: (classes) => classes.isNotEmpty
-            ? Padding(
-                padding: EdgeInsets.only(left: 30.w),
-                child: Align(
-                  alignment: Alignment.bottomLeft,
-                  child: _buildFloatingActionButton(context, ref),
-                ),
+            ? AppFloatingActionButton(
+                onPressed: () => _showAddClassDialog(context, ref),
               )
             : null,
         orElse: () => null,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
     );
   }
 
@@ -224,83 +221,14 @@ class ClassesScreen extends ConsumerWidget {
               className: classEntity.name,
               section: classEntity.grade,
               studentCount: classEntity.studentsCount,
-              onViewStudents: () {},
-              onOptions: () => _showClassOptions(context, ref, classEntity),
+              onViewStudents: () =>
+                  context.pushNewScreen(ClassDetailsScreen(id: classEntity.id)),
+              onEdit: () => _showEditClassDialog(context, ref, classEntity),
+              onDelete: () => _deleteClass(ref, classEntity.id),
             ),
           ),
         ),
       ],
-    );
-  }
-
-  void _showClassOptions(
-    BuildContext context,
-    WidgetRef ref,
-    ClassEntity classEntity,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: Text(AppStrings.editButton.tr()),
-              onTap: () {
-                Navigator.pop(context);
-                _showEditClassDialog(context, ref, classEntity);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: Text(
-                AppStrings.deleteButton.tr(),
-                style: const TextStyle(color: Colors.red),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _deleteClass(ref, classEntity.id);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFloatingActionButton(BuildContext context, WidgetRef ref) {
-    return Container(
-      width: 62.w,
-      height: 62.w,
-      decoration: BoxDecoration(
-        color: AppColors.secondary,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 16.6,
-            offset: const Offset(0, 11),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 6.6,
-            offset: const Offset(0, 4.4),
-          ),
-        ],
-      ),
-      child: FloatingActionButton(
-        onPressed: () => _showAddClassDialog(context, ref),
-        backgroundColor: AppColors.secondary,
-        elevation: 0,
-        shape: const CircleBorder(),
-        child: SvgPicture.asset(
-          AppAssets.icons.add,
-          width: 24.w,
-          height: 24.w,
-          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-        ),
-      ),
     );
   }
 }

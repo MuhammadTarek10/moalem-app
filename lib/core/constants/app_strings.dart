@@ -121,11 +121,25 @@ class AppStrings {
   static const String homeworkBook = 'homework_book';
   static const String classroomPerformance = 'classroom_performance';
 
-  // Empty State
+  // Classes Empty State
   static const String noClassesTitle = 'no_classes_title';
   static const String noClassesSubtitle = 'no_classes_subtitle';
   static const String addClassManually = 'add_class_manually';
   static const String attachExcelFile = 'attach_excel_file';
+
+  // Students Empty State
+  static const String noStudentsTitle = 'no_students_title';
+  static const String noStudentsSubtitle = 'no_students_subtitle';
+  static const String addStudentManually = 'add_student_manually';
+  static const String addStudentsExcel = 'add_students_excel';
+
+  // Add/Edit Student Form
+  static const String addStudentTitle = 'add_student_title';
+  static const String editStudentTitle = 'edit_student_title';
+  static const String studentNameLabel = 'student_name_label';
+  static const String studentNameHint = 'student_name_hint';
+  static const String studentIdLabel = 'student_id_label';
+  static const String studentIdHint = 'student_id_hint';
 
   // Add/Edit Class Form
   static const String addClassTitle = 'add_class_title';

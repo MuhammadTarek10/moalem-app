@@ -70,7 +70,6 @@ class _ChipInputFieldState extends State<ChipInputField> {
                         Expanded(
                           child: TextField(
                             controller: _textController,
-                            textAlign: TextAlign.start,
                             textDirection: TextDirection.rtl,
                             decoration: InputDecoration(
                               hintText: widget.hint,
