@@ -12,6 +12,7 @@ import 'package:moalem/features/profile/presentation/screens/advanced_settings_s
 import 'package:moalem/features/profile/presentation/screens/contact_us_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/profile_details_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/rate_us_screen.dart';
+import 'package:moalem/features/reports/presentation/screens/reports_screen.dart';
 import 'package:moalem/features/splash/presentation/pages/splash_screen.dart';
 import 'package:moalem/features/students/presentation/screens/student_details_screen.dart';
 import 'package:moalem/shared/screens/error_screen.dart';
@@ -90,6 +91,13 @@ final router = GoRouter(
         ),
       ],
       builder: (context, state) => const SizedBox.shrink(),
+    ),
+    GoRoute(
+      path: AppRoutes.reports,
+      builder: (context, state) {
+        final classId = state.uri.queryParameters['classId'];
+        return ReportsScreen(classId: classId);
+      },
     ),
   ],
 );

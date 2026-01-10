@@ -23,4 +23,7 @@ class AppRoutes {
 
   /// Builds the path for student details with the given [id]
   static String studentDetailsPath(String id) => '/students/$id';
+
+  // Reports Screen
+  static const String reports = '/reports';
 }

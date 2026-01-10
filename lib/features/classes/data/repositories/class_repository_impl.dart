@@ -91,6 +91,13 @@ class ClassRepositoryImpl implements ClassRepository {
   Future<List<EvaluationEntity>> getEvaluations() async {
     final db = await _databaseService.database;
     final result = await db.query(_evaluationsTable);
-    return result.map((map) => EvaluationEntity.fromMap(map)).toList();
+    return result
+        .map(
+          (map) => EvaluationEntity.fromMap({
+            ...map,
+            'is_binary': (map['is_binary'] as int) == 1,
+          }),
+        )
+        .toList();
   }
 }

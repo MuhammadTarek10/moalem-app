@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_enums.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/utils/error_handler.dart';
@@ -9,7 +10,6 @@ import 'package:moalem/features/students/presentation/controllers/student_detail
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/screens/error_screen.dart';
-import 'package:moalem/shared/screens/loading_screen.dart';
 
 class StudentDetailsScreen extends ConsumerWidget {
   final String studentId;
@@ -23,10 +23,9 @@ class StudentDetailsScreen extends ConsumerWidget {
       studentDetailsControllerProvider(studentId).notifier,
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: state.data.when(
-        loading: () => const LoadingScreen(),
+    return Container(
+      child: state.data.when(
+        loading: () => const SizedBox.shrink(),
         error: (error, _) => ErrorScreen(
           message: ErrorHandler.getErrorMessage(error),
           onRetry: () => controller.loadStudentDetails(),
@@ -36,70 +35,68 @@ class StudentDetailsScreen extends ConsumerWidget {
             return Center(child: Text(AppStrings.errorMessage.tr()));
           }
 
-          return SafeArea(
-            child: Column(
-              children: [
-                // Header
-                _buildHeader(
-                  context,
-                  details.student.name,
-                  details.student.number,
-                  details.classInfo.name,
-                ),
+          return Scaffold(
+            appBar: AppBar(title: Text(details.classInfo.name)),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  // Header
+                  _buildHeader(
+                    context,
+                    details.student.name,
+                    details.student.number,
+                    details.classInfo.name,
+                  ),
 
-                // Filter Row
-                _buildFilterRow(context, state, controller),
+                  // Filter Row
+                  _buildFilterRow(context, state, controller),
 
-                // Main Content - Scrollable
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    child: Column(
-                      children: [
-                        SizedBox(height: 16.h),
+                  // Main Content - Scrollable
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Column(
+                        children: [
+                          SizedBox(height: 16.h),
 
-                        // Circular Progress
-                        _buildProgressIndicator(
-                          context,
-                          controller.percentage.round(),
-                        ),
+                          // Circular Progress
+                          _buildProgressIndicator(
+                            context,
+                            controller.percentage.round(),
+                          ),
 
-                        SizedBox(height: 24.h),
+                          SizedBox(height: 24.h),
 
-                        // Score Items
-                        ...details.evaluations.map((evaluation) {
-                          return Padding(
-                            padding: EdgeInsets.only(bottom: 12.h),
-                            child: _buildScoreItem(
-                              context,
-                              _getEvaluationDisplayName(evaluation.name),
-                              evaluation.maxScore,
-                              controller.getDisplayScore(evaluation.id),
-                              () => controller.incrementScore(
-                                evaluation.id,
+                          // Score Items
+                          ...details.evaluations.map((evaluation) {
+                            return Padding(
+                              padding: EdgeInsets.only(bottom: 12.h),
+                              child: _buildScoreItem(
+                                context,
+                                _getEvaluationDisplayName(evaluation.name),
                                 evaluation.maxScore,
+                                controller.getDisplayScore(evaluation.id),
+                                () => controller.incrementScore(
+                                  evaluation.id,
+                                  evaluation.maxScore,
+                                ),
+                                () => controller.decrementScore(evaluation.id),
+                                evaluation.id,
+                                controller,
                               ),
-                              () => controller.decrementScore(evaluation.id),
-                              evaluation.id,
-                              controller,
-                            ),
-                          );
-                        }),
+                            );
+                          }),
 
-                        SizedBox(height: 16.h),
-
-                        // Attendance Section
-                        _buildAttendanceSection(context, state, controller),
-
-                        SizedBox(height: 24.h),
-                      ],
+                          SizedBox(height: 16.h),
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                // Footer
-                _buildFooter(context, controller, state),
-              ],
+                  // Footer
+                  _buildFooter(context, controller, state),
+                ],
+              ),
             ),
           );
         },
@@ -178,20 +175,20 @@ class StudentDetailsScreen extends ConsumerWidget {
           SizedBox(width: 12.w),
           // Period Type Dropdown
           Expanded(
-            child: _buildDropdown(
-              context,
-              _getPeriodTypeLabel(state.periodType),
-              PeriodType.values
-                  .map(
-                    (type) => DropdownMenuItem(
-                      value: type,
-                      child: Text(_getPeriodTypeLabel(type)),
-                    ),
-                  )
-                  .toList(),
-              (value) {
-                if (value != null) controller.changePeriodType(value);
-              },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLighter,
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Text(
+                _getPeriodTypeLabel(state.periodType),
+                style: context.bodyMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           SizedBox(width: 12.w),
@@ -248,6 +245,11 @@ class StudentDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildProgressIndicator(BuildContext context, int percentage) {
+    final progressColor = percentage < 50 ? AppColors.error : AppColors.primary;
+    final backgroundColor = percentage < 50
+        ? AppColors.error.withValues(alpha: 0.2)
+        : AppColors.primaryLighter;
+
     return SizedBox(
       width: 180.w,
       height: 180.w,
@@ -260,10 +262,8 @@ class StudentDetailsScreen extends ConsumerWidget {
             child: CircularProgressIndicator(
               value: percentage / 100,
               strokeWidth: 12.w,
-              backgroundColor: AppColors.primaryLighter,
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                AppColors.primary,
-              ),
+              backgroundColor: backgroundColor,
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
               strokeCap: StrokeCap.round,
             ),
           ),
@@ -271,7 +271,7 @@ class StudentDetailsScreen extends ConsumerWidget {
             '$percentage%',
             style: context.headlineMedium.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: progressColor,
             ),
           ),
         ],
@@ -387,132 +387,6 @@ class StudentDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAttendanceSection(
-    BuildContext context,
-    StudentDetailsState state,
-    StudentDetailsController controller,
-  ) {
-    final details = state.data.value;
-    final currentStatus =
-        state.pendingAttendanceStatus ?? details?.attendanceStatus;
-
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // Notes button
-              GestureDetector(
-                onTap: () => _showNotesDialog(context, controller),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLightest,
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(color: AppColors.inactiveBorder),
-                  ),
-                  child: Text(
-                    AppStrings.notes.tr(),
-                    style: context.bodySmall.copyWith(
-                      color: AppColors.textLight,
-                    ),
-                  ),
-                ),
-              ),
-              const Spacer(),
-              // Attendance radio buttons
-              _buildAttendanceRadio(
-                context,
-                AppStrings.excused.tr(),
-                currentStatus == AttendanceStatus.excused,
-                () =>
-                    controller.updateAttendanceStatus(AttendanceStatus.excused),
-              ),
-              SizedBox(width: 12.w),
-              _buildAttendanceRadio(
-                context,
-                AppStrings.absent.tr(),
-                currentStatus == AttendanceStatus.absent,
-                () =>
-                    controller.updateAttendanceStatus(AttendanceStatus.absent),
-              ),
-              SizedBox(width: 12.w),
-              _buildAttendanceRadio(
-                context,
-                AppStrings.present.tr(),
-                currentStatus == AttendanceStatus.present,
-                () =>
-                    controller.updateAttendanceStatus(AttendanceStatus.present),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAttendanceRadio(
-    BuildContext context,
-    String label,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: context.bodySmall.copyWith(
-              color: isSelected ? AppColors.primary : AppColors.textLight,
-            ),
-          ),
-          SizedBox(width: 4.w),
-          Container(
-            width: 20.w,
-            height: 20.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected
-                    ? AppColors.primary
-                    : AppColors.inactiveBorder,
-                width: 2,
-              ),
-            ),
-            child: isSelected
-                ? Center(
-                    child: Container(
-                      width: 10.w,
-                      height: 10.w,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  )
-                : null,
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFooter(
     BuildContext context,
     StudentDetailsController controller,
@@ -573,17 +447,10 @@ class StudentDetailsScreen extends ConsumerWidget {
                   : () async {
                       final success = await controller.saveChanges();
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              success
-                                  ? AppStrings.savedSuccessfully.tr()
-                                  : AppStrings.saveFailed.tr(),
-                            ),
-                            backgroundColor: success
-                                ? AppColors.primary
-                                : AppColors.error,
-                          ),
+                        context.showSuccessSnackBar(
+                          success
+                              ? AppStrings.savedSuccessfully.tr()
+                              : AppStrings.saveFailed.tr(),
                         );
                       }
                     },
@@ -612,40 +479,6 @@ class StudentDetailsScreen extends ConsumerWidget {
                       ),
                     ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showNotesDialog(
-    BuildContext context,
-    StudentDetailsController controller,
-  ) {
-    final textController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppStrings.notes.tr()),
-        content: TextField(
-          controller: textController,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: AppStrings.notes.tr(),
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppStrings.cancelButton.tr()),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              controller.updateNotes(textController.text);
-              Navigator.pop(context);
-            },
-            child: Text(AppStrings.saveButton.tr()),
           ),
         ],
       ),
@@ -693,13 +526,10 @@ class StudentDetailsScreen extends ConsumerWidget {
               final score = int.tryParse(textController.text);
               if (score != null && score >= 0 && score <= maxScore) {
                 controller.updateScore(evaluationId, score);
-                Navigator.pop(context);
+                context.pop();
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('يجب أن تكون الدرجة بين 0 و $maxScore'),
-                    backgroundColor: AppColors.error,
-                  ),
+                context.showErrorSnackBar(
+                  'يجب أن تكون الدرجة بين 0 و $maxScore',
                 );
               }
             },

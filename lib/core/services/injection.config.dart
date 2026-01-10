@@ -52,6 +52,8 @@ import '../../features/classes/domain/usecases/get_evaluations_usecase.dart'
     as _i859;
 import '../../features/home/domain/usecases/fetch_and_store_user_usecase.dart'
     as _i82;
+import '../../features/reports/domain/usecases/get_class_report_usecase.dart'
+    as _i564;
 import '../../features/students/data/repositories/student_repository_impl.dart'
     as _i865;
 import '../../features/students/domain/repositories/student_repository.dart'
@@ -139,6 +141,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i203.UpdateStudentScoreUseCase>(
       () => _i203.UpdateStudentScoreUseCase(gh<_i679.StudentRepository>()),
+    );
+    gh.factory<_i564.GetClassReportUseCase>(
+      () => _i564.GetClassReportUseCase(
+        gh<_i679.StudentRepository>(),
+        gh<_i367.ClassRepository>(),
+      ),
     );
     gh.singleton<_i1009.AuthInterceptor>(
       () => _i1009.AuthInterceptor(gh<_i1018.SecureStorageService>()),

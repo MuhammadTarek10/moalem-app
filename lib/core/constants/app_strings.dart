@@ -183,4 +183,29 @@ class AppStrings {
   static const String saveFailed = 'save_failed';
   static const String firstMonthExam = 'first_month_exam';
   static const String secondMonthExam = 'second_month_exam';
+
+  // Reports Screen
+  static const String classReports = 'class_reports';
+  static const String noData = 'no_data';
+  static const String select = 'select';
+  static const String studentNumberShort = 'student_number_short';
+  static const String studentNameShort = 'student_name_short';
+  static const String totalScoreShort = 'total_score_short';
+  static const String selectedCount = 'selected_count';
+  static const String exportExcel = 'export_excel';
+  static const String exportPdf = 'export_pdf';
+
+  // Evaluation Short Names (for table headers)
+  static const String classroomPerformanceShort = 'classroom_performance_short';
+  static const String homeworkBookShort = 'homework_book_short';
+  static const String activityBookShort = 'activity_book_short';
+  static const String weeklyReviewShort = 'weekly_review_short';
+  static const String oralTasksShort = 'oral_tasks_short';
+  static const String skillTasksShort = 'skill_tasks_short';
+  static const String skillsPerformanceShort = 'skills_performance_short';
+  static const String monthsExamAverageShort = 'months_exam_average_short';
+  static const String attendanceAndDiligenceShort =
+      'attendance_and_diligence_short';
+  static const String firstMonthExamShort = 'first_month_exam_short';
+  static const String secondMonthExamShort = 'second_month_exam_short';
 }
