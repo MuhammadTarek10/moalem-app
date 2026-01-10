@@ -18,6 +18,9 @@ class AppRoutes {
   /// Builds the path for class details with the given [id]
   static String classDetailsPath(String id) => '/classes/$id';
 
+  /// Builds the path for bulk score entry with the given class [id]
+  static String bulkScoreEntryPath(String id) => '/classes/$id/bulk-scores';
+
   // Students Screen
   static const String studentDetails = '/students';
 

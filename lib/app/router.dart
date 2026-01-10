@@ -14,6 +14,7 @@ import 'package:moalem/features/profile/presentation/screens/profile_details_scr
 import 'package:moalem/features/profile/presentation/screens/rate_us_screen.dart';
 import 'package:moalem/features/reports/presentation/screens/reports_screen.dart';
 import 'package:moalem/features/splash/presentation/pages/splash_screen.dart';
+import 'package:moalem/features/students/presentation/screens/bulk_score_entry_screen.dart';
 import 'package:moalem/features/students/presentation/screens/student_details_screen.dart';
 import 'package:moalem/shared/screens/error_screen.dart';
 
@@ -78,6 +79,11 @@ final router = GoRouter(
           path: ':id',
           builder: (context, state) =>
               ClassDetailsScreen(id: state.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: ':id/bulk-scores',
+          builder: (context, state) =>
+              BulkScoreEntryScreen(classId: state.pathParameters['id']!),
         ),
       ],
     ),

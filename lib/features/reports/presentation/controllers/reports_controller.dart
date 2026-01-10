@@ -164,8 +164,10 @@ class ReportsController extends StateNotifier<ReportsState> {
   }
 
   /// Export selected students to Excel
-  Future<void> exportToExcel() async {}
+  Future<void> exportToExcel() async {
+  }
 
   /// Export selected students to PDF
-  Future<void> exportToPdf() async {}
+  Future<void> exportToPdf() async {
+  }
 }

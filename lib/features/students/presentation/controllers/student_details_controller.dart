@@ -55,12 +55,11 @@ class StudentDetailsState {
       pendingNotes != null;
 }
 
-final studentDetailsControllerProvider =
-    StateNotifierProvider.family<
-      StudentDetailsController,
-      StudentDetailsState,
-      String
-    >((ref, studentId) {
+final studentDetailsControllerProvider = StateNotifierProvider.autoDispose
+    .family<StudentDetailsController, StudentDetailsState, String>((
+      ref,
+      studentId,
+    ) {
       return StudentDetailsController(
         getIt<GetStudentDetailsWithScoresUseCase>(),
         getIt<UpdateStudentScoreUseCase>(),

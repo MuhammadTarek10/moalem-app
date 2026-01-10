@@ -170,5 +170,17 @@
   "months_exam_average_short": "متوسط\nالامتحانات",
   "attendance_and_diligence_short": "الحضور و\nالمواظبة",
   "first_month_exam_short": "امتحان\nالشهر الأول",
-  "second_month_exam_short": "امتحان\nالشهر الثاني"
+  "second_month_exam_short": "امتحان\nالشهر الثاني",
+  "bulk_score_entry": "إضافة الدرجات",
+  "add_scores": "إضافة درجات",
+  "select_evaluation": "اختر نوع التقييم",
+  "select_period": "اختر الفترة",
+  "select_all": "تحديد الكل",
+  "deselect_all": "إلغاء التحديد",
+  "max_score": "الدرجة الكاملة",
+  "confirm_save_scores": "تأكيد حفظ الدرجات",
+  "save_scores_message": "هل تريد حفظ الدرجات لـ {} طالب؟",
+  "scores_updated": "تم تحديث الدرجات بنجاح",
+  "search_students": "ابحث عن طالب ..",
+  "view_reports": "عرض التقارير"
 }

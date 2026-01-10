@@ -195,6 +195,19 @@ class AppStrings {
   static const String exportExcel = 'export_excel';
   static const String exportPdf = 'export_pdf';
 
+  // Bulk Score Entry Screen
+  static const String bulkScoreEntry = 'bulk_score_entry';
+  static const String addScores = 'add_scores';
+  static const String selectEvaluation = 'select_evaluation';
+  static const String selectPeriod = 'select_period';
+  static const String selectAll = 'select_all';
+  static const String deselectAll = 'deselect_all';
+  static const String maxScore = 'max_score';
+  static const String confirmSaveScores = 'confirm_save_scores';
+  static const String saveScoresMessage = 'save_scores_message';
+  static const String scoresUpdated = 'scores_updated';
+  static const String searchStudents = 'search_students';
+
   // Evaluation Short Names (for table headers)
   static const String classroomPerformanceShort = 'classroom_performance_short';
   static const String homeworkBookShort = 'homework_book_short';
@@ -208,4 +221,7 @@ class AppStrings {
       'attendance_and_diligence_short';
   static const String firstMonthExamShort = 'first_month_exam_short';
   static const String secondMonthExamShort = 'second_month_exam_short';
+
+  // Class Details Screen
+  static const String viewReports = 'view_reports';
 }

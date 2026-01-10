@@ -11,6 +11,7 @@ class ClassCard extends StatelessWidget {
   final String section;
   final int studentCount;
   final VoidCallback? onViewStudents;
+  final VoidCallback? onAddScores;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -21,6 +22,7 @@ class ClassCard extends StatelessWidget {
     required this.section,
     required this.studentCount,
     this.onViewStudents,
+    this.onAddScores,
     this.onEdit,
     this.onDelete,
   });
@@ -125,37 +127,84 @@ class ClassCard extends StatelessWidget {
               ],
             ),
           ),
-          // Bottom section - View students button
-          GestureDetector(
-            onTap: onViewStudents,
-            child: Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLightest,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(8.r),
-                  bottomRight: Radius.circular(8.r),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppStrings.viewStudents.tr(),
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      color: AppColors.primary,
-                      letterSpacing: 0.5,
+          // Bottom section - Action buttons
+          Row(
+            children: [
+              // View Students button
+              Expanded(
+                child: GestureDetector(
+                  onTap: onViewStudents,
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLightest,
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(8.r),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people,
+                          color: AppColors.primary,
+                          size: 20.w,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          AppStrings.viewStudents.tr(),
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: AppColors.primary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: AppColors.primary,
-                    size: 20.w,
-                  ),
-                ],
+                ),
               ),
-            ),
+              // Divider
+              Container(
+                width: 1,
+                height: 52.h,
+                color: AppColors.primary.withValues(alpha: 0.2),
+              ),
+              // Add Scores button
+              Expanded(
+                child: GestureDetector(
+                  onTap: onAddScores,
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLightest,
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(8.r),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.edit,
+                          color: AppColors.primary,
+                          size: 20.w,
+                        ),
+                        SizedBox(width: 8.w),
+                        Text(
+                          AppStrings.addScores.tr(),
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            color: AppColors.primary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

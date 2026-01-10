@@ -102,7 +102,7 @@ class _ClassDetailsScreenState extends ConsumerState<ClassDetailsScreen> {
             onPressed: () {
               context.push('${AppRoutes.reports}?classId=${widget.id}');
             },
-            tooltip: 'عرض التقارير',
+            tooltip: AppStrings.viewReports.tr(),
           ),
         ],
       ),

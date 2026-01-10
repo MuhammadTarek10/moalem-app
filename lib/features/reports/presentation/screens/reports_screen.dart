@@ -210,7 +210,7 @@ class ReportsScreen extends ConsumerWidget {
       scrollDirection: Axis.horizontal,
       child: SingleChildScrollView(
         child: DataTable(
-          headingRowColor: WidgetStateProperty.all(AppColors.secondary),
+          headingRowColor: WidgetStateProperty.all(AppColors.textSecondary),
           headingTextStyle: context.bodyMedium.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,

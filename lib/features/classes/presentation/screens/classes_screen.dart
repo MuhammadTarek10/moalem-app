@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
@@ -11,7 +10,7 @@ import 'package:moalem/features/classes/presentation/screens/add_or_edit_class_d
 import 'package:moalem/features/classes/presentation/screens/class_details_screen.dart';
 import 'package:moalem/features/classes/presentation/widgets/class_card.dart';
 import 'package:moalem/features/classes/presentation/widgets/classes_empty_state.dart';
-import 'package:moalem/features/classes/presentation/widgets/evaluation_aspect_item.dart';
+import 'package:moalem/features/students/presentation/screens/bulk_score_entry_screen.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/widgets/app_floating_action_button.dart';
@@ -90,12 +89,6 @@ class ClassesScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 SizedBox(height: 16.h),
-                // Evaluation Aspects Section
-                _buildEvaluationAspectsSection(),
-                SizedBox(height: 16.h),
-                // Divider
-                Container(height: 1, color: AppColors.inactiveBorder),
-                SizedBox(height: 24.h),
                 // Classes List Section
                 _buildClassesListSection(context, ref, classes),
                 SizedBox(height: 100.h), // Space for FAB
@@ -112,85 +105,6 @@ class ClassesScreen extends ConsumerWidget {
             : null,
         orElse: () => null,
       ),
-    );
-  }
-
-  Widget _buildEvaluationAspectsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // Header
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              AppStrings.evaluationAspects.tr(),
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textMain,
-              ),
-            ),
-            GestureDetector(
-              onTap: () {},
-              child: Text(
-                AppStrings.viewAll.tr(),
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        // Evaluation aspects horizontal list
-        SizedBox(
-          height: 100.h,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              EvaluationAspectItem(
-                icon: AppAssets.icons.performanceMarks,
-                label: AppStrings.classroomPerformance.tr(),
-                onTap: () {},
-              ),
-              EvaluationAspectItem(
-                icon: AppAssets.icons.homeworkMarks,
-                label: AppStrings.homeworkBook.tr(),
-                onTap: () {},
-              ),
-              EvaluationAspectItem(
-                icon: AppAssets.icons.activitiesMarks,
-                label: AppStrings.activityBook.tr(),
-                onTap: () {},
-              ),
-              EvaluationAspectItem(
-                icon: AppAssets.icons.weekMarks,
-                label: AppStrings.weeklyReview.tr(),
-                onTap: () {},
-              ),
-              EvaluationAspectItem(
-                icon: AppAssets.icons.oralMarks,
-                label: AppStrings.oralTasks.tr(),
-                onTap: () {},
-              ),
-              EvaluationAspectItem(
-                icon: AppAssets.icons.physicalMarks,
-                label: AppStrings.skillTasks.tr(),
-                onTap: () {},
-              ),
-              EvaluationAspectItem(
-                icon: AppAssets.icons.attendanceMarks,
-                label: AppStrings.attendanceAndDiligence.tr(),
-                onTap: () {},
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -223,6 +137,9 @@ class ClassesScreen extends ConsumerWidget {
               studentCount: classEntity.studentsCount,
               onViewStudents: () =>
                   context.pushNewScreen(ClassDetailsScreen(id: classEntity.id)),
+              onAddScores: () => context.pushNewScreen(
+                BulkScoreEntryScreen(classId: classEntity.id),
+              ),
               onEdit: () => _showEditClassDialog(context, ref, classEntity),
               onDelete: () => _deleteClass(ref, classEntity.id),
             ),
