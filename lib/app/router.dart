@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/features/activation/presentation/screens/activation_screen.dart';
@@ -12,6 +13,7 @@ import 'package:moalem/features/profile/presentation/screens/contact_us_screen.d
 import 'package:moalem/features/profile/presentation/screens/profile_details_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/rate_us_screen.dart';
 import 'package:moalem/features/splash/presentation/pages/splash_screen.dart';
+import 'package:moalem/features/students/presentation/screens/student_details_screen.dart';
 import 'package:moalem/shared/screens/error_screen.dart';
 
 final router = GoRouter(
@@ -77,6 +79,17 @@ final router = GoRouter(
               ClassDetailsScreen(id: state.pathParameters['id']!),
         ),
       ],
+    ),
+    GoRoute(
+      path: AppRoutes.studentDetails,
+      routes: [
+        GoRoute(
+          path: ':id',
+          builder: (context, state) =>
+              StudentDetailsScreen(studentId: state.pathParameters['id']!),
+        ),
+      ],
+      builder: (context, state) => const SizedBox.shrink(),
     ),
   ],
 );

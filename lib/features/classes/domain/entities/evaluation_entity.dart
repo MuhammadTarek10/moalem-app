@@ -1,75 +1,60 @@
-class StudentEntity {
+class EvaluationEntity {
   final String id;
-  final String classId;
   final String name;
-  final int number;
-  final String qrCode;
-  final Map<String, int>? scores;
+  final bool isBinary;
+  final int maxScore;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
 
-  const StudentEntity({
+  EvaluationEntity({
     required this.id,
-    required this.classId,
     required this.name,
-    required this.number,
-    required this.qrCode,
-    this.scores,
+    required this.isBinary,
+    required this.maxScore,
     required this.createdAt,
     this.updatedAt,
     this.deletedAt,
   });
 
-  StudentEntity copyWith({
+  EvaluationEntity copyWith({
     String? id,
-    String? classId,
     String? name,
-    int? number,
-    String? qrCode,
-    Map<String, int>? scores,
+    bool? isBinary,
+    int? maxScore,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? deletedAt,
   }) {
-    return StudentEntity(
+    return EvaluationEntity(
       id: id ?? this.id,
-      classId: classId ?? this.classId,
       name: name ?? this.name,
-      number: number ?? this.number,
-      qrCode: qrCode ?? this.qrCode,
-      scores: scores ?? this.scores,
+      isBinary: isBinary ?? this.isBinary,
+      maxScore: maxScore ?? this.maxScore,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
-  /// Converts to map for database insertion
-  /// Note: scores are stored in a separate students_scores table
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'class_id': classId,
       'name': name,
-      'number': number.toString(),
-      'qr_code': qrCode,
+      'is_binary': isBinary,
+      'max_score': maxScore,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'deleted_at': deletedAt?.toIso8601String(),
     };
   }
 
-  /// Creates entity from database map
-  /// Note: scores are loaded separately from students_scores table
-  factory StudentEntity.fromMap(Map<String, dynamic> map) {
-    return StudentEntity(
+  factory EvaluationEntity.fromMap(Map<String, dynamic> map) {
+    return EvaluationEntity(
       id: map['id'] as String,
-      classId: map['class_id'] as String,
       name: map['name'] as String,
-      number: int.parse(map['number'] as String),
-      qrCode: map['qr_code'] as String,
-      scores: null, // Scores are stored in separate students_scores table
+      isBinary: map['is_binary'] as bool,
+      maxScore: map['max_score'] as int,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'] as String)
@@ -83,7 +68,7 @@ class StudentEntity {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is StudentEntity && other.id == id;
+    return other is EvaluationEntity && other.id == id;
   }
 
   @override

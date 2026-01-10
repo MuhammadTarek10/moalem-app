@@ -12,6 +12,7 @@ _SignupRequest _$SignupRequestFromJson(
   email: json['email'] as String,
   password: json['password'] as String,
   name: json['name'] as String,
+  groupName: json['group_name'] as String,
   subjects: (json['subjects'] as List<dynamic>)
       .map((e) => e as String)
       .toList(),
@@ -27,6 +28,7 @@ Map<String, dynamic> _$SignupRequestToJson(_SignupRequest instance) =>
       'email': instance.email,
       'password': instance.password,
       'name': instance.name,
+      'group_name': instance.groupName,
       'subjects': instance.subjects,
       'governorate': instance.governorate,
       'educational_administration': instance.educationalAdministration,

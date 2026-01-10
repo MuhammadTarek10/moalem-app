@@ -48,6 +48,8 @@ import '../../features/classes/domain/usecases/get_class_by_id_usecase.dart'
     as _i526;
 import '../../features/classes/domain/usecases/get_classes_usecase.dart'
     as _i1015;
+import '../../features/classes/domain/usecases/get_evaluations_usecase.dart'
+    as _i859;
 import '../../features/home/domain/usecases/fetch_and_store_user_usecase.dart'
     as _i82;
 import '../../features/students/data/repositories/student_repository_impl.dart'
@@ -60,8 +62,14 @@ import '../../features/students/domain/usecases/delete_student_usecase.dart'
     as _i965;
 import '../../features/students/domain/usecases/edit_student_usecase.dart'
     as _i958;
+import '../../features/students/domain/usecases/get_student_by_id_usecase.dart'
+    as _i925;
+import '../../features/students/domain/usecases/get_student_details_with_scores_usecase.dart'
+    as _i982;
 import '../../features/students/domain/usecases/get_students_usecase.dart'
     as _i623;
+import '../../features/students/domain/usecases/update_student_score_usecase.dart'
+    as _i203;
 import 'api_service.dart' as _i738;
 import 'auth_interceptor.dart' as _i1009;
 import 'database_service.dart' as _i748;
@@ -106,6 +114,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1015.GetClassesUseCase>(
       () => _i1015.GetClassesUseCase(gh<_i367.ClassRepository>()),
     );
+    gh.factory<_i859.GetEvaluationsUseCase>(
+      () => _i859.GetEvaluationsUseCase(gh<_i367.ClassRepository>()),
+    );
     gh.factory<_i891.AddStudentUseCase>(
       () => _i891.AddStudentUseCase(gh<_i679.StudentRepository>()),
     );
@@ -115,8 +126,19 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i958.EditStudentUseCase>(
       () => _i958.EditStudentUseCase(gh<_i679.StudentRepository>()),
     );
+    gh.factory<_i925.GetStudentByIdUseCase>(
+      () => _i925.GetStudentByIdUseCase(gh<_i679.StudentRepository>()),
+    );
+    gh.factory<_i982.GetStudentDetailsWithScoresUseCase>(
+      () => _i982.GetStudentDetailsWithScoresUseCase(
+        gh<_i679.StudentRepository>(),
+      ),
+    );
     gh.factory<_i623.GetStudentsUseCase>(
       () => _i623.GetStudentsUseCase(gh<_i679.StudentRepository>()),
+    );
+    gh.factory<_i203.UpdateStudentScoreUseCase>(
+      () => _i203.UpdateStudentScoreUseCase(gh<_i679.StudentRepository>()),
     );
     gh.singleton<_i1009.AuthInterceptor>(
       () => _i1009.AuthInterceptor(gh<_i1018.SecureStorageService>()),

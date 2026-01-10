@@ -1,4 +1,5 @@
 import 'package:injectable/injectable.dart';
+import 'package:moalem/core/constants/app_enums.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/domain/repositories/class_repository.dart';
 import 'package:uuid/uuid.dart';
@@ -15,6 +16,7 @@ class AddClassUseCase {
     required String subject,
     required String semester,
     required String school,
+    required EvaluationGroup evaluationGroup,
   }) {
     final classEntity = ClassEntity(
       id: const Uuid().v4(),
@@ -23,6 +25,7 @@ class AddClassUseCase {
       subject: subject,
       semester: semester,
       school: school,
+      evaluationGroup: evaluationGroup,
       createdAt: DateTime.now(),
     );
     return _repository.addClass(classEntity);

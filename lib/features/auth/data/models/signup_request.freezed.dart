@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SignupRequest {
 
- String get email; String get password; String get name; List<String> get subjects; String get governorate;@JsonKey(name: 'educational_administration') String get educationalAdministration;@JsonKey(name: 'whatsapp_number') String get whatsappNumber; List<String> get schools; List<String> get grades;
+ String get email; String get password; String get name;@JsonKey(name: 'group_name') String get groupName; List<String> get subjects; String get governorate;@JsonKey(name: 'educational_administration') String get educationalAdministration;@JsonKey(name: 'whatsapp_number') String get whatsappNumber; List<String> get schools; List<String> get grades;
 /// Create a copy of SignupRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SignupRequestCopyWith<SignupRequest> get copyWith => _$SignupRequestCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SignupRequest&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.subjects, subjects)&&(identical(other.governorate, governorate) || other.governorate == governorate)&&(identical(other.educationalAdministration, educationalAdministration) || other.educationalAdministration == educationalAdministration)&&(identical(other.whatsappNumber, whatsappNumber) || other.whatsappNumber == whatsappNumber)&&const DeepCollectionEquality().equals(other.schools, schools)&&const DeepCollectionEquality().equals(other.grades, grades));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SignupRequest&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.name, name) || other.name == name)&&(identical(other.groupName, groupName) || other.groupName == groupName)&&const DeepCollectionEquality().equals(other.subjects, subjects)&&(identical(other.governorate, governorate) || other.governorate == governorate)&&(identical(other.educationalAdministration, educationalAdministration) || other.educationalAdministration == educationalAdministration)&&(identical(other.whatsappNumber, whatsappNumber) || other.whatsappNumber == whatsappNumber)&&const DeepCollectionEquality().equals(other.schools, schools)&&const DeepCollectionEquality().equals(other.grades, grades));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,email,password,name,const DeepCollectionEquality().hash(subjects),governorate,educationalAdministration,whatsappNumber,const DeepCollectionEquality().hash(schools),const DeepCollectionEquality().hash(grades));
+int get hashCode => Object.hash(runtimeType,email,password,name,groupName,const DeepCollectionEquality().hash(subjects),governorate,educationalAdministration,whatsappNumber,const DeepCollectionEquality().hash(schools),const DeepCollectionEquality().hash(grades));
 
 @override
 String toString() {
-  return 'SignupRequest(email: $email, password: $password, name: $name, subjects: $subjects, governorate: $governorate, educationalAdministration: $educationalAdministration, whatsappNumber: $whatsappNumber, schools: $schools, grades: $grades)';
+  return 'SignupRequest(email: $email, password: $password, name: $name, groupName: $groupName, subjects: $subjects, governorate: $governorate, educationalAdministration: $educationalAdministration, whatsappNumber: $whatsappNumber, schools: $schools, grades: $grades)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SignupRequestCopyWith<$Res>  {
   factory $SignupRequestCopyWith(SignupRequest value, $Res Function(SignupRequest) _then) = _$SignupRequestCopyWithImpl;
 @useResult
 $Res call({
- String email, String password, String name, List<String> subjects, String governorate,@JsonKey(name: 'educational_administration') String educationalAdministration,@JsonKey(name: 'whatsapp_number') String whatsappNumber, List<String> schools, List<String> grades
+ String email, String password, String name,@JsonKey(name: 'group_name') String groupName, List<String> subjects, String governorate,@JsonKey(name: 'educational_administration') String educationalAdministration,@JsonKey(name: 'whatsapp_number') String whatsappNumber, List<String> schools, List<String> grades
 });
 
 
@@ -65,11 +65,12 @@ class _$SignupRequestCopyWithImpl<$Res>
 
 /// Create a copy of SignupRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? email = null,Object? password = null,Object? name = null,Object? subjects = null,Object? governorate = null,Object? educationalAdministration = null,Object? whatsappNumber = null,Object? schools = null,Object? grades = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? email = null,Object? password = null,Object? name = null,Object? groupName = null,Object? subjects = null,Object? governorate = null,Object? educationalAdministration = null,Object? whatsappNumber = null,Object? schools = null,Object? grades = null,}) {
   return _then(_self.copyWith(
 email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,groupName: null == groupName ? _self.groupName : groupName // ignore: cast_nullable_to_non_nullable
 as String,subjects: null == subjects ? _self.subjects : subjects // ignore: cast_nullable_to_non_nullable
 as List<String>,governorate: null == governorate ? _self.governorate : governorate // ignore: cast_nullable_to_non_nullable
 as String,educationalAdministration: null == educationalAdministration ? _self.educationalAdministration : educationalAdministration // ignore: cast_nullable_to_non_nullable
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String email,  String password,  String name,  List<String> subjects,  String governorate, @JsonKey(name: 'educational_administration')  String educationalAdministration, @JsonKey(name: 'whatsapp_number')  String whatsappNumber,  List<String> schools,  List<String> grades)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String email,  String password,  String name, @JsonKey(name: 'group_name')  String groupName,  List<String> subjects,  String governorate, @JsonKey(name: 'educational_administration')  String educationalAdministration, @JsonKey(name: 'whatsapp_number')  String whatsappNumber,  List<String> schools,  List<String> grades)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SignupRequest() when $default != null:
-return $default(_that.email,_that.password,_that.name,_that.subjects,_that.governorate,_that.educationalAdministration,_that.whatsappNumber,_that.schools,_that.grades);case _:
+return $default(_that.email,_that.password,_that.name,_that.groupName,_that.subjects,_that.governorate,_that.educationalAdministration,_that.whatsappNumber,_that.schools,_that.grades);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.email,_that.password,_that.name,_that.subjects,_that.gover
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String email,  String password,  String name,  List<String> subjects,  String governorate, @JsonKey(name: 'educational_administration')  String educationalAdministration, @JsonKey(name: 'whatsapp_number')  String whatsappNumber,  List<String> schools,  List<String> grades)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String email,  String password,  String name, @JsonKey(name: 'group_name')  String groupName,  List<String> subjects,  String governorate, @JsonKey(name: 'educational_administration')  String educationalAdministration, @JsonKey(name: 'whatsapp_number')  String whatsappNumber,  List<String> schools,  List<String> grades)  $default,) {final _that = this;
 switch (_that) {
 case _SignupRequest():
-return $default(_that.email,_that.password,_that.name,_that.subjects,_that.governorate,_that.educationalAdministration,_that.whatsappNumber,_that.schools,_that.grades);case _:
+return $default(_that.email,_that.password,_that.name,_that.groupName,_that.subjects,_that.governorate,_that.educationalAdministration,_that.whatsappNumber,_that.schools,_that.grades);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.email,_that.password,_that.name,_that.subjects,_that.gover
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String email,  String password,  String name,  List<String> subjects,  String governorate, @JsonKey(name: 'educational_administration')  String educationalAdministration, @JsonKey(name: 'whatsapp_number')  String whatsappNumber,  List<String> schools,  List<String> grades)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String email,  String password,  String name, @JsonKey(name: 'group_name')  String groupName,  List<String> subjects,  String governorate, @JsonKey(name: 'educational_administration')  String educationalAdministration, @JsonKey(name: 'whatsapp_number')  String whatsappNumber,  List<String> schools,  List<String> grades)?  $default,) {final _that = this;
 switch (_that) {
 case _SignupRequest() when $default != null:
-return $default(_that.email,_that.password,_that.name,_that.subjects,_that.governorate,_that.educationalAdministration,_that.whatsappNumber,_that.schools,_that.grades);case _:
+return $default(_that.email,_that.password,_that.name,_that.groupName,_that.subjects,_that.governorate,_that.educationalAdministration,_that.whatsappNumber,_that.schools,_that.grades);case _:
   return null;
 
 }
@@ -217,12 +218,13 @@ return $default(_that.email,_that.password,_that.name,_that.subjects,_that.gover
 @JsonSerializable()
 
 class _SignupRequest implements SignupRequest {
-  const _SignupRequest({required this.email, required this.password, required this.name, required final  List<String> subjects, required this.governorate, @JsonKey(name: 'educational_administration') required this.educationalAdministration, @JsonKey(name: 'whatsapp_number') required this.whatsappNumber, required final  List<String> schools, required final  List<String> grades}): _subjects = subjects,_schools = schools,_grades = grades;
+  const _SignupRequest({required this.email, required this.password, required this.name, @JsonKey(name: 'group_name') required this.groupName, required final  List<String> subjects, required this.governorate, @JsonKey(name: 'educational_administration') required this.educationalAdministration, @JsonKey(name: 'whatsapp_number') required this.whatsappNumber, required final  List<String> schools, required final  List<String> grades}): _subjects = subjects,_schools = schools,_grades = grades;
   factory _SignupRequest.fromJson(Map<String, dynamic> json) => _$SignupRequestFromJson(json);
 
 @override final  String email;
 @override final  String password;
 @override final  String name;
+@override@JsonKey(name: 'group_name') final  String groupName;
  final  List<String> _subjects;
 @override List<String> get subjects {
   if (_subjects is EqualUnmodifiableListView) return _subjects;
@@ -261,16 +263,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SignupRequest&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._subjects, _subjects)&&(identical(other.governorate, governorate) || other.governorate == governorate)&&(identical(other.educationalAdministration, educationalAdministration) || other.educationalAdministration == educationalAdministration)&&(identical(other.whatsappNumber, whatsappNumber) || other.whatsappNumber == whatsappNumber)&&const DeepCollectionEquality().equals(other._schools, _schools)&&const DeepCollectionEquality().equals(other._grades, _grades));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SignupRequest&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.name, name) || other.name == name)&&(identical(other.groupName, groupName) || other.groupName == groupName)&&const DeepCollectionEquality().equals(other._subjects, _subjects)&&(identical(other.governorate, governorate) || other.governorate == governorate)&&(identical(other.educationalAdministration, educationalAdministration) || other.educationalAdministration == educationalAdministration)&&(identical(other.whatsappNumber, whatsappNumber) || other.whatsappNumber == whatsappNumber)&&const DeepCollectionEquality().equals(other._schools, _schools)&&const DeepCollectionEquality().equals(other._grades, _grades));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,email,password,name,const DeepCollectionEquality().hash(_subjects),governorate,educationalAdministration,whatsappNumber,const DeepCollectionEquality().hash(_schools),const DeepCollectionEquality().hash(_grades));
+int get hashCode => Object.hash(runtimeType,email,password,name,groupName,const DeepCollectionEquality().hash(_subjects),governorate,educationalAdministration,whatsappNumber,const DeepCollectionEquality().hash(_schools),const DeepCollectionEquality().hash(_grades));
 
 @override
 String toString() {
-  return 'SignupRequest(email: $email, password: $password, name: $name, subjects: $subjects, governorate: $governorate, educationalAdministration: $educationalAdministration, whatsappNumber: $whatsappNumber, schools: $schools, grades: $grades)';
+  return 'SignupRequest(email: $email, password: $password, name: $name, groupName: $groupName, subjects: $subjects, governorate: $governorate, educationalAdministration: $educationalAdministration, whatsappNumber: $whatsappNumber, schools: $schools, grades: $grades)';
 }
 
 
@@ -281,7 +283,7 @@ abstract mixin class _$SignupRequestCopyWith<$Res> implements $SignupRequestCopy
   factory _$SignupRequestCopyWith(_SignupRequest value, $Res Function(_SignupRequest) _then) = __$SignupRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String email, String password, String name, List<String> subjects, String governorate,@JsonKey(name: 'educational_administration') String educationalAdministration,@JsonKey(name: 'whatsapp_number') String whatsappNumber, List<String> schools, List<String> grades
+ String email, String password, String name,@JsonKey(name: 'group_name') String groupName, List<String> subjects, String governorate,@JsonKey(name: 'educational_administration') String educationalAdministration,@JsonKey(name: 'whatsapp_number') String whatsappNumber, List<String> schools, List<String> grades
 });
 
 
@@ -298,11 +300,12 @@ class __$SignupRequestCopyWithImpl<$Res>
 
 /// Create a copy of SignupRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? email = null,Object? password = null,Object? name = null,Object? subjects = null,Object? governorate = null,Object? educationalAdministration = null,Object? whatsappNumber = null,Object? schools = null,Object? grades = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? email = null,Object? password = null,Object? name = null,Object? groupName = null,Object? subjects = null,Object? governorate = null,Object? educationalAdministration = null,Object? whatsappNumber = null,Object? schools = null,Object? grades = null,}) {
   return _then(_SignupRequest(
 email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,groupName: null == groupName ? _self.groupName : groupName // ignore: cast_nullable_to_non_nullable
 as String,subjects: null == subjects ? _self._subjects : subjects // ignore: cast_nullable_to_non_nullable
 as List<String>,governorate: null == governorate ? _self.governorate : governorate // ignore: cast_nullable_to_non_nullable
 as String,educationalAdministration: null == educationalAdministration ? _self.educationalAdministration : educationalAdministration // ignore: cast_nullable_to_non_nullable

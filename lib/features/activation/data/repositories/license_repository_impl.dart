@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:injectable/injectable.dart';
 import 'package:moalem/core/constants/app_keys.dart';
 import 'package:moalem/core/services/secure_storage_service.dart';
@@ -29,10 +31,24 @@ class LicenseRepositoryImpl implements LicenseRepository {
         key: AppKeys.license,
         value: couponModel.license,
       );
-    }
 
-    // Store the expiration date in regular storage for quick access
-    if (couponModel.expiresAt != null) {
+      // Extract expiresAt from the JWT token
+      try {
+        final expiresAt = _extractExpiresAtFromJWT(couponModel.license!);
+        if (expiresAt != null) {
+          await _storageService.setString(AppKeys.licenseExpiresAt, expiresAt);
+        }
+      } catch (e) {
+        // If JWT decoding fails, try using the expiresAt from the model
+        if (couponModel.expiresAt != null) {
+          await _storageService.setString(
+            AppKeys.licenseExpiresAt,
+            couponModel.expiresAt!,
+          );
+        }
+      }
+    } else if (couponModel.expiresAt != null) {
+      // Fallback: Store the expiration date from the model if no license token
       await _storageService.setString(
         AppKeys.licenseExpiresAt,
         couponModel.expiresAt!,
@@ -40,6 +56,45 @@ class LicenseRepositoryImpl implements LicenseRepository {
     }
 
     return couponModel;
+  }
+
+  /// Extracts the expiresAt field from a JWT token
+  String? _extractExpiresAtFromJWT(String token) {
+    try {
+      // JWT format: header.payload.signature
+      final parts = token.split('.');
+      if (parts.length != 3) {
+        return null;
+      }
+
+      // Decode the payload (second part)
+      final payload = parts[1];
+
+      // Normalize base64 string (JWT uses base64url encoding without padding)
+      var normalizedPayload = payload.replaceAll('-', '+').replaceAll('_', '/');
+
+      // Add padding if needed
+      switch (normalizedPayload.length % 4) {
+        case 2:
+          normalizedPayload += '==';
+          break;
+        case 3:
+          normalizedPayload += '=';
+          break;
+      }
+
+      // Decode from base64
+      final jsonString = utf8.decode(base64.decode(normalizedPayload));
+
+      // Parse JSON
+      final Map<String, dynamic> payloadMap = json.decode(jsonString);
+
+      // Extract expiresAt
+      return payloadMap['expiresAt'] as String?;
+    } catch (e) {
+      // Return null if decoding fails
+      return null;
+    }
   }
 
   @override

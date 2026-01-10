@@ -7,7 +7,7 @@ import 'database_schema.dart';
 @singleton
 class DatabaseService {
   static const String _dbName = 'moalem.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 3;
 
   Database? _database;
 
@@ -41,6 +41,19 @@ class DatabaseService {
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    // Implement migration logic here
+    if (oldVersion < 2) {
+      // Migrate from v1 to v2: restructure students_scores table
+      for (final query in DatabaseSchema.migrateV1ToV2) {
+        await db.execute(query);
+      }
+    }
+
+    if (oldVersion < 3) {
+      // Migrate from v2 to v3: fix evaluation_group column type
+      // Drop and recreate classes table to fix the enum type issue
+      for (final query in DatabaseSchema.migrateV2ToV3) {
+        await db.execute(query);
+      }
+    }
   }
 }

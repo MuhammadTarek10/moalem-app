@@ -44,6 +44,12 @@ class AppStrings {
   // Multi-step signup strings
   static const String fullNameLabel = 'full_name_label';
   static const String fullNameHint = 'full_name_hint';
+  static const String groupNameLabel = 'group_name_label';
+  static const String groupNameHint = 'group_name_hint';
+  static const String prePrimaryGroup = 'pre_primary_group';
+  static const String primaryGroup = 'primary_group';
+  static const String secondaryGroup = 'secondary_group';
+  static const String highSchoolGroup = 'high_school_group';
   static const String subjectLabel = 'subject_label';
   static const String subjectHint = 'subject_hint';
   static const String whatsappLabel = 'whatsapp_label';
@@ -120,6 +126,8 @@ class AppStrings {
   static const String activityBook = 'activity_book';
   static const String homeworkBook = 'homework_book';
   static const String classroomPerformance = 'classroom_performance';
+  static const String skillsPerformance = 'skills_performance';
+  static const String monthsExamAverage = 'months_exam_average';
 
   // Classes Empty State
   static const String noClassesTitle = 'no_classes_title';
@@ -154,4 +162,25 @@ class AppStrings {
   static const String semesterHint = 'semester_hint';
   static const String schoolFieldLabel = 'school_field_label';
   static const String schoolFieldHint = 'school_field_hint';
+
+  // Student Details Screen
+  static const String studentDetailsTitle = 'student_details_title';
+  static const String grades = 'grades';
+  static const String weekly = 'weekly';
+  static const String monthly = 'monthly';
+  static const String semester = 'semester';
+  static const String first = 'first';
+  static const String second = 'second';
+  static const String third = 'third';
+  static const String fourth = 'fourth';
+  static const String studentNumber = 'student_number';
+  static const String totalGrades = 'total_grades';
+  static const String present = 'present';
+  static const String absent = 'absent';
+  static const String excused = 'excused';
+  static const String notes = 'notes';
+  static const String savedSuccessfully = 'saved_successfully';
+  static const String saveFailed = 'save_failed';
+  static const String firstMonthExam = 'first_month_exam';
+  static const String secondMonthExam = 'second_month_exam';
 }

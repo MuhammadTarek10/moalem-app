@@ -1,3 +1,5 @@
+import 'package:moalem/core/constants/app_enums.dart';
+
 class ClassEntity {
   final String id;
   final String name;
@@ -6,6 +8,7 @@ class ClassEntity {
   final String semester;
   final String school;
   final int studentsCount;
+  final EvaluationGroup evaluationGroup;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
@@ -18,6 +21,7 @@ class ClassEntity {
     required this.semester,
     required this.school,
     this.studentsCount = 0,
+    required this.evaluationGroup,
     required this.createdAt,
     this.updatedAt,
     this.deletedAt,
@@ -31,6 +35,7 @@ class ClassEntity {
     String? semester,
     String? school,
     int? studentsCount,
+    EvaluationGroup? evaluationGroup,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? deletedAt,
@@ -43,6 +48,7 @@ class ClassEntity {
       semester: semester ?? this.semester,
       school: school ?? this.school,
       studentsCount: studentsCount ?? this.studentsCount,
+      evaluationGroup: evaluationGroup ?? this.evaluationGroup,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -58,6 +64,7 @@ class ClassEntity {
       'subject': subject,
       'semester': semester,
       'school': school,
+      'evaluation_group': evaluationGroup.name,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'deleted_at': deletedAt?.toIso8601String(),
@@ -74,6 +81,9 @@ class ClassEntity {
       semester: map['semester'] as String,
       school: map['school'] as String,
       studentsCount: (map['students_count'] as int?) ?? 0,
+      evaluationGroup: EvaluationGroup.values.byName(
+        map['evaluation_group'] as String,
+      ),
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: map['updated_at'] != null
           ? DateTime.parse(map['updated_at'] as String)

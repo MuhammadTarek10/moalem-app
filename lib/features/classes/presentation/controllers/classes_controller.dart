@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moalem/core/constants/app_enums.dart';
 import 'package:moalem/core/services/injection.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/domain/usecases/add_class_usecase.dart';
@@ -49,6 +50,7 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
     required String subject,
     required String semester,
     required String school,
+    EvaluationGroup evaluationGroup = EvaluationGroup.prePrimary,
   }) async {
     try {
       final newClass = await _addClassUseCase(
@@ -57,6 +59,7 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
         subject: subject,
         semester: semester,
         school: school,
+        evaluationGroup: evaluationGroup,
       );
 
       state.whenData((classes) {

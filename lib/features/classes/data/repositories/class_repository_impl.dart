@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:moalem/core/services/database_service.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
+import 'package:moalem/features/classes/domain/entities/evaluation_entity.dart';
 import 'package:moalem/features/classes/domain/repositories/class_repository.dart';
 
 @LazySingleton(as: ClassRepository)
@@ -11,6 +12,7 @@ class ClassRepositoryImpl implements ClassRepository {
 
   static const String _tableName = 'classes';
   static const String _studentsTable = 'students';
+  static const String _evaluationsTable = 'evaluations';
 
   @override
   Future<List<ClassEntity>> getClasses() async {
@@ -83,5 +85,12 @@ class ClassRepositoryImpl implements ClassRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  @override
+  Future<List<EvaluationEntity>> getEvaluations() async {
+    final db = await _databaseService.database;
+    final result = await db.query(_evaluationsTable);
+    return result.map((map) => EvaluationEntity.fromMap(map)).toList();
   }
 }

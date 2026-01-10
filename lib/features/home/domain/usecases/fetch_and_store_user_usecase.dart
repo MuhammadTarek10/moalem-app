@@ -34,15 +34,27 @@ class FetchAndStoreUserUseCase {
       );
 
       // Update license expiration in regular storage for quick access
-      if (user.licenseExpiresAt != null) {
+      // Only update if the API returns a non-null value
+      if (user.licenseExpiresAt != null && user.licenseExpiresAt!.isNotEmpty) {
         await _storage.setString(
           AppKeys.licenseExpiresAt,
           user.licenseExpiresAt!,
         );
       }
 
-      // Check if license is still valid
-      return LicenseChecker.isLicenseValid(user.licenseExpiresAt);
+      // Check license validity
+      // First try the API response, then fall back to local storage
+      // This handles cases where the server hasn't updated the license yet
+      final apiLicenseExpiresAt = user.licenseExpiresAt;
+      if (apiLicenseExpiresAt != null && apiLicenseExpiresAt.isNotEmpty) {
+        return LicenseChecker.isLicenseValid(apiLicenseExpiresAt);
+      } else {
+        // Fall back to locally stored license (e.g., just redeemed a coupon)
+        final localLicenseExpiresAt = _storage.getString(
+          AppKeys.licenseExpiresAt,
+        );
+        return LicenseChecker.isLicenseValid(localLicenseExpiresAt);
+      }
     } catch (e) {
       // If fetching fails, check local storage
       final licenseExpiresAt = _storage.getString(AppKeys.licenseExpiresAt);

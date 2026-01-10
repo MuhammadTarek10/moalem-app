@@ -9,6 +9,7 @@ abstract class SignupRequest with _$SignupRequest {
     required String email,
     required String password,
     required String name,
+    @JsonKey(name: 'group_name') required String groupName,
     required List<String> subjects,
     required String governorate,
     @JsonKey(name: 'educational_administration')
