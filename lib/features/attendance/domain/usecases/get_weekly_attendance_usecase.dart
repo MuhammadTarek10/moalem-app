@@ -29,11 +29,12 @@ class GetWeeklyAttendanceUseCase {
     final weekEndDate = WeekHelper.getWeekEnd(weekStartDate);
 
     // Get all attendance records for the class in this week
-    final attendanceRecords = await _attendanceRepository.getAttendanceByDateRange(
-      classId: classId,
-      startDate: weekStartDate,
-      endDate: weekEndDate,
-    );
+    final attendanceRecords = await _attendanceRepository
+        .getAttendanceByDateRange(
+          classId: classId,
+          startDate: weekStartDate,
+          endDate: weekEndDate,
+        );
 
     // Group records by student
     final Map<String, WeeklyAttendanceEntity> result = {};
@@ -78,7 +79,8 @@ class GetWeeklyAttendanceUseCase {
     return students.map((student) {
       return StudentWeeklyAttendance(
         student: student,
-        weeklyAttendance: weeklyAttendance[student.id] ??
+        weeklyAttendance:
+            weeklyAttendance[student.id] ??
             WeeklyAttendanceEntity(
               studentId: student.id,
               classId: classId,

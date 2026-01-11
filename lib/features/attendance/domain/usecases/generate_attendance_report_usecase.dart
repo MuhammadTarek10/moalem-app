@@ -43,11 +43,12 @@ class GenerateWeeklyAttendanceReportUseCase {
     final weekEndDate = WeekHelper.getWeekEnd(weekStartDate);
 
     // Get all attendance records for the class in this week
-    final attendanceRecords = await _attendanceRepository.getAttendanceByDateRange(
-      classId: classId,
-      startDate: weekStartDate,
-      endDate: weekEndDate,
-    );
+    final attendanceRecords = await _attendanceRepository
+        .getAttendanceByDateRange(
+          classId: classId,
+          startDate: weekStartDate,
+          endDate: weekEndDate,
+        );
 
     // Build student print data
     final List<StudentPrintData> studentsData = [];

@@ -22,7 +22,8 @@ class PrintDataEntity {
   // Multi-week scores support
   final bool isMultiWeek; // True for multi-week scores export
   final int weekGroup; // 1 for weeks 1-5, 2 for weeks 6-10, 3 for weeks 11-15
-  final Map<int, DateTime>? weekStartDates; // week number -> start date for headers
+  final Map<int, DateTime>?
+  weekStartDates; // week number -> start date for headers
 
   const PrintDataEntity({
     required this.printType,
@@ -80,22 +81,23 @@ class PrintDataEntity {
 /// Student data for print
 class StudentPrintData {
   final StudentEntity student;
-  final Map<String, int> scores; // evaluationId -> score (for single week scores)
+  final Map<String, int>
+  scores; // evaluationId -> score (for single week scores)
   final Map<String, AttendanceStatus>?
-      attendance; // legacy: period key -> status
+  attendance; // legacy: period key -> status
   final Map<DateTime, AttendanceStatus>?
-      attendanceDaily; // date -> status (for weekly attendance)
+  attendanceDaily; // date -> status (for weekly attendance)
   final int totalScore;
   final int maxPossibleScore;
 
   // Multi-week scores support
   final Map<int, Map<String, int>>?
-      weeklyScores; // week number -> (evaluationId -> score)
+  weeklyScores; // week number -> (evaluationId -> score)
   final Map<int, int>? weeklyTotals; // week number -> total score
 
   // Multi-week attendance support
   final Map<int, Map<DateTime, AttendanceStatus>>?
-      weeklyAttendance; // week number -> (date -> status)
+  weeklyAttendance; // week number -> (date -> status)
 
   const StudentPrintData({
     required this.student,

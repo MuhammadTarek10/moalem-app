@@ -71,7 +71,11 @@ class GenerateMultiWeekScoresReportUseCase {
 
       for (final weekNum in weekNumbers) {
         final studentDetails = await _studentRepository
-            .getStudentDetailsWithScores(student.id, PeriodType.weekly, weekNum);
+            .getStudentDetailsWithScores(
+              student.id,
+              PeriodType.weekly,
+              weekNum,
+            );
 
         final scores = <String, int>{};
         int totalScore = 0;

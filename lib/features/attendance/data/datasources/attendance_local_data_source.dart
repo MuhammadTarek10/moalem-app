@@ -130,11 +130,7 @@ class AttendanceLocalDataSource {
   /// Delete an attendance record
   Future<void> deleteAttendance(String id) async {
     final db = await _databaseService.database;
-    await db.delete(
-      'daily_attendance',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('daily_attendance', where: 'id = ?', whereArgs: [id]);
   }
 
   /// Delete all attendance records for a specific date and class

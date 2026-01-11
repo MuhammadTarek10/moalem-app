@@ -68,12 +68,12 @@ class GenerateMultiWeekAttendanceReportUseCase {
         final weekEndDate = WeekHelper.getWeekEnd(weekStartDate);
 
         // Get attendance records for this week
-        final attendanceRecords =
-            await _attendanceRepository.getAttendanceByDateRange(
-          classId: classId,
-          startDate: weekStartDate,
-          endDate: weekEndDate,
-        );
+        final attendanceRecords = await _attendanceRepository
+            .getAttendanceByDateRange(
+              classId: classId,
+              startDate: weekStartDate,
+              endDate: weekEndDate,
+            );
 
         // Filter records for this student
         final studentRecords = attendanceRecords

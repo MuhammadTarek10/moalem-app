@@ -139,7 +139,5 @@ class DatabaseSchema {
   ];
 
   /// Migration from v3 to v4: Add daily_attendance table
-  static const List<String> migrateV3ToV4 = [
-    _createDailyAttendanceTable,
-  ];
+  static const List<String> migrateV3ToV4 = [_createDailyAttendanceTable];
 }

@@ -65,8 +65,8 @@ class AttendanceEntryState {
     this.isSaving = false,
     this.error,
     this.successMessage,
-  })  : weekStartDate = weekStartDate ?? WeekHelper.getWeekStart(DateTime.now()),
-        selectedDay = selectedDay ?? WeekHelper.getWeekStart(DateTime.now());
+  }) : weekStartDate = weekStartDate ?? WeekHelper.getWeekStart(DateTime.now()),
+       selectedDay = selectedDay ?? WeekHelper.getWeekStart(DateTime.now());
 
   AttendanceEntryState copyWith({
     List<ClassEntity>? classes,
@@ -91,8 +91,9 @@ class AttendanceEntryState {
       isLoading: isLoading ?? this.isLoading,
       isSaving: isSaving ?? this.isSaving,
       error: clearMessages ? null : (error ?? this.error),
-      successMessage:
-          clearMessages ? null : (successMessage ?? this.successMessage),
+      successMessage: clearMessages
+          ? null
+          : (successMessage ?? this.successMessage),
     );
   }
 
@@ -107,7 +108,8 @@ class AttendanceEntryState {
     if (searchQuery.isEmpty) return students;
     return students
         .where(
-          (s) => s.student.name.toLowerCase().contains(searchQuery.toLowerCase()),
+          (s) =>
+              s.student.name.toLowerCase().contains(searchQuery.toLowerCase()),
         )
         .toList();
   }
@@ -117,7 +119,9 @@ class AttendanceEntryState {
 
   /// Get count of students with attendance recorded for selected day
   int get recordedCount {
-    return students.where((s) => s.getStatusForDate(selectedDay) != null).length;
+    return students
+        .where((s) => s.getStatusForDate(selectedDay) != null)
+        .length;
   }
 }
 
@@ -194,10 +198,11 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final studentsWithAttendance = await _getWeeklyAttendanceUseCase.getWithStudents(
-        classId: state.selectedClass!.id,
-        weekStartDate: state.weekStartDate,
-      );
+      final studentsWithAttendance = await _getWeeklyAttendanceUseCase
+          .getWithStudents(
+            classId: state.selectedClass!.id,
+            weekStartDate: state.weekStartDate,
+          );
 
       final studentInputs = studentsWithAttendance.map((swa) {
         return StudentAttendanceInput(
@@ -207,10 +212,7 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
         );
       }).toList();
 
-      state = state.copyWith(
-        students: studentInputs,
-        isLoading: false,
-      );
+      state = state.copyWith(students: studentInputs, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -226,7 +228,9 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
 
     final updatedStudents = state.students.map((s) {
       if (s.student.id == studentId) {
-        final newDailyStatus = Map<DateTime, AttendanceStatus>.from(s.dailyStatus);
+        final newDailyStatus = Map<DateTime, AttendanceStatus>.from(
+          s.dailyStatus,
+        );
         newDailyStatus[normalizedDay] = status;
         return s.copyWith(dailyStatus: newDailyStatus, hasChanges: true);
       }
@@ -245,7 +249,9 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
     );
 
     final updatedStudents = state.students.map((s) {
-      final newDailyStatus = Map<DateTime, AttendanceStatus>.from(s.dailyStatus);
+      final newDailyStatus = Map<DateTime, AttendanceStatus>.from(
+        s.dailyStatus,
+      );
       newDailyStatus[normalizedDay] = status;
       return s.copyWith(dailyStatus: newDailyStatus, hasChanges: true);
     }).toList();
@@ -266,11 +272,13 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
 
     try {
       // Build the map of student -> (date -> status)
-      final Map<String, Map<DateTime, AttendanceStatus>> studentDayStatuses = {};
+      final Map<String, Map<DateTime, AttendanceStatus>> studentDayStatuses =
+          {};
 
       for (final studentInput in state.students) {
         if (studentInput.hasChanges) {
-          studentDayStatuses[studentInput.student.id] = studentInput.dailyStatus;
+          studentDayStatuses[studentInput.student.id] =
+              studentInput.dailyStatus;
         }
       }
 
@@ -320,10 +328,10 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
 /// Provider for attendance entry controller
 final attendanceEntryControllerProvider = StateNotifierProvider.autoDispose
     .family<AttendanceEntryController, AttendanceEntryState, String?>((
-  ref,
-  classId,
-) {
-  final controller = getIt<AttendanceEntryController>();
-  controller.initialize(classId: classId);
-  return controller;
-});
+      ref,
+      classId,
+    ) {
+      final controller = getIt<AttendanceEntryController>();
+      controller.initialize(classId: classId);
+      return controller;
+    });

@@ -34,7 +34,8 @@ class SaveAttendanceUseCase {
   Future<void> saveForDay({
     required String classId,
     required DateTime date,
-    required Map<String, AttendanceStatus> studentStatuses, // studentId -> status
+    required Map<String, AttendanceStatus>
+    studentStatuses, // studentId -> status
   }) async {
     final normalizedDate = DateTime(date.year, date.month, date.day);
     final records = studentStatuses.entries.map((entry) {
@@ -55,7 +56,7 @@ class SaveAttendanceUseCase {
   Future<void> saveForWeek({
     required String classId,
     required Map<String, Map<DateTime, AttendanceStatus>>
-        studentDayStatuses, // studentId -> (date -> status)
+    studentDayStatuses, // studentId -> (date -> status)
   }) async {
     final List<DailyAttendanceEntity> records = [];
 
@@ -65,14 +66,16 @@ class SaveAttendanceUseCase {
         final date = dayEntry.key;
         final status = dayEntry.value;
 
-        records.add(DailyAttendanceEntity(
-          id: const Uuid().v4(),
-          studentId: studentId,
-          classId: classId,
-          date: DateTime(date.year, date.month, date.day),
-          status: status,
-          createdAt: DateTime.now(),
-        ));
+        records.add(
+          DailyAttendanceEntity(
+            id: const Uuid().v4(),
+            studentId: studentId,
+            classId: classId,
+            date: DateTime(date.year, date.month, date.day),
+            status: status,
+            createdAt: DateTime.now(),
+          ),
+        );
       }
     }
 

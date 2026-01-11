@@ -44,6 +44,6 @@ class AppRoutes {
   /// Builds the path for attendance entry with optional class ID
   static String attendanceEntryPath({String? classId}) =>
       classId != null && classId.isNotEmpty
-          ? '/attendance/entry?classId=$classId'
-          : '/attendance/entry';
+      ? '/attendance/entry?classId=$classId'
+      : '/attendance/entry';
 }
