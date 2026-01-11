@@ -609,12 +609,7 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
               context.pop();
               await controller.saveSelectedScores();
               if (context.mounted && state.error == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppStrings.scoresUpdated.tr()),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                context.showSuccessSnackBar(AppStrings.scoresUpdated.tr());
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),

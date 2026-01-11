@@ -29,4 +29,14 @@ class AppRoutes {
 
   // Reports Screen
   static const String reports = '/reports';
+
+  // Print Screen
+  static const String print = '/print';
+  static const String printOptions = '/print/options';
+
+  /// Builds the path for print options with the given parameters
+  static String printOptionsPath({
+    required String classId,
+    required String printType,
+  }) => '/print/options?classId=$classId&printType=$printType';
 }

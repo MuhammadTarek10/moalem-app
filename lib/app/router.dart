@@ -8,6 +8,7 @@ import 'package:moalem/features/auth/presentation/screens/signup_screen.dart';
 import 'package:moalem/features/classes/presentation/screens/class_details_screen.dart';
 import 'package:moalem/features/classes/presentation/screens/classes_screen.dart';
 import 'package:moalem/features/home/presentation/pages/main_navigation_screen.dart';
+import 'package:moalem/features/print/presentation/screens/print_options_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/advanced_settings_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/contact_us_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/profile_details_screen.dart';
@@ -103,6 +104,17 @@ final router = GoRouter(
       builder: (context, state) {
         final classId = state.uri.queryParameters['classId'];
         return ReportsScreen(classId: classId);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.printOptions,
+      builder: (context, state) {
+        final classId = state.uri.queryParameters['classId'];
+        final printType = state.uri.queryParameters['printType'];
+        return PrintOptionsScreen(
+          classId: classId ?? '',
+          printType: printType ?? 'scores',
+        );
       },
     ),
   ],

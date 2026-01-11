@@ -52,6 +52,14 @@ import '../../features/classes/domain/usecases/get_evaluations_usecase.dart'
     as _i859;
 import '../../features/home/domain/usecases/fetch_and_store_user_usecase.dart'
     as _i82;
+import '../../features/print/data/services/excel_export_service.dart' as _i552;
+import '../../features/print/data/services/pdf_export_service.dart' as _i191;
+import '../../features/print/data/services/template_loader_service.dart'
+    as _i832;
+import '../../features/print/domain/usecases/generate_attendance_report_usecase.dart'
+    as _i763;
+import '../../features/print/domain/usecases/generate_scores_report_usecase.dart'
+    as _i51;
 import '../../features/reports/domain/usecases/get_class_report_usecase.dart'
     as _i564;
 import '../../features/students/data/repositories/student_repository_impl.dart'
@@ -91,6 +99,11 @@ extension GetItInjectableX on _i174.GetIt {
   }) async {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final networkModule = _$NetworkModule();
+    gh.factory<_i552.ExcelExportService>(() => _i552.ExcelExportService());
+    gh.factory<_i191.PdfExportService>(() => _i191.PdfExportService());
+    gh.factory<_i832.TemplateLoaderService>(
+      () => _i832.TemplateLoaderService(),
+    );
     gh.singleton<_i748.DatabaseService>(() => _i748.DatabaseService());
     gh.singleton<_i1018.SecureStorageService>(
       () => _i1018.SecureStorageService(),
@@ -192,6 +205,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i107.AuthRemoteDataSource>(),
         gh<_i285.StorageService>(),
         gh<_i1018.SecureStorageService>(),
+      ),
+    );
+    gh.factory<_i763.GenerateAttendanceReportUseCase>(
+      () => _i763.GenerateAttendanceReportUseCase(
+        gh<_i679.StudentRepository>(),
+        gh<_i367.ClassRepository>(),
+        gh<_i926.UserRepository>(),
+      ),
+    );
+    gh.factory<_i51.GenerateScoresReportUseCase>(
+      () => _i51.GenerateScoresReportUseCase(
+        gh<_i679.StudentRepository>(),
+        gh<_i367.ClassRepository>(),
+        gh<_i926.UserRepository>(),
       ),
     );
     gh.factory<_i82.FetchAndStoreUserUseCase>(

@@ -224,4 +224,24 @@ class AppStrings {
 
   // Class Details Screen
   static const String viewReports = 'view_reports';
+
+  // Print Screen
+  static const String printStudentScores = 'print_student_scores';
+  static const String printAttendance = 'print_attendance';
+  static const String printQRCodes = 'print_qr_codes';
+  static const String selectClass = 'select_class';
+  static const String exportOptions = 'export_options';
+  static const String generatePDF = 'generate_pdf';
+  static const String generateExcel = 'generate_excel';
+  static const String reportHeader = 'report_header';
+  static const String governorate = 'governorate';
+  static const String administration = 'administration';
+  static const String classLabel = 'class_label';
+  static const String subjectClass = 'subject_class';
+  static const String exportSuccess = 'export_success';
+  static const String exportFailed = 'export_failed';
+  static const String periodLabel = 'period_label';
+  static const String studentScores = 'student_scores';
+  static const String studentAttendance = 'student_attendance';
+  static const String comingSoon = 'coming_soon';
 }
