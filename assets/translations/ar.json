@@ -200,5 +200,17 @@
   "period_label": "الفترة",
   "student_scores": "درجات الطلاب",
   "student_attendance": "حضور الطلاب",
-  "coming_soon": "قريباً"
+  "coming_soon": "قريباً",
+  "attendance": "الحضور والغياب",
+  "mark_all": "تحديد الكل",
+  "confirm_save": "تأكيد الحفظ",
+  "save_attendance_message": "هل تريد حفظ بيانات الحضور؟",
+  "attendance_saved": "تم حفظ الحضور بنجاح",
+  "saturday": "السبت",
+  "sunday": "الأحد",
+  "monday": "الاثنين",
+  "tuesday": "الثلاثاء",
+  "wednesday": "الأربعاء",
+  "thursday": "الخميس",
+  "friday": "الجمعة"
 }

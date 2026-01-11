@@ -6,8 +6,8 @@ import 'package:moalem/features/classes/domain/usecases/get_classes_usecase.dart
 import 'package:moalem/features/print/data/services/excel_export_service.dart';
 import 'package:moalem/features/print/data/services/pdf_export_service.dart';
 import 'package:moalem/features/print/domain/entities/print_data_entity.dart';
-import 'package:moalem/features/print/domain/usecases/generate_attendance_report_usecase.dart';
-import 'package:moalem/features/print/domain/usecases/generate_scores_report_usecase.dart';
+import 'package:moalem/features/print/domain/usecases/generate_multi_week_attendance_report_usecase.dart';
+import 'package:moalem/features/print/domain/usecases/generate_multi_week_scores_report_usecase.dart';
 
 /// State for the print screen
 class PrintState {
@@ -17,6 +17,7 @@ class PrintState {
   final AsyncValue<PrintDataEntity?> printData;
   final PeriodType periodType;
   final int periodNumber;
+  final int weekGroup; // 1 for weeks 1-5, 2 for weeks 6-10, 3 for weeks 11-15
   final bool isExporting;
   final String? exportMessage;
 
@@ -27,9 +28,17 @@ class PrintState {
     this.printData = const AsyncValue.loading(),
     this.periodType = PeriodType.weekly,
     this.periodNumber = 1,
+    this.weekGroup = 1,
     this.isExporting = false,
     this.exportMessage,
   });
+
+  /// Get the week range label for the current week group
+  String get weekGroupLabel {
+    final startWeek = (weekGroup - 1) * 5 + 1;
+    final endWeek = startWeek + 4;
+    return 'الأسابيع $startWeek - $endWeek';
+  }
 
   PrintState copyWith({
     AsyncValue<List<ClassEntity>>? classes,
@@ -38,6 +47,7 @@ class PrintState {
     AsyncValue<PrintDataEntity?>? printData,
     PeriodType? periodType,
     int? periodNumber,
+    int? weekGroup,
     bool? isExporting,
     String? exportMessage,
   }) {
@@ -48,6 +58,7 @@ class PrintState {
       printData: printData ?? this.printData,
       periodType: periodType ?? this.periodType,
       periodNumber: periodNumber ?? this.periodNumber,
+      weekGroup: weekGroup ?? this.weekGroup,
       isExporting: isExporting ?? this.isExporting,
       exportMessage: exportMessage ?? this.exportMessage,
     );
@@ -62,8 +73,8 @@ final printControllerProvider =
       return PrintController(
         printType,
         getIt<GetClassesUseCase>(),
-        getIt<GenerateScoresReportUseCase>(),
-        getIt<GenerateAttendanceReportUseCase>(),
+        getIt<GenerateMultiWeekScoresReportUseCase>(),
+        getIt<GenerateMultiWeekAttendanceReportUseCase>(),
         getIt<ExcelExportService>(),
         getIt<PdfExportService>(),
       );
@@ -71,16 +82,18 @@ final printControllerProvider =
 
 class PrintController extends StateNotifier<PrintState> {
   final GetClassesUseCase _getClassesUseCase;
-  final GenerateScoresReportUseCase _generateScoresReportUseCase;
-  final GenerateAttendanceReportUseCase _generateAttendanceReportUseCase;
+  final GenerateMultiWeekScoresReportUseCase
+  _generateMultiWeekScoresReportUseCase;
+  final GenerateMultiWeekAttendanceReportUseCase
+  _generateMultiWeekAttendanceReportUseCase;
   final ExcelExportService _excelExportService;
   final PdfExportService _pdfExportService;
 
   PrintController(
     String printTypeString,
     this._getClassesUseCase,
-    this._generateScoresReportUseCase,
-    this._generateAttendanceReportUseCase,
+    this._generateMultiWeekScoresReportUseCase,
+    this._generateMultiWeekAttendanceReportUseCase,
     this._excelExportService,
     this._pdfExportService,
   ) : super(
@@ -119,10 +132,17 @@ class PrintController extends StateNotifier<PrintState> {
     await loadPrintData();
   }
 
-  /// Change period number
+  /// Change period number (for attendance)
   Future<void> changePeriodNumber(int number) async {
     if (state.periodNumber == number) return;
     state = state.copyWith(periodNumber: number);
+    await loadPrintData();
+  }
+
+  /// Change week group (for scores - 1 for weeks 1-5, 2 for weeks 6-10, etc.)
+  Future<void> changeWeekGroup(int group) async {
+    if (state.weekGroup == group) return;
+    state = state.copyWith(weekGroup: group);
     await loadPrintData();
   }
 
@@ -136,16 +156,16 @@ class PrintController extends StateNotifier<PrintState> {
       PrintDataEntity? printData;
 
       if (state.printType == PrintType.scores) {
-        printData = await _generateScoresReportUseCase(
-          classId,
-          state.periodType,
-          state.periodNumber,
+        // Use multi-week scores report for scores
+        printData = await _generateMultiWeekScoresReportUseCase(
+          classId: classId,
+          weekGroup: state.weekGroup,
         );
       } else if (state.printType == PrintType.attendance) {
-        printData = await _generateAttendanceReportUseCase(
-          classId,
-          state.periodType,
-          state.periodNumber,
+        // Use multi-week attendance report
+        printData = await _generateMultiWeekAttendanceReportUseCase(
+          classId: classId,
+          weekGroup: state.weekGroup,
         );
       }
 

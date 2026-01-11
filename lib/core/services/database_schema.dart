@@ -9,6 +9,7 @@ class DatabaseSchema {
     _createEvaluationsTable,
     _insertEvaluationAspects,
     _createStudentsScoresTable,
+    _createDailyAttendanceTable,
   ];
 
   static const String _createClassesTable = '''
@@ -94,6 +95,21 @@ class DatabaseSchema {
     )
   ''';
 
+  static const String _createDailyAttendanceTable = '''
+    CREATE TABLE IF NOT EXISTS daily_attendance (
+      id TEXT PRIMARY KEY,
+      student_id TEXT NOT NULL,
+      class_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      attendance_status TEXT NOT NULL CHECK(attendance_status IN ('present', 'absent', 'excused')),
+      created_at TEXT NOT NULL,
+      updated_at TEXT,
+      FOREIGN KEY (student_id) REFERENCES students (id),
+      FOREIGN KEY (class_id) REFERENCES classes (id),
+      UNIQUE(student_id, date)
+    )
+  ''';
+
   /// Migration queries for version upgrades
   static const List<String> migrateV1ToV2 = [
     // Drop old table and create new one (data migration handled separately)
@@ -120,5 +136,10 @@ class DatabaseSchema {
        FROM classes_backup''',
     // Drop backup table
     'DROP TABLE IF EXISTS classes_backup',
+  ];
+
+  /// Migration from v3 to v4: Add daily_attendance table
+  static const List<String> migrateV3ToV4 = [
+    _createDailyAttendanceTable,
   ];
 }

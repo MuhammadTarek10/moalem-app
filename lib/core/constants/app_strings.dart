@@ -244,4 +244,20 @@ class AppStrings {
   static const String studentScores = 'student_scores';
   static const String studentAttendance = 'student_attendance';
   static const String comingSoon = 'coming_soon';
+
+  // Attendance Entry Screen
+  static const String attendance = 'attendance';
+  static const String markAll = 'mark_all';
+  static const String confirmSave = 'confirm_save';
+  static const String saveAttendanceMessage = 'save_attendance_message';
+  static const String attendanceSaved = 'attendance_saved';
+
+  // Days of the week
+  static const String saturday = 'saturday';
+  static const String sunday = 'sunday';
+  static const String monday = 'monday';
+  static const String tuesday = 'tuesday';
+  static const String wednesday = 'wednesday';
+  static const String thursday = 'thursday';
+  static const String friday = 'friday';
 }

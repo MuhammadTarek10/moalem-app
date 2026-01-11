@@ -21,6 +21,20 @@ import '../../features/activation/domain/repositories/license_repository.dart'
     as _i1066;
 import '../../features/activation/domain/usecases/redeem_coupon_usecase.dart'
     as _i253;
+import '../../features/attendance/data/datasources/attendance_local_data_source.dart'
+    as _i769;
+import '../../features/attendance/data/repositories/attendance_repository_impl.dart'
+    as _i719;
+import '../../features/attendance/domain/repositories/attendance_repository.dart'
+    as _i477;
+import '../../features/attendance/domain/usecases/generate_attendance_report_usecase.dart'
+    as _i296;
+import '../../features/attendance/domain/usecases/get_weekly_attendance_usecase.dart'
+    as _i891;
+import '../../features/attendance/domain/usecases/save_attendance_usecase.dart'
+    as _i763;
+import '../../features/attendance/presentation/controllers/attendance_entry_controller.dart'
+    as _i507;
 import '../../features/auth/data/datasources/auth_remote_data_source.dart'
     as _i107;
 import '../../features/auth/data/datasources/user_remote_data_source.dart'
@@ -58,6 +72,10 @@ import '../../features/print/data/services/template_loader_service.dart'
     as _i832;
 import '../../features/print/domain/usecases/generate_attendance_report_usecase.dart'
     as _i763;
+import '../../features/print/domain/usecases/generate_multi_week_attendance_report_usecase.dart'
+    as _i871;
+import '../../features/print/domain/usecases/generate_multi_week_scores_report_usecase.dart'
+    as _i968;
 import '../../features/print/domain/usecases/generate_scores_report_usecase.dart'
     as _i51;
 import '../../features/reports/domain/usecases/get_class_report_usecase.dart'
@@ -112,6 +130,9 @@ extension GetItInjectableX on _i174.GetIt {
       final i = _i285.StorageService();
       return i.init().then((_) => i);
     }, preResolve: true);
+    gh.factory<_i769.AttendanceLocalDataSource>(
+      () => _i769.AttendanceLocalDataSource(gh<_i748.DatabaseService>()),
+    );
     gh.lazySingleton<_i367.ClassRepository>(
       () => _i972.ClassRepositoryImpl(gh<_i748.DatabaseService>()),
     );
@@ -135,6 +156,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i859.GetEvaluationsUseCase>(
       () => _i859.GetEvaluationsUseCase(gh<_i367.ClassRepository>()),
+    );
+    gh.factory<_i477.AttendanceRepository>(
+      () =>
+          _i719.AttendanceRepositoryImpl(gh<_i769.AttendanceLocalDataSource>()),
     );
     gh.factory<_i891.AddStudentUseCase>(
       () => _i891.AddStudentUseCase(gh<_i679.StudentRepository>()),
@@ -176,14 +201,31 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i203.UpdateStudentScoreUseCase>(),
       ),
     );
+    gh.factory<_i891.GetWeeklyAttendanceUseCase>(
+      () => _i891.GetWeeklyAttendanceUseCase(
+        gh<_i477.AttendanceRepository>(),
+        gh<_i679.StudentRepository>(),
+      ),
+    );
     gh.singleton<_i1009.AuthInterceptor>(
       () => _i1009.AuthInterceptor(gh<_i1018.SecureStorageService>()),
+    );
+    gh.factory<_i763.SaveAttendanceUseCase>(
+      () => _i763.SaveAttendanceUseCase(gh<_i477.AttendanceRepository>()),
     );
     gh.lazySingleton<_i361.Dio>(
       () => networkModule.dio(gh<_i1009.AuthInterceptor>()),
     );
     gh.lazySingleton<_i738.ApiService>(
       () => networkModule.apiService(gh<_i361.Dio>()),
+    );
+    gh.factory<_i507.AttendanceEntryController>(
+      () => _i507.AttendanceEntryController(
+        gh<_i1015.GetClassesUseCase>(),
+        gh<_i526.GetClassByIdUseCase>(),
+        gh<_i891.GetWeeklyAttendanceUseCase>(),
+        gh<_i763.SaveAttendanceUseCase>(),
+      ),
     );
     gh.lazySingleton<_i886.UserRemoteDataSource>(
       () => _i886.UserRemoteDataSourceImpl(gh<_i738.ApiService>()),
@@ -214,10 +256,33 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i926.UserRepository>(),
       ),
     );
+    gh.factory<_i968.GenerateMultiWeekScoresReportUseCase>(
+      () => _i968.GenerateMultiWeekScoresReportUseCase(
+        gh<_i679.StudentRepository>(),
+        gh<_i367.ClassRepository>(),
+        gh<_i926.UserRepository>(),
+      ),
+    );
     gh.factory<_i51.GenerateScoresReportUseCase>(
       () => _i51.GenerateScoresReportUseCase(
         gh<_i679.StudentRepository>(),
         gh<_i367.ClassRepository>(),
+        gh<_i926.UserRepository>(),
+      ),
+    );
+    gh.factory<_i296.GenerateWeeklyAttendanceReportUseCase>(
+      () => _i296.GenerateWeeklyAttendanceReportUseCase(
+        gh<_i477.AttendanceRepository>(),
+        gh<_i367.ClassRepository>(),
+        gh<_i679.StudentRepository>(),
+        gh<_i926.UserRepository>(),
+      ),
+    );
+    gh.factory<_i871.GenerateMultiWeekAttendanceReportUseCase>(
+      () => _i871.GenerateMultiWeekAttendanceReportUseCase(
+        gh<_i477.AttendanceRepository>(),
+        gh<_i367.ClassRepository>(),
+        gh<_i679.StudentRepository>(),
         gh<_i926.UserRepository>(),
       ),
     );

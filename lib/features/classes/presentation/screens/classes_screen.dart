@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
@@ -139,6 +141,9 @@ class ClassesScreen extends ConsumerWidget {
                   context.pushNewScreen(ClassDetailsScreen(id: classEntity.id)),
               onAddScores: () => context.pushNewScreen(
                 BulkScoreEntryScreen(classId: classEntity.id),
+              ),
+              onAddAttendance: () => context.push(
+                AppRoutes.attendanceEntryPath(classId: classEntity.id),
               ),
               onEdit: () => _showEditClassDialog(context, ref, classEntity),
               onDelete: () => _deleteClass(ref, classEntity.id),

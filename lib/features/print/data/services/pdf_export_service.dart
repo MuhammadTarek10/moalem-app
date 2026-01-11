@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
+import 'package:moalem/features/attendance/domain/entities/weekly_attendance_entity.dart';
 import 'package:moalem/features/print/domain/entities/print_data_entity.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
@@ -26,10 +27,15 @@ class PdfExportService {
       // Yield to UI thread
       await Future.delayed(Duration.zero);
 
+      // Use landscape for multi-week (many columns)
+      final pageFormat = printData.isMultiWeek
+          ? PdfPageFormat.a4.landscape
+          : PdfPageFormat.a4;
+
       // Add pages
       pdf.addPage(
         pw.MultiPage(
-          pageFormat: PdfPageFormat.a4,
+          pageFormat: pageFormat,
           textDirection: pw.TextDirection.rtl,
           theme: pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold),
           build: (context) => [
@@ -38,7 +44,9 @@ class PdfExportService {
             pw.SizedBox(height: 20),
 
             // Student data table
-            _buildDataTable(printData),
+            printData.isMultiWeek
+                ? _buildMultiWeekDataTable(printData)
+                : _buildDataTable(printData),
           ],
         ),
       );
@@ -57,6 +65,35 @@ class PdfExportService {
 
   /// Build PDF header with metadata
   pw.Widget _buildHeader(PrintDataEntity printData) {
+    // Determine period text
+    String periodText;
+    String periodLabel;
+
+    if (printData.isMultiWeek) {
+      final weekNums = printData.weekNumbers;
+      periodText = 'الأسابيع ${weekNums.first} - ${weekNums.last}';
+      periodLabel = 'الفترة';
+    } else if (printData.printType == PrintType.attendance &&
+        printData.weekStartDate != null) {
+      final dateFormat = DateFormat('d/M/yyyy', 'ar');
+      periodText =
+          '${dateFormat.format(printData.weekStartDate!)} - ${dateFormat.format(printData.weekEndDate!)}';
+      periodLabel = 'الأسبوع';
+    } else {
+      periodText = 'الأسبوع ${printData.periodNumber}';
+      periodLabel = 'الفترة';
+    }
+
+    String titleText;
+    if (printData.isMultiWeek) {
+      titleText = printData.printType == PrintType.scores
+          ? 'سجل رصد درجات فصل'
+          : 'سجل الحضور والغياب';
+    } else {
+      titleText =
+          'تقرير ${printData.printType == PrintType.scores ? 'الدرجات' : 'الحضور'}';
+    }
+
     return pw.Container(
       padding: const pw.EdgeInsets.all(16),
       decoration: pw.BoxDecoration(
@@ -67,7 +104,7 @@ class PdfExportService {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            'تقرير ${printData.printType == PrintType.scores ? 'الدرجات' : 'الحضور'}',
+            titleText,
             style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
             textDirection: pw.TextDirection.rtl,
           ),
@@ -77,7 +114,7 @@ class PdfExportService {
           _buildMetadataRow('المدرسة', printData.classEntity.school),
           _buildMetadataRow('الفصل', printData.classEntity.name),
           _buildMetadataRow('المادة', printData.classEntity.subject),
-          _buildMetadataRow('الفترة', 'الأسبوع ${printData.periodNumber}'),
+          _buildMetadataRow(periodLabel, periodText),
         ],
       ),
     );
@@ -119,7 +156,20 @@ class PdfExportService {
         headers.add(_getEvaluationShortName(printData.evaluations![i].name));
       }
     } else if (printData.printType == PrintType.attendance) {
-      headers.add('الحالة');
+      // Weekly attendance with day columns (Sat-Thu)
+      if (printData.weekStartDate != null) {
+        final weekDays = printData.weekDays;
+        final dateFormat = DateFormat('d/M', 'ar');
+
+        // Add days in reverse for RTL
+        for (var i = weekDays.length - 1; i >= 0; i--) {
+          final day = weekDays[i];
+          final dayName = WeekHelper.getShortDayNameArabic(day.weekday);
+          headers.add('$dayName ${dateFormat.format(day)}');
+        }
+      } else {
+        headers.add('الحالة');
+      }
     }
 
     // Add name and number at the end (they'll appear on the right in RTL)
@@ -143,11 +193,24 @@ class PdfExportService {
           row.add('$score/${evaluation.maxScore}');
         }
       } else if (printData.printType == PrintType.attendance) {
-        final attendanceData = studentData.attendance ?? {};
-        final status = attendanceData.values.isNotEmpty
-            ? _getAttendanceStatusText(attendanceData.values.first)
-            : '-';
-        row.add(status);
+        // Weekly attendance with day columns (Sat-Thu)
+        if (printData.weekStartDate != null &&
+            studentData.attendanceDaily != null) {
+          final weekDays = printData.weekDays;
+
+          // Add days in reverse for RTL
+          for (var i = weekDays.length - 1; i >= 0; i--) {
+            final day = weekDays[i];
+            final status = studentData.getAttendanceForDate(day);
+            row.add(status != null ? _getAttendanceStatusSymbol(status) : '-');
+          }
+        } else {
+          final attendanceData = studentData.attendance ?? {};
+          final status = attendanceData.values.isNotEmpty
+              ? _getAttendanceStatusText(attendanceData.values.first)
+              : '-';
+          row.add(status);
+        }
       }
 
       // Add name and number at the end (rightmost in display)
@@ -170,6 +233,180 @@ class PdfExportService {
       cellAlignments: {0: pw.Alignment.center, 1: pw.Alignment.centerRight},
       headerAlignments: {0: pw.Alignment.center, 1: pw.Alignment.center},
     );
+  }
+
+  /// Build multi-week data table with all 5 weeks
+  pw.Widget _buildMultiWeekDataTable(PrintDataEntity printData) {
+    final weekNumbers = printData.weekNumbers;
+    final dateFormat = DateFormat('d/M', 'ar');
+    final dayNames = ['سبت', 'أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس'];
+
+    // Determine columns per week based on print type
+    int colsPerWeek;
+    if (printData.printType == PrintType.scores &&
+        printData.evaluations != null) {
+      colsPerWeek = printData.evaluations!.length + 1; // evaluations + total
+    } else if (printData.printType == PrintType.attendance) {
+      colsPerWeek = 6; // 6 days (Sat-Thu)
+    } else {
+      return pw.Text('لا توجد بيانات');
+    }
+
+    // Calculate total columns
+    final numDataCols = weekNumbers.length * colsPerWeek;
+    final totalCols = 2 + numDataCols; // م + الاسم + data columns
+
+    // Prepare all headers in one row (simplified for RTL)
+    final headers = <String>[];
+
+    // Add week columns in reverse for RTL (rightmost first in list = leftmost in RTL display)
+    for (var w = weekNumbers.length - 1; w >= 0; w--) {
+      final weekNum = weekNumbers[w];
+      final weekStartDate = printData.weekStartDates?[weekNum];
+      final weekLabel = weekStartDate != null
+          ? 'أسبوع ${_getArabicOrdinal(weekNum)} ${dateFormat.format(weekStartDate)}'
+          : 'الأسبوع ${_getArabicOrdinal(weekNum)}';
+
+      if (printData.printType == PrintType.scores &&
+          printData.evaluations != null) {
+        // Add total first (rightmost for this week)
+        headers.add('$weekLabel\nالمجموع');
+
+        // Add evaluations in reverse
+        final evaluations = printData.evaluations!;
+        for (var e = evaluations.length - 1; e >= 0; e--) {
+          headers.add(
+            '$weekLabel\n${_getEvaluationShortName(evaluations[e].name)}',
+          );
+        }
+      } else if (printData.printType == PrintType.attendance) {
+        // Add days in reverse for RTL (Thu first, then Wed, etc.)
+        final weekDays = weekStartDate != null
+            ? WeekHelper.getWeekDays(weekStartDate)
+            : <DateTime>[];
+        for (var d = 5; d >= 0; d--) {
+          if (weekDays.isNotEmpty && d < weekDays.length) {
+            headers.add(
+              '$weekLabel\n${dayNames[d]} ${dateFormat.format(weekDays[d])}',
+            );
+          } else {
+            headers.add('$weekLabel\n${dayNames[d]}');
+          }
+        }
+      }
+    }
+
+    // Add name and number at the end (rightmost in RTL display)
+    headers.add('الاسم');
+    headers.add('م');
+
+    // Prepare data rows
+    final rows = <List<dynamic>>[];
+    for (final studentData in printData.studentsData) {
+      final row = <dynamic>[];
+
+      // Add week data in reverse for RTL
+      for (var w = weekNumbers.length - 1; w >= 0; w--) {
+        final weekNum = weekNumbers[w];
+
+        if (printData.printType == PrintType.scores &&
+            printData.evaluations != null) {
+          // Add total first
+          row.add(studentData.getTotalForWeek(weekNum).toString());
+
+          // Add evaluations in reverse
+          final evaluations = printData.evaluations!;
+          for (var e = evaluations.length - 1; e >= 0; e--) {
+            final evaluation = evaluations[e];
+            final score = studentData.getScoreForWeek(weekNum, evaluation.id);
+            row.add(score.toString());
+          }
+        } else if (printData.printType == PrintType.attendance) {
+          // Add days in reverse for RTL
+          final weekStartDate = printData.weekStartDates?[weekNum];
+          final weekDays = weekStartDate != null
+              ? WeekHelper.getWeekDays(weekStartDate)
+              : <DateTime>[];
+
+          for (var d = 5; d >= 0; d--) {
+            if (weekDays.isNotEmpty && d < weekDays.length) {
+              final day = weekDays[d];
+              final status = studentData.getAttendanceForWeekDate(weekNum, day);
+              row.add(
+                status != null ? _getAttendanceStatusSymbol(status) : '-',
+              );
+            } else {
+              row.add('-');
+            }
+          }
+        }
+      }
+
+      // Add name and number
+      row.add(studentData.student.name);
+      row.add(studentData.student.number.toString());
+
+      rows.add(row);
+    }
+
+    // Build alignments map
+    final cellAlignments = <int, pw.Alignment>{};
+    final headerAlignments = <int, pw.Alignment>{};
+    for (var i = 0; i < totalCols; i++) {
+      cellAlignments[i] = pw.Alignment.center;
+      headerAlignments[i] = pw.Alignment.center;
+    }
+    // Name column should be right-aligned
+    cellAlignments[totalCols - 2] = pw.Alignment.centerRight;
+
+    return pw.TableHelper.fromTextArray(
+      headers: headers,
+      data: rows,
+      border: pw.TableBorder.all(),
+      headerStyle: pw.TextStyle(
+        fontWeight: pw.FontWeight.bold,
+        color: PdfColors.white,
+        fontSize: 8,
+      ),
+      cellStyle: const pw.TextStyle(fontSize: 8),
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey700),
+      cellHeight: 25,
+      cellAlignments: cellAlignments,
+      headerAlignments: headerAlignments,
+    );
+  }
+
+  String _getArabicOrdinal(int number) {
+    const ordinals = {
+      1: 'الأول',
+      2: 'الثاني',
+      3: 'الثالث',
+      4: 'الرابع',
+      5: 'الخامس',
+      6: 'السادس',
+      7: 'السابع',
+      8: 'الثامن',
+      9: 'التاسع',
+      10: 'العاشر',
+      11: 'الحادي عشر',
+      12: 'الثاني عشر',
+      13: 'الثالث عشر',
+      14: 'الرابع عشر',
+      15: 'الخامس عشر',
+    };
+    return ordinals[number] ?? '$number';
+  }
+
+  /// Get short symbol for attendance status
+  String _getAttendanceStatusSymbol(AttendanceStatus status) {
+    switch (status) {
+      case AttendanceStatus.present:
+        return '✓';
+      case AttendanceStatus.absent:
+        return '✗';
+      case AttendanceStatus.excused:
+        return 'إ';
+    }
   }
 
   /// Get attendance status text in Arabic

@@ -33,10 +33,17 @@ class AppRoutes {
   // Print Screen
   static const String print = '/print';
   static const String printOptions = '/print/options';
+  static const String attendanceEntry = '/attendance/entry';
 
   /// Builds the path for print options with the given parameters
   static String printOptionsPath({
     required String classId,
     required String printType,
   }) => '/print/options?classId=$classId&printType=$printType';
+
+  /// Builds the path for attendance entry with optional class ID
+  static String attendanceEntryPath({String? classId}) =>
+      classId != null && classId.isNotEmpty
+          ? '/attendance/entry?classId=$classId'
+          : '/attendance/entry';
 }

@@ -12,6 +12,7 @@ class ClassCard extends StatelessWidget {
   final int studentCount;
   final VoidCallback? onViewStudents;
   final VoidCallback? onAddScores;
+  final VoidCallback? onAddAttendance;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
@@ -23,6 +24,7 @@ class ClassCard extends StatelessWidget {
     required this.studentCount,
     this.onViewStudents,
     this.onAddScores,
+    this.onAddAttendance,
     this.onEdit,
     this.onDelete,
   });
@@ -142,7 +144,7 @@ class ClassCard extends StatelessWidget {
                         bottomRight: Radius.circular(8.r),
                       ),
                     ),
-                    child: Row(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
@@ -150,11 +152,50 @@ class ClassCard extends StatelessWidget {
                           color: AppColors.primary,
                           size: 20.w,
                         ),
-                        SizedBox(width: 8.w),
+                        SizedBox(height: 4.h),
                         Text(
                           AppStrings.viewStudents.tr(),
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 16.sp,
+                            fontSize: 14.sp,
+                            color: AppColors.primary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Divider
+              Container(
+                width: 1,
+                height: 52.h,
+                color: AppColors.primary.withValues(alpha: 0.2),
+              ),
+              // Add Attendance button
+              Expanded(
+                child: GestureDetector(
+                  onTap: onAddAttendance,
+                  child: Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primaryLightest,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.event_available,
+                          color: AppColors.primary,
+                          size: 20.w,
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          AppStrings.attendance.tr(),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14.sp,
                             color: AppColors.primary,
                             letterSpacing: 0.5,
                           ),
@@ -182,15 +223,16 @@ class ClassCard extends StatelessWidget {
                         bottomLeft: Radius.circular(8.r),
                       ),
                     ),
-                    child: Row(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.edit, color: AppColors.primary, size: 20.w),
-                        SizedBox(width: 8.w),
+                        SizedBox(height: 4.h),
                         Text(
                           AppStrings.addScores.tr(),
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 16.sp,
+                            fontSize: 14.sp,
                             color: AppColors.primary,
                             letterSpacing: 0.5,
                           ),

@@ -176,6 +176,7 @@ class PrintOptionsScreen extends ConsumerWidget {
     PrintState state,
     PrintController controller,
   ) {
+    // Both scores and attendance now use week group selector (5 weeks at a time)
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       color: Colors.white,
@@ -195,30 +196,32 @@ class PrintOptionsScreen extends ConsumerWidget {
                 border: Border.all(color: AppColors.inactiveBorder),
               ),
               child: DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  isExpanded: true,
-                  value: state.periodNumber,
-                  items: List.generate(12, (index) => index + 1)
-                      .map(
-                        (n) => DropdownMenuItem(
-                          value: n,
-                          child: Text('${AppStrings.weekly.tr()} $n'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) controller.changePeriodNumber(value);
-                  },
-                  icon: Icon(
-                    Icons.keyboard_arrow_down,
-                    color: AppColors.textLight,
-                    size: 20.sp,
-                  ),
-                ),
+                child: _buildWeekGroupDropdown(state, controller),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Week group dropdown for both scores and attendance (weeks 1-5, 6-10, 11-15)
+  Widget _buildWeekGroupDropdown(PrintState state, PrintController controller) {
+    return DropdownButton<int>(
+      isExpanded: true,
+      value: state.weekGroup,
+      items: [
+        DropdownMenuItem(value: 1, child: Text('الأسابيع 1 - 5')),
+        DropdownMenuItem(value: 2, child: Text('الأسابيع 6 - 10')),
+        DropdownMenuItem(value: 3, child: Text('الأسابيع 11 - 15')),
+      ],
+      onChanged: (value) {
+        if (value != null) controller.changeWeekGroup(value);
+      },
+      icon: Icon(
+        Icons.keyboard_arrow_down,
+        color: AppColors.textLight,
+        size: 20.sp,
       ),
     );
   }
@@ -236,6 +239,15 @@ class PrintOptionsScreen extends ConsumerWidget {
         ) ??
         printData.administration;
 
+    // Determine period text based on multi-week or single week
+    String periodText;
+    if (printData.isMultiWeek) {
+      final weekNums = printData.weekNumbers;
+      periodText = 'الأسابيع ${weekNums.first} - ${weekNums.last}';
+    } else {
+      periodText = '${AppStrings.weekly.tr()} ${printData.periodNumber}';
+    }
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -246,7 +258,7 @@ class PrintOptionsScreen extends ConsumerWidget {
             school: printData.classEntity.school,
             className: printData.classEntity.name,
             subject: printData.classEntity.subject,
-            period: '${AppStrings.weekly.tr()} ${printData.periodNumber}',
+            period: periodText,
           ),
 
           // Students preview (simplified)

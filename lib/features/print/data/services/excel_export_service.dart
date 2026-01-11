@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
+import 'package:moalem/features/attendance/domain/entities/weekly_attendance_entity.dart';
 import 'package:moalem/features/print/domain/entities/print_data_entity.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -55,9 +56,16 @@ class ExcelExportService {
 
     // Create title
     final titleCell = sheet.getRangeByIndex(currentRow, 1);
-    titleCell.setText(
-      'تقرير ${printData.printType == PrintType.scores ? 'الدرجات' : 'الحضور'}',
-    );
+    String titleText;
+    if (printData.isMultiWeek) {
+      titleText = printData.printType == PrintType.scores
+          ? 'سجل رصد درجات فصل'
+          : 'سجل الحضور والغياب';
+    } else {
+      titleText =
+          'تقرير ${printData.printType == PrintType.scores ? 'الدرجات' : 'الحضور'}';
+    }
+    titleCell.setText(titleText);
     titleCell.cellStyle.bold = true;
     titleCell.cellStyle.fontSize = 16;
     titleCell.cellStyle.hAlign = xlsio.HAlignType.right;
@@ -95,29 +103,59 @@ class ExcelExportService {
       'المادة',
       printData.classEntity.subject,
     );
-    currentRow = _addMetadataRow(
-      sheet,
-      currentRow,
-      'الفترة',
-      'الأسبوع ${printData.periodNumber}',
-    );
+    // Period info - show week dates for attendance or multi-week range
+    if (printData.isMultiWeek) {
+      final weekNums = printData.weekNumbers;
+      currentRow = _addMetadataRow(
+        sheet,
+        currentRow,
+        'الفترة',
+        'الأسابيع ${weekNums.first} - ${weekNums.last}',
+      );
+    } else if (printData.printType == PrintType.attendance &&
+        printData.weekStartDate != null) {
+      final dateFormat = DateFormat('d/M/yyyy', 'ar');
+      currentRow = _addMetadataRow(
+        sheet,
+        currentRow,
+        'الأسبوع',
+        '${dateFormat.format(printData.weekStartDate!)} - ${dateFormat.format(printData.weekEndDate!)}',
+      );
+    } else {
+      currentRow = _addMetadataRow(
+        sheet,
+        currentRow,
+        'الفترة',
+        'الأسبوع ${printData.periodNumber}',
+      );
+    }
     currentRow += 1;
 
     // Yield to UI thread
     await Future.delayed(Duration.zero);
 
-    // Create table headers
-    currentRow = _createTableHeaders(sheet, currentRow, printData);
-    currentRow += 1;
+    // Create table headers (multi-week has two header rows)
+    if (printData.isMultiWeek) {
+      currentRow = _createMultiWeekHeaders(sheet, currentRow, printData);
+      currentRow += 1;
+    } else {
+      currentRow = _createTableHeaders(sheet, currentRow, printData);
+      currentRow += 1;
+    }
 
     // Yield to UI thread
     await Future.delayed(Duration.zero);
 
     // Add student data
-    await _addStudentData(sheet, currentRow, printData);
+    if (printData.isMultiWeek) {
+      await _addMultiWeekStudentData(sheet, currentRow, printData);
+    } else {
+      await _addStudentData(sheet, currentRow, printData);
+    }
 
-    // Auto-fit columns
-    for (var col = 1; col <= 20; col++) {
+    // Auto-fit columns (more columns for multi-week)
+    final maxCols = printData.isMultiWeek ? 50 : 20;
+    for (var col = 1; col <= maxCols; col++) {
       sheet.autoFitColumn(col);
     }
   }
@@ -174,10 +212,24 @@ class ExcelExportService {
       cell.setText('المجموع');
       _styleHeaderCell(cell);
     } else if (printData.printType == PrintType.attendance) {
-      // Attendance status header
-      cell = sheet.getRangeByIndex(row, col);
-      cell.setText('الحالة');
-      _styleHeaderCell(cell);
+      // Weekly attendance with day columns (Sat-Thu)
+      if (printData.weekStartDate != null) {
+        final weekDays = printData.weekDays;
+        final dateFormat = DateFormat('d/M', 'ar');
+
+        for (final day in weekDays) {
+          cell = sheet.getRangeByIndex(row, col);
+          final dayName = WeekHelper.getShortDayNameArabic(day.weekday);
+          cell.setText('$dayName\n${dateFormat.format(day)}');
+          _styleHeaderCell(cell);
+          col++;
+        }
+      } else {
+        // Legacy single status header
+        cell = sheet.getRangeByIndex(row, col);
+        cell.setText('الحالة');
+        _styleHeaderCell(cell);
+      }
     }
 
     return row;
@@ -188,6 +240,254 @@ class ExcelExportService {
     cell.cellStyle.backColor = '#4472C4';
     cell.cellStyle.fontColor = '#FFFFFF';
     cell.cellStyle.hAlign = xlsio.HAlignType.center;
+  }
+
+  /// Create multi-week headers with two rows:
+  /// Row 1: Week group headers (merged across evaluation/day columns)
+  /// Row 2: Evaluation or day sub-headers for each week
+  int _createMultiWeekHeaders(
+    xlsio.Worksheet sheet,
+    int row,
+    PrintDataEntity printData,
+  ) {
+    final weekNumbers = printData.weekNumbers;
+    final dateFormat = DateFormat('d/M', 'ar');
+
+    // Determine columns per week based on print type
+    int colsPerWeek;
+    if (printData.printType == PrintType.scores &&
+        printData.evaluations != null) {
+      colsPerWeek = printData.evaluations!.length + 1; // evaluations + total
+    } else if (printData.printType == PrintType.attendance) {
+      colsPerWeek = 6; // Sat, Sun, Mon, Tue, Wed, Thu (6 days)
+    } else {
+      return row;
+    }
+
+    // Row 1: Student number, name, then week group headers
+    int col = 1;
+
+    // Student number header (spans 2 rows)
+    var cell = sheet.getRangeByIndex(row, col);
+    cell.setText('م');
+    _styleHeaderCell(cell);
+    sheet.getRangeByIndex(row, col, row + 1, col).merge();
+    col++;
+
+    // Student name header (spans 2 rows)
+    cell = sheet.getRangeByIndex(row, col);
+    cell.setText('الاسم');
+    _styleHeaderCell(cell);
+    sheet.getRangeByIndex(row, col, row + 1, col).merge();
+    col++;
+
+    // Week group headers (row 1)
+    for (final weekNum in weekNumbers) {
+      final startCol = col;
+      final endCol = col + colsPerWeek - 1;
+
+      // Merged week header
+      cell = sheet.getRangeByIndex(row, startCol);
+      final weekStartDate = printData.weekStartDates?[weekNum];
+      String weekLabel = 'الأسبوع ${_getArabicOrdinal(weekNum)}';
+      if (weekStartDate != null) {
+        weekLabel += ' ${dateFormat.format(weekStartDate)}';
+      }
+      cell.setText(weekLabel);
+      _styleWeekHeaderCell(cell);
+      sheet.getRangeByIndex(row, startCol, row, endCol).merge();
+
+      col = endCol + 1;
+    }
+
+    // Row 2: Sub-headers for each week
+    col = 3; // Start after م and الاسم
+
+    if (printData.printType == PrintType.scores &&
+        printData.evaluations != null) {
+      // Evaluation sub-headers
+      for (final _ in weekNumbers) {
+        for (final evaluation in printData.evaluations!) {
+          cell = sheet.getRangeByIndex(row + 1, col);
+          cell.setText(_getEvaluationShortName(evaluation.name));
+          _styleSubHeaderCell(cell);
+          col++;
+        }
+
+        // Total header
+        cell = sheet.getRangeByIndex(row + 1, col);
+        cell.setText('المجموع');
+        _styleTotalHeaderCell(cell);
+        col++;
+      }
+    } else if (printData.printType == PrintType.attendance) {
+      // Day sub-headers (Sat to Thu)
+      final dayNames = ['سبت', 'أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس'];
+      for (final weekNum in weekNumbers) {
+        final weekStartDate = printData.weekStartDates?[weekNum];
+        final weekDays = weekStartDate != null
+            ? WeekHelper.getWeekDays(weekStartDate)
+            : <DateTime>[];
+
+        for (var i = 0; i < 6; i++) {
+          cell = sheet.getRangeByIndex(row + 1, col);
+          if (weekDays.isNotEmpty && i < weekDays.length) {
+            cell.setText('${dayNames[i]}\n${dateFormat.format(weekDays[i])}');
+          } else {
+            cell.setText(dayNames[i]);
+          }
+          _styleSubHeaderCell(cell);
+          col++;
+        }
+      }
+    }
+
+    return row + 1; // Return the row after the second header row
+  }
+
+  void _styleWeekHeaderCell(xlsio.Range cell) {
+    cell.cellStyle.bold = true;
+    cell.cellStyle.backColor = '#305496'; // Darker blue
+    cell.cellStyle.fontColor = '#FFFFFF';
+    cell.cellStyle.hAlign = xlsio.HAlignType.center;
+    cell.cellStyle.vAlign = xlsio.VAlignType.center;
+  }
+
+  void _styleSubHeaderCell(xlsio.Range cell) {
+    cell.cellStyle.bold = true;
+    cell.cellStyle.backColor = '#BDD7EE'; // Light blue
+    cell.cellStyle.fontColor = '#000000';
+    cell.cellStyle.hAlign = xlsio.HAlignType.center;
+  }
+
+  void _styleTotalHeaderCell(xlsio.Range cell) {
+    cell.cellStyle.bold = true;
+    cell.cellStyle.backColor = '#FFE699'; // Light yellow
+    cell.cellStyle.fontColor = '#000000';
+    cell.cellStyle.hAlign = xlsio.HAlignType.center;
+  }
+
+  String _getArabicOrdinal(int number) {
+    const ordinals = {
+      1: 'الأول',
+      2: 'الثاني',
+      3: 'الثالث',
+      4: 'الرابع',
+      5: 'الخامس',
+      6: 'السادس',
+      7: 'السابع',
+      8: 'الثامن',
+      9: 'التاسع',
+      10: 'العاشر',
+      11: 'الحادي عشر',
+      12: 'الثاني عشر',
+      13: 'الثالث عشر',
+      14: 'الرابع عشر',
+      15: 'الخامس عشر',
+    };
+    return ordinals[number] ?? '$number';
+  }
+
+  /// Add multi-week student data
+  Future<void> _addMultiWeekStudentData(
+    xlsio.Worksheet sheet,
+    int startRow,
+    PrintDataEntity printData,
+  ) async {
+    const batchSize = 10;
+
+    for (var i = 0; i < printData.studentsData.length; i += batchSize) {
+      final end = (i + batchSize < printData.studentsData.length)
+          ? i + batchSize
+          : printData.studentsData.length;
+
+      for (var j = i; j < end; j++) {
+        final studentData = printData.studentsData[j];
+        final rowIndex = startRow + j;
+
+        _addMultiWeekStudentRow(sheet, rowIndex, studentData, printData);
+      }
+
+      // Yield to UI thread after each batch
+      await Future.delayed(Duration.zero);
+    }
+  }
+
+  void _addMultiWeekStudentRow(
+    xlsio.Worksheet sheet,
+    int rowIndex,
+    StudentPrintData studentData,
+    PrintDataEntity printData,
+  ) {
+    final weekNumbers = printData.weekNumbers;
+    int col = 1;
+
+    // Student number
+    var cell = sheet.getRangeByIndex(rowIndex, col);
+    cell.setNumber(
+      (int.tryParse(studentData.student.number.toString()) ?? 0).toDouble(),
+    );
+    cell.cellStyle.hAlign = xlsio.HAlignType.center;
+    col++;
+
+    // Student name
+    cell = sheet.getRangeByIndex(rowIndex, col);
+    cell.setText(studentData.student.name);
+    cell.cellStyle.hAlign = xlsio.HAlignType.right;
+    col++;
+
+    if (printData.printType == PrintType.scores &&
+        printData.evaluations != null) {
+      // Scores for each week
+      final evaluations = printData.evaluations!;
+      for (final weekNum in weekNumbers) {
+        // Evaluation scores
+        for (final evaluation in evaluations) {
+          final score = studentData.getScoreForWeek(weekNum, evaluation.id);
+          cell = sheet.getRangeByIndex(rowIndex, col);
+          cell.setNumber(score.toDouble());
+          cell.cellStyle.hAlign = xlsio.HAlignType.center;
+          col++;
+        }
+
+        // Week total
+        final weekTotal = studentData.getTotalForWeek(weekNum);
+        cell = sheet.getRangeByIndex(rowIndex, col);
+        cell.setNumber(weekTotal.toDouble());
+        cell.cellStyle.hAlign = xlsio.HAlignType.center;
+        cell.cellStyle.bold = true;
+        cell.cellStyle.backColor =
+            '#FFF2CC'; // Light yellow background for totals
+        col++;
+      }
+    } else if (printData.printType == PrintType.attendance) {
+      // Attendance for each week (6 days per week)
+      for (final weekNum in weekNumbers) {
+        final weekStartDate = printData.weekStartDates?[weekNum];
+        final weekDays = weekStartDate != null
+            ? WeekHelper.getWeekDays(weekStartDate)
+            : <DateTime>[];
+
+        for (var i = 0; i < 6; i++) {
+          cell = sheet.getRangeByIndex(rowIndex, col);
+          if (weekDays.isNotEmpty && i < weekDays.length) {
+            final day = weekDays[i];
+            final status = studentData.getAttendanceForWeekDate(weekNum, day);
+            if (status != null) {
+              cell.setText(_getAttendanceStatusSymbol(status));
+              _styleAttendanceCell(cell, status);
+            } else {
+              cell.setText('-');
+              cell.cellStyle.hAlign = xlsio.HAlignType.center;
+            }
+          } else {
+            cell.setText('-');
+            cell.cellStyle.hAlign = xlsio.HAlignType.center;
+          }
+          col++;
+        }
+      }
+    }
   }
 
   Future<void> _addStudentData(
@@ -254,15 +554,65 @@ class ExcelExportService {
       cell.cellStyle.hAlign = xlsio.HAlignType.center;
       cell.cellStyle.bold = true;
     } else if (printData.printType == PrintType.attendance) {
-      // Attendance status
-      final attendanceData = studentData.attendance ?? {};
-      final status = attendanceData.values.isNotEmpty
-          ? _getAttendanceStatusText(attendanceData.values.first)
-          : '-';
+      // Weekly attendance with day columns (Sat-Thu)
+      if (printData.weekStartDate != null &&
+          studentData.attendanceDaily != null) {
+        final weekDays = printData.weekDays;
 
-      cell = sheet.getRangeByIndex(rowIndex, col);
-      cell.setText(status);
-      cell.cellStyle.hAlign = xlsio.HAlignType.right;
+        for (final day in weekDays) {
+          cell = sheet.getRangeByIndex(rowIndex, col);
+          final status = studentData.getAttendanceForDate(day);
+          if (status != null) {
+            cell.setText(_getAttendanceStatusSymbol(status));
+            _styleAttendanceCell(cell, status);
+          } else {
+            cell.setText('-');
+            cell.cellStyle.hAlign = xlsio.HAlignType.center;
+          }
+          col++;
+        }
+      } else {
+        // Legacy single status
+        final attendanceData = studentData.attendance ?? {};
+        final status = attendanceData.values.isNotEmpty
+            ? _getAttendanceStatusText(attendanceData.values.first)
+            : '-';
+
+        cell = sheet.getRangeByIndex(rowIndex, col);
+        cell.setText(status);
+        cell.cellStyle.hAlign = xlsio.HAlignType.right;
+      }
+    }
+  }
+
+  /// Style attendance cell based on status
+  void _styleAttendanceCell(xlsio.Range cell, AttendanceStatus status) {
+    cell.cellStyle.hAlign = xlsio.HAlignType.center;
+    switch (status) {
+      case AttendanceStatus.present:
+        cell.cellStyle.backColor = '#C6EFCE'; // Light green
+        cell.cellStyle.fontColor = '#006100'; // Dark green
+        break;
+      case AttendanceStatus.absent:
+        cell.cellStyle.backColor = '#FFC7CE'; // Light red
+        cell.cellStyle.fontColor = '#9C0006'; // Dark red
+        break;
+      case AttendanceStatus.excused:
+        cell.cellStyle.backColor = '#FFEB9C'; // Light yellow
+        cell.cellStyle.fontColor = '#9C5700'; // Dark yellow
+        break;
+    }
+  }
+
+  /// Get short symbol for attendance status
+  String _getAttendanceStatusSymbol(AttendanceStatus status) {
+    switch (status) {
+      case AttendanceStatus.present:
+        return '✓';
+      case AttendanceStatus.absent:
+        return '✗';
+      case AttendanceStatus.excused:
+        return 'إ';
     }
   }
 
