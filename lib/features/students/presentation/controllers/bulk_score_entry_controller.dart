@@ -67,7 +67,10 @@ class BulkScoreEntryState {
   List<StudentScoreInput> get filteredStudents {
     if (searchQuery.isEmpty) return students;
     return students
-        .where((s) => s.student.name.toLowerCase().contains(searchQuery.toLowerCase()))
+        .where(
+          (s) =>
+              s.student.name.toLowerCase().contains(searchQuery.toLowerCase()),
+        )
         .toList();
   }
 
@@ -113,10 +116,15 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
       final allEvaluations = await _getEvaluationsUseCase();
 
       // Filter evaluations by class group and override max scores
-      final evaluationScoresMap = _getEvaluationScoresMap(classInfo.evaluationGroup);
+      final evaluationScoresMap = _getEvaluationScoresMap(
+        classInfo.evaluationGroup,
+      );
       final availableEvaluations = allEvaluations
           .where((e) => evaluationScoresMap.containsKey(e.name))
-          .map((e) => e.copyWith(maxScore: evaluationScoresMap[e.name] ?? e.maxScore))
+          .map(
+            (e) =>
+                e.copyWith(maxScore: evaluationScoresMap[e.name] ?? e.maxScore),
+          )
           .toList();
 
       // Get students
@@ -128,7 +136,9 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
       state = state.copyWith(
         classInfo: classInfo,
         availableEvaluations: availableEvaluations,
-        selectedEvaluation: availableEvaluations.isNotEmpty ? availableEvaluations.first : null,
+        selectedEvaluation: availableEvaluations.isNotEmpty
+            ? availableEvaluations.first
+            : null,
         students: studentInputs,
         isLoading: false,
       );
@@ -286,11 +296,12 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   }
 }
 
-final bulkScoreEntryControllerProvider =
-    StateNotifierProvider.autoDispose.family<BulkScoreEntryController, BulkScoreEntryState, String>(
-  (ref, classId) {
-    final controller = getIt<BulkScoreEntryController>();
-    controller.loadClassData(classId);
-    return controller;
-  },
-);
+final bulkScoreEntryControllerProvider = StateNotifierProvider.autoDispose
+    .family<BulkScoreEntryController, BulkScoreEntryState, String>((
+      ref,
+      classId,
+    ) {
+      final controller = getIt<BulkScoreEntryController>();
+      controller.loadClassData(classId);
+      return controller;
+    });

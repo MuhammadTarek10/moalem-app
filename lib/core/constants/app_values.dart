@@ -23,22 +23,19 @@ class EvaluationValues {
   };
 
   static const Map<String, int> primaryEvaluationScores = {
-    // Total: 40
+    // Total: 30
     'homework_book': 5,
     'activity_book': 5,
     'weekly_review': 5,
-    'attendance_and_diligence': 5,
     'skills_performance': 10,
-    'months_exam_average': 10,
+    'attendance_and_diligence': 5,
   };
 
   static const Map<String, int> secondaryEvaluationScores = {
-    // Total: 70
+    // Total: 40
     'weekly_review': 20,
     'homework_book': 10,
     'attendance_and_diligence': 10,
-    'first_month_exam': 15,
-    'second_month_exam': 15,
   };
 
   static const Map<String, int> highSchoolEvaluationScores = {

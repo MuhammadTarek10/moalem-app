@@ -185,11 +185,7 @@ class ClassCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.edit,
-                          color: AppColors.primary,
-                          size: 20.w,
-                        ),
+                        Icon(Icons.edit, color: AppColors.primary, size: 20.w),
                         SizedBox(width: 8.w),
                         Text(
                           AppStrings.addScores.tr(),
