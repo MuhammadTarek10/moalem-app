@@ -113,7 +113,8 @@ class PrintOptionsScreen extends ConsumerWidget {
               ExportButtons(
                 onExportExcel: () => controller.exportToExcel(),
                 onExportPdf: () => controller.exportToPdf(),
-                isLoading: state.isExporting,
+                isExcelLoading: state.isExportingExcel,
+                isPdfLoading: state.isExportingPdf,
               ),
             ],
           );

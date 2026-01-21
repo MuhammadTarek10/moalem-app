@@ -6,17 +6,21 @@ import 'package:moalem/core/constants/app_strings.dart';
 class ExportButtons extends StatelessWidget {
   final VoidCallback onExportExcel;
   final VoidCallback onExportPdf;
-  final bool isLoading;
+  final bool isExcelLoading;
+  final bool isPdfLoading;
 
   const ExportButtons({
     super.key,
     required this.onExportExcel,
     required this.onExportPdf,
-    this.isLoading = false,
+    this.isExcelLoading = false,
+    this.isPdfLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = isExcelLoading || isPdfLoading;
+
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -35,7 +39,7 @@ class ExportButtons extends StatelessWidget {
           Expanded(
             child: ElevatedButton.icon(
               onPressed: isLoading ? null : onExportExcel,
-              icon: isLoading
+              icon: isExcelLoading
                   ? SizedBox(
                       width: 20.w,
                       height: 20.h,
@@ -61,7 +65,7 @@ class ExportButtons extends StatelessWidget {
           Expanded(
             child: ElevatedButton.icon(
               onPressed: isLoading ? null : onExportPdf,
-              icon: isLoading
+              icon: isPdfLoading
                   ? SizedBox(
                       width: 20.w,
                       height: 20.h,

@@ -45,10 +45,12 @@ extension SnackBarExtension on BuildContext {
   void showSnackBar(SnackBar snackBar) =>
       scaffoldMessenger.showSnackBar(snackBar);
   void showTextSnackBar(String message) {
+    scaffoldMessenger.removeCurrentSnackBar();
     scaffoldMessenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   void showErrorSnackBar(String message) {
+    scaffoldMessenger.removeCurrentSnackBar();
     scaffoldMessenger.showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
@@ -58,6 +60,7 @@ extension SnackBarExtension on BuildContext {
   }
 
   void showSuccessSnackBar(String message) {
+    scaffoldMessenger.removeCurrentSnackBar();
     scaffoldMessenger.showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
@@ -67,6 +70,7 @@ extension SnackBarExtension on BuildContext {
   }
 
   void showInfoSnackBar(String message) {
+    scaffoldMessenger.removeCurrentSnackBar();
     scaffoldMessenger.showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
