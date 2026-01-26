@@ -18,7 +18,9 @@ class PrintState {
   final PeriodType periodType;
   final int periodNumber;
   final int weekGroup; // 1 for weeks 1-5, 2 for weeks 6-10, 3 for weeks 11-15
-  final bool isExporting;
+  final bool isExportingExcel;
+  final bool isExportingPdf;
+  final bool isExportingEmptySheet;
   final String? exportMessage;
 
   const PrintState({
@@ -29,7 +31,9 @@ class PrintState {
     this.periodType = PeriodType.weekly,
     this.periodNumber = 1,
     this.weekGroup = 1,
-    this.isExporting = false,
+    this.isExportingExcel = false,
+    this.isExportingPdf = false,
+    this.isExportingEmptySheet = false,
     this.exportMessage,
   });
 
@@ -48,7 +52,9 @@ class PrintState {
     PeriodType? periodType,
     int? periodNumber,
     int? weekGroup,
-    bool? isExporting,
+    bool? isExportingExcel,
+    bool? isExportingPdf,
+    bool? isExportingEmptySheet,
     String? exportMessage,
   }) {
     return PrintState(
@@ -59,7 +65,10 @@ class PrintState {
       periodType: periodType ?? this.periodType,
       periodNumber: periodNumber ?? this.periodNumber,
       weekGroup: weekGroup ?? this.weekGroup,
-      isExporting: isExporting ?? this.isExporting,
+      isExportingExcel: isExportingExcel ?? this.isExportingExcel,
+      isExportingPdf: isExportingPdf ?? this.isExportingPdf,
+      isExportingEmptySheet:
+          isExportingEmptySheet ?? this.isExportingEmptySheet,
       exportMessage: exportMessage ?? this.exportMessage,
     );
   }
@@ -180,17 +189,17 @@ class PrintController extends StateNotifier<PrintState> {
     final printData = state.printData.value;
     if (printData == null) return;
 
-    state = state.copyWith(isExporting: true, exportMessage: null);
+    state = state.copyWith(isExportingExcel: true, exportMessage: null);
     try {
       // Run export in background
       await _excelExportService.exportToExcel(printData);
       state = state.copyWith(
-        isExporting: false,
+        isExportingExcel: false,
         exportMessage: 'تم تصدير Excel بنجاح',
       );
     } catch (e) {
       state = state.copyWith(
-        isExporting: false,
+        isExportingExcel: false,
         exportMessage: 'فشل تصدير Excel: $e',
       );
     }
@@ -201,18 +210,38 @@ class PrintController extends StateNotifier<PrintState> {
     final printData = state.printData.value;
     if (printData == null) return;
 
-    state = state.copyWith(isExporting: true, exportMessage: null);
+    state = state.copyWith(isExportingPdf: true, exportMessage: null);
     try {
       // Run export in background
       await _pdfExportService.exportToPdf(printData);
       state = state.copyWith(
-        isExporting: false,
+        isExportingPdf: false,
         exportMessage: 'تم تصدير PDF بنجاح',
       );
     } catch (e) {
       state = state.copyWith(
-        isExporting: false,
+        isExportingPdf: false,
         exportMessage: 'فشل تصدير PDF: $e',
+      );
+    }
+  }
+
+  /// Export empty attendance sheet (runs in background to prevent UI freeze)
+  Future<void> exportEmptySheet() async {
+    final printData = state.printData.value;
+    if (printData == null) return;
+
+    state = state.copyWith(isExportingEmptySheet: true, exportMessage: null);
+    try {
+      await _excelExportService.exportEmptyAttendanceSheet(printData);
+      state = state.copyWith(
+        isExportingEmptySheet: false,
+        exportMessage: 'تم تصدير كشف الغياب الفارغ بنجاح',
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isExportingEmptySheet: false,
+        exportMessage: 'فشل تصدير كشف الغياب الفارغ: $e',
       );
     }
   }

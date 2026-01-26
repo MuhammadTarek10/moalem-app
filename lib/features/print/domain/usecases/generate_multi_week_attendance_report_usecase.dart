@@ -36,6 +36,7 @@ class GenerateMultiWeekAttendanceReportUseCase {
     if (classEntity == null) return null;
 
     // Get user profile for governorate and administration
+    // Get user profile for governorate and administration
     final user = await _userRepository.getUser();
     final governorate = user.governorate ?? '';
     final administration = user.educationalAdministration ?? '';
@@ -118,8 +119,12 @@ class GenerateMultiWeekAttendanceReportUseCase {
     );
   }
 
-  /// Get the default semester start date (first Saturday of the current school year)
+  /// Get the default semester start date
   DateTime _getDefaultSemesterStart() {
+    // TEMPORARY: Hardcoded to start of 2nd semester (Feb 7, 2026) as requested
+    return DateTime(2026, 2, 7);
+
+    /* Original logic commented out for testing
     final now = DateTime.now();
     // School year typically starts in September
     // If we're before September, use previous year's September
@@ -129,6 +134,7 @@ class GenerateMultiWeekAttendanceReportUseCase {
     // Find the first Saturday on or after September 1
     int daysUntilSaturday = (DateTime.saturday - sept1.weekday) % 7;
     return sept1.add(Duration(days: daysUntilSaturday));
+    */
   }
 
   /// Convert app_enums.AttendanceStatus to print AttendanceStatus
