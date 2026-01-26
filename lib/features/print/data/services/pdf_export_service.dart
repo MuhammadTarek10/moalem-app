@@ -109,11 +109,11 @@ class PdfExportService {
             textDirection: pw.TextDirection.rtl,
           ),
           pw.SizedBox(height: 12),
-          _buildMetadataRow('المحافظة', printData.governorate),
-          _buildMetadataRow('الإدارة التعليمية', printData.administration),
-          _buildMetadataRow('المدرسة', printData.classEntity.school),
-          _buildMetadataRow('الفصل', printData.classEntity.name),
-          _buildMetadataRow('المادة', printData.classEntity.subject),
+          _buildMetadataRow('المحافظة/', printData.governorate),
+          _buildMetadataRow('الإدارة التعليمية/', printData.administration),
+          _buildMetadataRow('المدرسة/', printData.classEntity.school),
+          _buildMetadataRow('الفصل/', printData.classEntity.name),
+          _buildMetadataRow('المادة/', printData.classEntity.subject),
           _buildMetadataRow(periodLabel, periodText),
         ],
       ),
@@ -401,9 +401,9 @@ class PdfExportService {
   String _getAttendanceStatusSymbol(AttendanceStatus status) {
     switch (status) {
       case AttendanceStatus.present:
-        return '✓';
+        return '√';
       case AttendanceStatus.absent:
-        return '✗';
+        return 'غ';
       case AttendanceStatus.excused:
         return 'إ';
     }

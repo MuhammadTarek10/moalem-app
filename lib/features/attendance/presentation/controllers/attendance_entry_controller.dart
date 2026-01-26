@@ -65,8 +65,10 @@ class AttendanceEntryState {
     this.isSaving = false,
     this.error,
     this.successMessage,
-  }) : weekStartDate = weekStartDate ?? WeekHelper.getWeekStart(DateTime.now()),
-       selectedDay = selectedDay ?? WeekHelper.getWeekStart(DateTime.now());
+  }) : weekStartDate =
+           weekStartDate ?? WeekHelper.getWeekStart(DateTime(2026, 2, 7)),
+       selectedDay =
+           selectedDay ?? WeekHelper.getWeekStart(DateTime(2026, 2, 7));
 
   AttendanceEntryState copyWith({
     List<ClassEntity>? classes,

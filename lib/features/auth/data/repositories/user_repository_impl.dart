@@ -22,12 +22,38 @@ class UserRepositoryImpl implements UserRepository {
     if (user != null) {
       return UserModel.fromJson(jsonDecode(user)).toDomain();
     }
-    final userModel = await _remoteDataSource.getUser();
+    return refreshUser();
+  }
+
+  @override
+  Future<User> refreshUser() async {
+    // 1. Fetch remote user
+    final remoteUser = await _remoteDataSource.getUser();
+
+    // 2. Get local user (if any) to preserve fields that might be null in remote
+    //    (e.g., fields captured in signup but not returned/persisted by backend yet)
+    UserModel? localUser;
+    final localUserStr = _storageService.getString(AppKeys.user);
+    if (localUserStr != null) {
+      localUser = UserModel.fromJson(jsonDecode(localUserStr));
+    }
+
+    // 3. Merge: Remote takes precedence, but if remote is null/empty and local exists, keep local.
+    final mergedUser = remoteUser.copyWith(
+      educationalAdministration:
+          remoteUser.educationalAdministration ??
+          localUser?.educationalAdministration,
+      governorate: remoteUser.governorate ?? localUser?.governorate,
+      name: remoteUser.name ?? localUser?.name,
+      // Add other fields to merge if necessary, but these are the critical ones for reports
+    );
+
+    // 4. Save merged result
     await _storageService.setString(
       AppKeys.user,
-      jsonEncode(userModel.toJson()),
+      jsonEncode(mergedUser.toJson()),
     );
-    return userModel.toDomain();
+    return mergedUser.toDomain();
   }
 
   @override

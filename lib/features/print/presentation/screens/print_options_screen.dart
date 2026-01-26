@@ -113,8 +113,11 @@ class PrintOptionsScreen extends ConsumerWidget {
               ExportButtons(
                 onExportExcel: () => controller.exportToExcel(),
                 onExportPdf: () => controller.exportToPdf(),
+                onExportEmptySheet: () => controller.exportEmptySheet(),
                 isExcelLoading: state.isExportingExcel,
                 isPdfLoading: state.isExportingPdf,
+                isEmptySheetLoading: state.isExportingEmptySheet,
+                showEmptySheetButton: printType == 'attendance',
               ),
             ],
           );
