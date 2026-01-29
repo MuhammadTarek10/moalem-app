@@ -7,7 +7,7 @@ import 'database_schema.dart';
 @singleton
 class DatabaseService {
   static const String _dbName = 'moalem.db';
-  static const int _dbVersion = 4;
+  static const int _dbVersion = 5;
 
   Database? _database;
 
@@ -59,6 +59,13 @@ class DatabaseService {
     if (oldVersion < 4) {
       // Migrate from v3 to v4: add daily_attendance table
       for (final query in DatabaseSchema.migrateV3ToV4) {
+        await db.execute(query);
+      }
+    }
+
+    if (oldVersion < 5) {
+      // Migrate from v4 to v5: add Primary 3-6 evaluations
+      for (final query in DatabaseSchema.migrateV4ToV5) {
         await db.execute(query);
       }
     }

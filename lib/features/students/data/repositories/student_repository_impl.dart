@@ -114,6 +114,13 @@ class StudentRepositoryImpl implements StudentRepository {
       });
     }).toList();
 
+    // Sort evaluations to match the order in EvaluationValues
+    evaluations.sort((a, b) {
+      final indexA = evaluationIds.indexOf(a.name);
+      final indexB = evaluationIds.indexOf(b.name);
+      return indexA.compareTo(indexB);
+    });
+
     // Get scores for this student, period type, and period number
     final scoresResult = await db.query(
       _studentsScoresTable,

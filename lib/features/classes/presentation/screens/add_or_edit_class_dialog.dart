@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:moalem/core/constants/app_enums.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/classes/presentation/models/add_class_form_data.dart';
 import 'package:moalem/features/profile/presentation/controllers/profile_controller.dart';
@@ -9,7 +10,6 @@ import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/utils/validators.dart';
 import 'package:moalem/shared/widgets/app_button.dart';
 import 'package:moalem/shared/widgets/dropdown_field.dart';
-import 'package:moalem/shared/widgets/text_input.dart';
 
 class AddOrEditClassDialog extends ConsumerStatefulWidget {
   final ClassFormData? initialData;
@@ -46,6 +46,20 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
     'الفصل الدراسى الثانى',
   ];
 
+  Map<EvaluationGroup, String> get _evaluationGroups => {
+    EvaluationGroup.prePrimary: AppStrings.prePrimaryGroup.tr(),
+    EvaluationGroup.primary: AppStrings.primaryGroup.tr(),
+    EvaluationGroup.secondary: AppStrings.secondaryGroup.tr(),
+    EvaluationGroup.high: AppStrings.highSchoolGroup.tr(),
+  };
+
+  EvaluationGroup? _getEvaluationGroupFromLabel(String label) {
+    for (var entry in _evaluationGroups.entries) {
+      if (entry.value == label) return entry.key;
+    }
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +67,13 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
   }
 
   void _onSubmit() {
+    // Auto-generate class name if empty
+    if (_formData.className == null || _formData.className!.isEmpty) {
+      final name =
+          '${_formData.educationalStage ?? ""} - ${_formData.subject ?? ""}';
+      _formData = _formData.copyWith(className: name);
+    }
+
     if (_formKey.currentState?.validate() ?? false) {
       Navigator.of(context).pop(_formData);
     }
@@ -128,19 +149,41 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
                         value: _formData.educationalStage,
                         items: user.grades,
                         hint: AppStrings.educationalStageHint.tr(),
-                        onChanged: (value) => _formData = _formData.copyWith(
-                          educationalStage: value,
-                        ),
-                        validator: requiredValidator,
-                      ),
-                      SizedBox(height: 20.h),
+                        onChanged: (value) {
+                          EvaluationGroup? group;
+                          if (value != null) {
+                            // Auto-detect evaluation group
+                            final v = value.toLowerCase();
+                            if (v.contains('الإعدادي') ||
+                                v.contains('اعدادي') ||
+                                v.contains('prep')) {
+                              group = EvaluationGroup.secondary;
+                            } else if (v.contains('الثانوي') ||
+                                v.contains('ثانوي') ||
+                                v.contains('sec')) {
+                              group = EvaluationGroup.high;
+                            } else if (v.contains('الثالث') ||
+                                v.contains('الرابع') ||
+                                v.contains('الخامس') ||
+                                v.contains('السادس') ||
+                                v.contains('3') ||
+                                v.contains('4') ||
+                                v.contains('5') ||
+                                v.contains('6')) {
+                              group = EvaluationGroup.primary;
+                            } else {
+                              group = EvaluationGroup.prePrimary;
+                            }
+                          }
 
-                      // Class Name
-                      AppTextFormField(
-                        initialValue: _formData.className,
-                        hint: AppStrings.classNameLabel.tr(),
-                        onChanged: (value) =>
-                            _formData = _formData.copyWith(className: value),
+                          setState(() {
+                            _formData = _formData.copyWith(
+                              educationalStage: value,
+                              evaluationGroup:
+                                  group ?? _formData.evaluationGroup,
+                            );
+                          });
+                        },
                         validator: requiredValidator,
                       ),
                       SizedBox(height: 20.h),
@@ -174,6 +217,26 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
                         hint: AppStrings.schoolFieldHint.tr(),
                         onChanged: (value) =>
                             _formData = _formData.copyWith(school: value),
+                        validator: requiredValidator,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Evaluation Group
+                      DropdownField(
+                        value: _formData.evaluationGroup != null
+                            ? _evaluationGroups[_formData.evaluationGroup!]
+                            : null,
+                        items: _evaluationGroups.values.toList(),
+                        hint: AppStrings.educationalStageHint
+                            .tr(), // Or a better hint
+                        onChanged: (value) {
+                          if (value != null) {
+                            final group = _getEvaluationGroupFromLabel(value);
+                            _formData = _formData.copyWith(
+                              evaluationGroup: group,
+                            );
+                          }
+                        },
                         validator: requiredValidator,
                       ),
                       SizedBox(height: 32.h),

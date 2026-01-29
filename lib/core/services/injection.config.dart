@@ -133,11 +133,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i769.AttendanceLocalDataSource>(
       () => _i769.AttendanceLocalDataSource(gh<_i748.DatabaseService>()),
     );
-    gh.lazySingleton<_i367.ClassRepository>(
-      () => _i972.ClassRepositoryImpl(gh<_i748.DatabaseService>()),
-    );
     gh.lazySingleton<_i679.StudentRepository>(
       () => _i865.StudentRepositoryImpl(gh<_i748.DatabaseService>()),
+    );
+    gh.lazySingleton<_i367.ClassRepository>(
+      () => _i972.ClassRepositoryImpl(gh<_i748.DatabaseService>()),
     );
     gh.factory<_i1053.AddClassUseCase>(
       () => _i1053.AddClassUseCase(gh<_i367.ClassRepository>()),
@@ -157,9 +157,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i859.GetEvaluationsUseCase>(
       () => _i859.GetEvaluationsUseCase(gh<_i367.ClassRepository>()),
     );
-    gh.factory<_i477.AttendanceRepository>(
-      () =>
-          _i719.AttendanceRepositoryImpl(gh<_i769.AttendanceLocalDataSource>()),
+    gh.factory<_i564.GetClassReportUseCase>(
+      () => _i564.GetClassReportUseCase(
+        gh<_i679.StudentRepository>(),
+        gh<_i367.ClassRepository>(),
+      ),
+    );
+    gh.singleton<_i1009.AuthInterceptor>(
+      () => _i1009.AuthInterceptor(gh<_i1018.SecureStorageService>()),
     );
     gh.factory<_i891.AddStudentUseCase>(
       () => _i891.AddStudentUseCase(gh<_i679.StudentRepository>()),
@@ -187,10 +192,28 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i203.UpdateStudentScoreUseCase>(
       () => _i203.UpdateStudentScoreUseCase(gh<_i679.StudentRepository>()),
     );
-    gh.factory<_i564.GetClassReportUseCase>(
-      () => _i564.GetClassReportUseCase(
+    gh.factory<_i477.AttendanceRepository>(
+      () =>
+          _i719.AttendanceRepositoryImpl(gh<_i769.AttendanceLocalDataSource>()),
+    );
+    gh.factory<_i891.GetWeeklyAttendanceUseCase>(
+      () => _i891.GetWeeklyAttendanceUseCase(
+        gh<_i477.AttendanceRepository>(),
         gh<_i679.StudentRepository>(),
-        gh<_i367.ClassRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i361.Dio>(
+      () => networkModule.dio(gh<_i1009.AuthInterceptor>()),
+    );
+    gh.factory<_i763.SaveAttendanceUseCase>(
+      () => _i763.SaveAttendanceUseCase(gh<_i477.AttendanceRepository>()),
+    );
+    gh.factory<_i507.AttendanceEntryController>(
+      () => _i507.AttendanceEntryController(
+        gh<_i1015.GetClassesUseCase>(),
+        gh<_i526.GetClassByIdUseCase>(),
+        gh<_i891.GetWeeklyAttendanceUseCase>(),
+        gh<_i763.SaveAttendanceUseCase>(),
       ),
     );
     gh.factory<_i1037.BulkScoreEntryController>(
@@ -201,31 +224,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i203.UpdateStudentScoreUseCase>(),
       ),
     );
-    gh.factory<_i891.GetWeeklyAttendanceUseCase>(
-      () => _i891.GetWeeklyAttendanceUseCase(
-        gh<_i477.AttendanceRepository>(),
-        gh<_i679.StudentRepository>(),
-      ),
-    );
-    gh.singleton<_i1009.AuthInterceptor>(
-      () => _i1009.AuthInterceptor(gh<_i1018.SecureStorageService>()),
-    );
-    gh.factory<_i763.SaveAttendanceUseCase>(
-      () => _i763.SaveAttendanceUseCase(gh<_i477.AttendanceRepository>()),
-    );
-    gh.lazySingleton<_i361.Dio>(
-      () => networkModule.dio(gh<_i1009.AuthInterceptor>()),
-    );
     gh.lazySingleton<_i738.ApiService>(
       () => networkModule.apiService(gh<_i361.Dio>()),
-    );
-    gh.factory<_i507.AttendanceEntryController>(
-      () => _i507.AttendanceEntryController(
-        gh<_i1015.GetClassesUseCase>(),
-        gh<_i526.GetClassByIdUseCase>(),
-        gh<_i891.GetWeeklyAttendanceUseCase>(),
-        gh<_i763.SaveAttendanceUseCase>(),
-      ),
     );
     gh.lazySingleton<_i886.UserRemoteDataSource>(
       () => _i886.UserRemoteDataSourceImpl(gh<_i738.ApiService>()),
@@ -236,18 +236,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i285.StorageService>(),
       ),
     );
-    gh.lazySingleton<_i107.AuthRemoteDataSource>(
-      () => _i107.AuthRemoteDataSourceImpl(gh<_i738.ApiService>()),
-    );
     gh.lazySingleton<_i315.LicenseRemoteDataSource>(
       () => _i315.LicenseRemoteDataSourceImpl(gh<_i738.ApiService>()),
-    );
-    gh.lazySingleton<_i787.AuthRepository>(
-      () => _i153.AuthRepositoryImpl(
-        gh<_i107.AuthRemoteDataSource>(),
-        gh<_i285.StorageService>(),
-        gh<_i1018.SecureStorageService>(),
-      ),
     );
     gh.factory<_i763.GenerateAttendanceReportUseCase>(
       () => _i763.GenerateAttendanceReportUseCase(
@@ -286,18 +276,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i926.UserRepository>(),
       ),
     );
+    gh.lazySingleton<_i107.AuthRemoteDataSource>(
+      () => _i107.AuthRemoteDataSourceImpl(gh<_i738.ApiService>()),
+    );
+    gh.lazySingleton<_i787.AuthRepository>(
+      () => _i153.AuthRepositoryImpl(
+        gh<_i107.AuthRemoteDataSource>(),
+        gh<_i285.StorageService>(),
+        gh<_i1018.SecureStorageService>(),
+      ),
+    );
     gh.factory<_i82.FetchAndStoreUserUseCase>(
       () => _i82.FetchAndStoreUserUseCase(
         gh<_i926.UserRepository>(),
         gh<_i1018.SecureStorageService>(),
         gh<_i285.StorageService>(),
-      ),
-    );
-    gh.lazySingleton<_i1066.LicenseRepository>(
-      () => _i167.LicenseRepositoryImpl(
-        gh<_i315.LicenseRemoteDataSource>(),
-        gh<_i285.StorageService>(),
-        gh<_i1018.SecureStorageService>(),
       ),
     );
     gh.factory<_i435.SignInUseCase>(
@@ -308,6 +301,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i57.SignUpUseCase>(
       () => _i57.SignUpUseCase(gh<_i787.AuthRepository>()),
+    );
+    gh.lazySingleton<_i1066.LicenseRepository>(
+      () => _i167.LicenseRepositoryImpl(
+        gh<_i315.LicenseRemoteDataSource>(),
+        gh<_i285.StorageService>(),
+        gh<_i1018.SecureStorageService>(),
+      ),
     );
     gh.factory<_i253.RedeemCouponUseCase>(
       () => _i253.RedeemCouponUseCase(gh<_i1066.LicenseRepository>()),

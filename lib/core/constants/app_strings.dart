@@ -129,6 +129,13 @@ class AppStrings {
   static const String skillsPerformance = 'skills_performance';
   static const String monthsExamAverage = 'months_exam_average';
 
+  // Primary 3-6
+  static const String primaryHomework = 'primary_homework';
+  static const String primaryActivity = 'primary_activity';
+  static const String primaryWeekly = 'primary_weekly';
+  static const String primaryPerformance = 'primary_performance';
+  static const String primaryAttendance = 'primary_attendance';
+
   // Classes Empty State
   static const String noClassesTitle = 'no_classes_title';
   static const String noClassesSubtitle = 'no_classes_subtitle';

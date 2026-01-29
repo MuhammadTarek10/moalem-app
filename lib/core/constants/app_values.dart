@@ -24,11 +24,11 @@ class EvaluationValues {
 
   static const Map<String, int> primaryEvaluationScores = {
     // Total: 30
-    'homework_book': 5,
-    'activity_book': 5,
-    'weekly_review': 5,
-    'skills_performance': 10,
-    'attendance_and_diligence': 5,
+    'primary_homework': 5,
+    'primary_activity': 5,
+    'primary_weekly': 5,
+    'primary_performance': 10,
+    'primary_attendance': 5,
   };
 
   static const Map<String, int> secondaryEvaluationScores = {

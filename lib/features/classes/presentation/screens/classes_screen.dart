@@ -31,6 +31,7 @@ class ClassesScreen extends ConsumerWidget {
             subject: result.subject!,
             semester: result.semester!,
             school: result.school!,
+            evaluationGroup: result.evaluationGroup!,
           );
     }
   }
