@@ -71,12 +71,9 @@ class SignupStepThree extends StatelessWidget {
                       items: EgyptRegions.governorates,
                       onChanged: (value) {
                         // Reset administration when governorate changes
-                        onDataChanged(
-                          formData.copyWith(
-                            governorate: value,
-                            educationalAdministration: null,
-                          ),
-                        );
+                        final newData = formData.copyWith(governorate: value);
+                        newData.educationalAdministration = null;
+                        onDataChanged(newData);
                       },
                       hint: AppStrings.governorateLabel.tr(),
                       validator: requiredValidator,
