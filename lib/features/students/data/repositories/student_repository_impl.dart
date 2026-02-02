@@ -47,6 +47,19 @@ class StudentRepositoryImpl implements StudentRepository {
   }
 
   @override
+  Future<StudentEntity?> getStudentByQrCode(String qrCode) async {
+    final db = await _databaseService.database;
+    final result = await db.query(
+      _tableName,
+      where: 'qr_code = ? AND deleted_at IS NULL',
+      whereArgs: [qrCode],
+    );
+
+    if (result.isEmpty) return null;
+    return StudentEntity.fromMap(result.first);
+  }
+
+  @override
   Future<StudentDetailsWithScores?> getStudentDetailsWithScores(
     String studentId,
     PeriodType periodType,

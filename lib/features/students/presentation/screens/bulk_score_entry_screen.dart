@@ -11,9 +11,11 @@ import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/classes/domain/entities/evaluation_entity.dart';
 import 'package:moalem/features/students/domain/entities/student_score_input_entity.dart';
 import 'package:moalem/features/students/presentation/controllers/bulk_score_entry_controller.dart';
+import 'package:moalem/features/students/presentation/widgets/score_entry_dialog.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/screens/loading_screen.dart';
+import 'package:moalem/shared/widgets/qr_scanner_screen.dart';
 
 class BulkScoreEntryScreen extends ConsumerStatefulWidget {
   final String classId;
@@ -148,8 +150,50 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                           width: 24.w,
                           height: 24.h,
                         ),
-                        onPressed: () {
-                          // QR scan functionality can be added here
+                        onPressed: () async {
+                          final qrCode = await Navigator.push<String>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const QrScannerScreen(),
+                            ),
+                          );
+
+                          if (qrCode != null && context.mounted) {
+                            final student = await controller.handleQrScanned(
+                              qrCode,
+                            );
+                            if (student != null && context.mounted) {
+                              final score = await showDialog<int>(
+                                context: context,
+                                builder: (context) => ScoreEntryDialog(
+                                  studentName: student.name,
+                                  maxScore: state.currentMaxScore ?? 0,
+                                ),
+                              );
+
+                              if (score != null) {
+                                await controller.updateStudentScore(
+                                  student.id,
+                                  score,
+                                );
+                                if (context.mounted) {
+                                  context.showSuccessSnackBar(
+                                    AppStrings.scoresUpdated.tr(),
+                                  );
+                                }
+                              }
+                            } else if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Student not found in this class',
+                                    textAlign: TextAlign.center,
+                                  ).tr(),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
                         },
                       ),
                     ),

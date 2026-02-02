@@ -91,6 +91,8 @@ import '../../features/students/domain/usecases/edit_student_usecase.dart'
     as _i958;
 import '../../features/students/domain/usecases/get_student_by_id_usecase.dart'
     as _i925;
+import '../../features/students/domain/usecases/get_student_by_qr_code_usecase.dart'
+    as _i171;
 import '../../features/students/domain/usecases/get_student_details_with_scores_usecase.dart'
     as _i982;
 import '../../features/students/domain/usecases/get_students_by_class_id_usecase.dart'
@@ -135,6 +137,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i367.ClassRepository>(
       () => _i972.ClassRepositoryImpl(gh<_i748.DatabaseService>()),
+    );
+    gh.lazySingleton<_i171.GetStudentByQrCodeUseCase>(
+      () => _i171.GetStudentByQrCodeUseCase(gh<_i679.StudentRepository>()),
     );
     gh.factory<_i1053.AddClassUseCase>(
       () => _i1053.AddClassUseCase(gh<_i367.ClassRepository>()),
@@ -219,6 +224,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i859.GetEvaluationsUseCase>(),
         gh<_i346.GetStudentsByClassIdUseCase>(),
         gh<_i203.UpdateStudentScoreUseCase>(),
+        gh<_i171.GetStudentByQrCodeUseCase>(),
       ),
     );
     gh.lazySingleton<_i738.ApiService>(
