@@ -39,6 +39,7 @@ dependencies:
   share_plus: ^7.2.1
   intl: ^0.20.2
   excel: ^4.0.6
+  archive: ^3.6.1
 
 # Override archive for excel compatibility
 # Override intl because syncfusion 24.x requires older intl, but SDK requires 0.20.x

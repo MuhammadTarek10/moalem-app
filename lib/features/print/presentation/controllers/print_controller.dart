@@ -74,11 +74,8 @@ class PrintState {
   }
 }
 
-final printControllerProvider =
-    StateNotifierProvider.family<PrintController, PrintState, String>((
-      ref,
-      printType,
-    ) {
+final printControllerProvider = StateNotifierProvider.family
+    .autoDispose<PrintController, PrintState, String>((ref, printType) {
       return PrintController(
         printType,
         getIt<GetClassesUseCase>(),

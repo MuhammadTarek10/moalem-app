@@ -280,6 +280,54 @@ class StudentAssessmentExcelExporter {
 
       currentRow++;
     }
+
+    // =========================================================================
+    // STEP 3.5: Clean up unused rows (Dynamic Print Area)
+    // =========================================================================
+    // We assume the template might have pre-formatted rows up to e.g. 100.
+    // We want to remove them so the "Print Area" stops at the last student.
+    _removeUnusedRows(sheet, currentRow);
+  }
+
+  /// Remove unused rows from the sheet to fix the print area
+  void _removeUnusedRows(excel_pkg.Sheet sheet, int lastUsedRow) {
+    // We scan a reasonable buffer of rows to ensure we catch any pre-formatted empty rows
+    // The template likely doesn't go beyond 200 rows for a class list.
+    const int maxRowsToCheck = 200;
+
+    // Note: iterating backwards or checking logic matters less here because
+    // removeRow shifts indices. But 'excel' package removeRow logic usually
+    // requires careful handling. safest is to just loop check.
+    // However, the 'excel' package documentation suggests removeRow(index).
+
+    // Strategy: Delete rows from [lastUsedRow] up to [maxRowsToCheck].
+    // Since removing a row shifts subsequent rows up, we can repeatedly remove
+    // the *same* index (lastUsedRow) if we want to delete a block.
+    // BUT, we only want to delete rows that exist in the template.
+
+    // A safer approach with the current 'excel' package is to check maxRows.
+    final int totalRows = sheet.maxRows;
+
+    // If we have more rows than data, delete the excess.
+    if (totalRows > lastUsedRow) {
+      // We delete from the bottom up to avoid index shifting issues affecting our loop range logic
+      // (though strictly usually you delete top down for range, or bottom up for index preservation).
+      // Actually, if we delete row K, row K+1 becomes K.
+      // So to delete a range K..N, we can repeatedly delete row K, (N-K) times.
+
+      int rowsToDelete = totalRows - lastUsedRow;
+
+      // Cap at maxRowsToCheck to prevent infinite loops or huge processing if maxRows is wrong
+      if (rowsToDelete > maxRowsToCheck) {
+        rowsToDelete = maxRowsToCheck;
+      }
+
+      // Remove rows starting from lastUsedRow
+      // Note: sheet.maxRows updates dynamically? It should.
+      for (int i = 0; i < rowsToDelete; i++) {
+        sheet.removeRow(lastUsedRow);
+      }
+    }
   }
 
   /// Write a single student's scores for a single week
