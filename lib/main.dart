@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
           title: 'Moalem',
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
-          locale: context.locale,
+          locale: LocalizationConfig.startLocale,
           theme: AppTheme.lightTheme,
           routerConfig: router,
           debugShowCheckedModeBanner: false,

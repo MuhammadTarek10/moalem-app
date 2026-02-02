@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 
@@ -757,30 +757,6 @@ class ExcelExportService {
         final sheet = excel[currentSheetName];
         sheet.isRTL = true;
 
-        // Rename sheet to clarify content
-        // Note: excel package rename might be tricky if key changes,
-        // usually safer to just leave as Sheet1 or rename at the very end.
-        // But we can try to find the "Week Header" row dynamically.
-
-        int weekHeaderRow = 4; // Default
-        bool foundHeader = false;
-
-        // Scan for "الأسبوع" to find the header row
-        for (var r = 0; r < 10; r++) {
-          for (var c = 0; c < 20; c++) {
-            // Scan first few cols
-            final cell = sheet.cell(
-              excel_pkg.CellIndex.indexByColumnRow(columnIndex: c, rowIndex: r),
-            );
-            if (cell.value.toString().contains('الأسبوع')) {
-              weekHeaderRow = r;
-              foundHeader = true;
-              break;
-            }
-          }
-          if (foundHeader) break;
-        }
-
         final arabicSubHeaders = [
           'أداء صفي',
           'كراسة الواجب',
@@ -796,13 +772,9 @@ class ExcelExportService {
           final weekNum = currentWeeks[w];
           final startCol = firstWeekStartColIndex + (w * weekBlockSize);
 
-          // Update Week Header
-          _safeUpdateCell(
-            sheet,
-            startCol,
-            weekHeaderRow,
-            excel_pkg.TextCellValue('الأسبوع $weekNum'),
-          );
+          // Update Week Header (Row 5 -> Index 4)
+          // We only update the text to match the selected week number.
+          // We assume the template already has the correct borders, rotation, and background.
 
           // Use _safeUpdateCell to attempt to preserve style, or just update value.
           // Since we want to be very careful not to break the "merged" look if it exists,
@@ -849,92 +821,77 @@ class ExcelExportService {
           }
         }
 
-        // 4. Fill Metadata (Dynamic Search - Multi-Page)
-        // We scan expected header areas for every page (every 60 rows)
-        // based on the total number of students.
-        // Assuming 50 students per page max.
-        final int studentsPerPage = 50;
-        final int rowsPerPage = 60;
-        final int totalPages = (printData.studentsData.length / studentsPerPage)
-            .ceil();
+        // 4. Fill Metadata (Dynamic Search)
+        // Scan the first 10 rows and 5 columns to find the metadata placeholders.
+        // This is robust against template shifts or RTL/LTR indexing issues.
+        for (var r = 0; r < 10; r++) {
+          for (var c = 0; c < 5; c++) {
+            final cellIndex = excel_pkg.CellIndex.indexByColumnRow(
+              columnIndex: c,
+              rowIndex: r,
+            );
+            final cell = sheet.cell(cellIndex);
+            final value = cell.value?.toString() ?? '';
 
-        for (var p = 0; p < totalPages; p++) {
-          final int baseRow = p * rowsPerPage;
-          // Scan first 10 rows of each page
-          for (var r = baseRow; r < baseRow + 10; r++) {
-            for (var c = 0; c < 5; c++) {
-              final cellIndex = excel_pkg.CellIndex.indexByColumnRow(
-                columnIndex: c,
-                rowIndex: r,
+            if (value.contains('مديرية')) {
+              _safeUpdateCell(
+                sheet,
+                c,
+                r,
+                excel_pkg.TextCellValue(
+                  'مديرية التربية والتعليم ${printData.governorate}',
+                ),
               );
-              final cell = sheet.cell(cellIndex);
-              final value = cell.value?.toString() ?? '';
-
-              if (value.contains('مديرية')) {
-                _safeUpdateCell(
-                  sheet,
-                  c,
-                  r,
-                  excel_pkg.TextCellValue(
-                    'مديرية التربية والتعليم ${printData.governorate}',
-                  ),
-                );
-              } else if (value.contains('إدارة')) {
-                _safeUpdateCell(
-                  sheet,
-                  c,
-                  r,
-                  excel_pkg.TextCellValue('إدارة ${printData.administration}'),
-                );
-              } else if (value.contains('مدرسة')) {
-                _safeUpdateCell(
-                  sheet,
-                  c,
-                  r,
-                  excel_pkg.TextCellValue(
-                    'مدرسة / ${printData.classEntity.school}',
-                  ),
-                );
-              } else if (value.contains('سجل') && value.contains('درجات')) {
-                final titleText =
-                    'سجل رصد درجات فصل ${printData.classEntity.grade} / ${printData.classEntity.name}                                               مادة : ${printData.classEntity.subject}';
-                _safeUpdateCell(
-                  sheet,
-                  c,
-                  r,
-                  excel_pkg.TextCellValue(titleText),
-                );
-              }
+            } else if (value.contains('إدارة')) {
+              _safeUpdateCell(
+                sheet,
+                c,
+                r,
+                excel_pkg.TextCellValue('إدارة ${printData.administration}'),
+              );
+            } else if (value.contains('مدرسة')) {
+              _safeUpdateCell(
+                sheet,
+                c,
+                r,
+                excel_pkg.TextCellValue(
+                  'مدرسة / ${printData.classEntity.school}',
+                ),
+              );
+            } else if (value.contains('سجل') && value.contains('درجات')) {
+              // Title Row
+              final titleText =
+                  'سجل رصد درجات فصل ${printData.classEntity.grade} / ${printData.classEntity.name}                                               مادة : ${printData.classEntity.subject}';
+              _safeUpdateCell(sheet, c, r, excel_pkg.TextCellValue(titleText));
             }
           }
         }
 
-        // 5. Write Student Data
-        // Row 9 (Index 8) is start of first page.
-        // Page structure: 60 rows total. Header ~9 rows. Footer ~? rows.
-        // 50 students per page.
-        final int studentStartOffset = 8;
-        int totalRows = printData.studentsData.length;
-        if (totalRows < 50) totalRows = 50; // Ensure at least 1 page filled
+        // Start row for students matches template (Row 9 -> Index 8)
+        int currentRowIndex = 8;
 
+        // We want to export ALL students, but ensure at least 50 rows for empty templates if needed.
+        // "Export until the last" implies we shouldn't cut off data.
+        final int totalRows = printData.studentsData.length > 50
+            ? printData.studentsData.length
+            : 50;
+
+        // Loop for total rows
         for (var i = 0; i < totalRows; i++) {
           final studentData = i < printData.studentsData.length
               ? printData.studentsData[i]
               : null;
 
-          // Calculate Row Index with Pagination
-          // Page 0: Rows 8..57 (Indices)
-          // Page 1: Rows (60+8).. (Indices)
-          final int pageIndex = i ~/ studentsPerPage;
-          final int indexInPage = i % studentsPerPage;
-          final int currentRowIndex =
-              (pageIndex * rowsPerPage) + studentStartOffset + indexInPage;
-
           // Name
-          // Determine style source: If we are beyond first page (i >= 50),
-          // copy style from first student of first page (Index 9)
+          // Determine style source: If we are beyond row 58 (approx 50 rows),
+          // we might need to copy style from a previous row (e.g., Row 10/Index 9)
+          // However, `_safeUpdateCell` works by reading the current cell.
+          // If current cell is null (outside template), we need to inject style.
+
+          // Helper to get consistent style for Name column
           excel_pkg.CellStyle? nameStyle;
           if (i >= 50) {
+            // Copy from first student row (Index 9), Name column (Index 2)
             final refCell = sheet.cell(
               excel_pkg.CellIndex.indexByColumnRow(
                 columnIndex: studentNameColIndex,
@@ -1058,6 +1015,7 @@ class ExcelExportService {
               }
             }
           }
+          currentRowIndex++;
         }
       } // End Chunk Loop
 

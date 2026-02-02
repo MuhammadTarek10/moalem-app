@@ -2,10 +2,11 @@ import 'dart:convert';
 
 import 'package:injectable/injectable.dart';
 import 'package:moalem/core/constants/app_keys.dart';
+import 'package:moalem/core/entities/user.dart';
 import 'package:moalem/core/services/secure_storage_service.dart';
 import 'package:moalem/core/services/storage_service.dart';
-import 'package:moalem/core/utils/license_checker.dart';
 import 'package:moalem/features/auth/data/models/user_mapper.dart';
+import 'package:moalem/features/auth/data/models/user_model.dart';
 import 'package:moalem/features/auth/domain/repositories/user_repository.dart';
 
 @injectable
@@ -20,8 +21,8 @@ class FetchAndStoreUserUseCase {
     this._storage,
   );
 
-  /// Returns true if the user's license is valid, false otherwise.
-  Future<bool> call() async {
+  /// Returns the User object.
+  Future<User> call() async {
     try {
       // Fetch user from API
       final user = await _userRepository.getUser();
@@ -42,23 +43,14 @@ class FetchAndStoreUserUseCase {
         );
       }
 
-      // Check license validity
-      // First try the API response, then fall back to local storage
-      // This handles cases where the server hasn't updated the license yet
-      final apiLicenseExpiresAt = user.licenseExpiresAt;
-      if (apiLicenseExpiresAt != null && apiLicenseExpiresAt.isNotEmpty) {
-        return LicenseChecker.isLicenseValid(apiLicenseExpiresAt);
-      } else {
-        // Fall back to locally stored license (e.g., just redeemed a coupon)
-        final localLicenseExpiresAt = _storage.getString(
-          AppKeys.licenseExpiresAt,
-        );
-        return LicenseChecker.isLicenseValid(localLicenseExpiresAt);
-      }
+      return user;
     } catch (e) {
-      // If fetching fails, check local storage
-      final licenseExpiresAt = _storage.getString(AppKeys.licenseExpiresAt);
-      return LicenseChecker.isLicenseValid(licenseExpiresAt);
+      // If fetching fails, try to get from local storage
+      final userJson = await _secureStorage.read(AppKeys.user);
+      if (userJson != null) {
+        return UserModel.fromJson(jsonDecode(userJson)).toDomain();
+      }
+      rethrow;
     }
   }
 }
