@@ -59,20 +59,7 @@ class PrintScreen extends StatelessWidget {
             icon: Icons.qr_code_2_outlined,
             iconColor: AppColors.primary,
             onTap: () {
-              // Show coming soon dialog
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text(AppStrings.comingSoon.tr()),
-                  content: Text(AppStrings.comingSoonSubtitle.tr()),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(AppStrings.closeButton.tr()),
-                    ),
-                  ],
-                ),
-              );
+              context.push(AppRoutes.qrPrint);
             },
           ),
         ],

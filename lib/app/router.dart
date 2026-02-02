@@ -10,6 +10,7 @@ import 'package:moalem/features/classes/presentation/screens/class_details_scree
 import 'package:moalem/features/classes/presentation/screens/classes_screen.dart';
 import 'package:moalem/features/home/presentation/pages/main_navigation_screen.dart';
 import 'package:moalem/features/print/presentation/screens/print_options_screen.dart';
+import 'package:moalem/features/print/presentation/screens/qr_print_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/advanced_settings_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/contact_us_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/profile_details_screen.dart';
@@ -117,6 +118,10 @@ final router = GoRouter(
           printType: printType ?? 'scores',
         );
       },
+    ),
+    GoRoute(
+      path: AppRoutes.qrPrint,
+      builder: (context, state) => const QrPrintScreen(),
     ),
     GoRoute(
       path: AppRoutes.attendanceEntry,

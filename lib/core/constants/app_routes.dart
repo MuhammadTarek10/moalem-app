@@ -33,6 +33,7 @@ class AppRoutes {
   // Print Screen
   static const String print = '/print';
   static const String printOptions = '/print/options';
+  static const String qrPrint = '/qr-print';
   static const String attendanceEntry = '/attendance/entry';
 
   /// Builds the path for print options with the given parameters

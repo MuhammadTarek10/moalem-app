@@ -68,6 +68,7 @@ import '../../features/home/domain/usecases/fetch_and_store_user_usecase.dart'
     as _i82;
 import '../../features/print/data/services/excel_export_service.dart' as _i552;
 import '../../features/print/data/services/pdf_export_service.dart' as _i191;
+import '../../features/print/data/services/qr_pdf_service.dart' as _i951;
 import '../../features/print/domain/usecases/generate_attendance_report_usecase.dart'
     as _i763;
 import '../../features/print/domain/usecases/generate_multi_week_attendance_report_usecase.dart'
@@ -117,6 +118,7 @@ extension GetItInjectableX on _i174.GetIt {
     final networkModule = _$NetworkModule();
     gh.factory<_i552.ExcelExportService>(() => _i552.ExcelExportService());
     gh.factory<_i191.PdfExportService>(() => _i191.PdfExportService());
+    gh.factory<_i951.QrPdfService>(() => _i951.QrPdfService());
     gh.singleton<_i748.DatabaseService>(() => _i748.DatabaseService());
     gh.singleton<_i1018.SecureStorageService>(
       () => _i1018.SecureStorageService(),
