@@ -51,7 +51,7 @@ class AuthRepositoryImpl implements AuthRepository {
       governorate: request.governorate,
       educationalAdministration: request.educationalAdministration,
       schools: request.schools,
-      grades: request.grades,
+      grades: request.grades ?? [],
     );
 
     await _storageService.setString(

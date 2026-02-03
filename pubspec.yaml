@@ -33,21 +33,18 @@ dependencies:
   url_launcher: ^6.3.2
   persistent_bottom_nav_bar: ^6.2.1
   uuid: ^4.5.2
-  syncfusion_flutter_xlsio: ^24.1.41
   pdf: ^3.11.0
   printing: ^5.13.0
   share_plus: ^7.2.1
-  intl: ^0.20.2
-  excel: ^4.0.6
-  archive: ^3.6.1
   qr_flutter: ^4.1.0
   mobile_scanner: ^6.0.0
-
-# Override archive for excel compatibility
-# Override intl because syncfusion 24.x requires older intl, but SDK requires 0.20.x
-# Override image to ensure it doesn't pull in archive 4.x
-dependency_overrides:
+  intl: ^0.20.2
+  excel: any
+  syncfusion_flutter_xlsio: ^29.2.11
   archive: ^3.6.1
+
+# Override intl because syncfusion 24.x requires older intl, but SDK requires 0.20.x
+dependency_overrides:
   intl: ^0.20.2
   image: ^4.1.7
 

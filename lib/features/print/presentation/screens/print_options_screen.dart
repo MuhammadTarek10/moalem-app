@@ -77,8 +77,18 @@ class PrintOptionsScreen extends ConsumerWidget {
               // Class selector dropdown
               _buildClassSelector(context, state, controller, classes),
 
-              // Period selector
-              _buildPeriodSelector(context, state, controller),
+              // Page selector for PrePrimary (if applicable)
+              // Show page selector for PrePrimary (1-2 ابتدائي)
+              if (state.printData.hasValue &&
+                  state.printData.value?.classEntity.evaluationGroup.name ==
+                      'prePrimary')
+                _buildPageSelector(context, state, controller),
+
+              // Show month selector for High School (ثانوي)
+              if (state.printData.hasValue &&
+                  state.printData.value?.classEntity.evaluationGroup.name ==
+                      'high')
+                _buildMonthSelector(context, state, controller),
 
               // Data preview
               Expanded(
@@ -175,57 +185,110 @@ class PrintOptionsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPeriodSelector(
+  Widget _buildPageSelector(
     BuildContext context,
     PrintState state,
     PrintController controller,
   ) {
-    // Both scores and attendance now use week group selector (5 weeks at a time)
+    final pages = [
+      {'label': 'الصفحة 1 (أسابيع 1-5)', 'value': 1},
+      {'label': 'الصفحة 2 (أسابيع 6-10)', 'value': 2},
+      {'label': 'الصفحة 3 (أسابيع 11-15)', 'value': 3},
+      {'label': 'الصفحة 4 (أسابيع 16-18)', 'value': 4},
+    ];
+
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       color: Colors.white,
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            AppStrings.periodLabel.tr(),
+            'اختر الصفحة للتصدير',
             style: context.bodyMedium.copyWith(fontWeight: FontWeight.w600),
           ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLightest,
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppColors.inactiveBorder),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: _buildWeekGroupDropdown(state, controller),
-              ),
-            ),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: pages.map((page) {
+              final isSelected = state.weekGroup == page['value'];
+              return ChoiceChip(
+                label: Text(page['label'] as String),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    controller.changeWeekGroup(page['value'] as int);
+                  }
+                },
+                selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                labelStyle: context.bodySmall.copyWith(
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                side: BorderSide(
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.inactiveBorder,
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
     );
   }
 
-  /// Week group dropdown for both scores and attendance (weeks 1-5, 6-10, 11-15)
-  Widget _buildWeekGroupDropdown(PrintState state, PrintController controller) {
-    return DropdownButton<int>(
-      isExpanded: true,
-      value: state.weekGroup,
-      items: [
-        DropdownMenuItem(value: 1, child: Text('الأسابيع 1 - 5')),
-        DropdownMenuItem(value: 2, child: Text('الأسابيع 6 - 10')),
-        DropdownMenuItem(value: 3, child: Text('الأسابيع 11 - 15')),
-      ],
-      onChanged: (value) {
-        if (value != null) controller.changeWeekGroup(value);
-      },
-      icon: Icon(
-        Icons.keyboard_arrow_down,
-        color: AppColors.textLight,
-        size: 20.sp,
+  /// Build month selector for High School (ثانوي) - 3 months
+  Widget _buildMonthSelector(
+    BuildContext context,
+    PrintState state,
+    PrintController controller,
+  ) {
+    final months = [
+      {'label': 'شهر فبراير (أسابيع 1-4)', 'value': 1},
+      {'label': 'شهر مارس (أسابيع 5-8)', 'value': 2},
+      {'label': 'شهر أبريل (أسابيع 9-12)', 'value': 3},
+    ];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'اختر الشهر للتصدير',
+            style: context.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 8.h),
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
+            children: months.map((month) {
+              final isSelected = state.weekGroup == month['value'];
+              return ChoiceChip(
+                label: Text(month['label'] as String),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    controller.changeWeekGroup(month['value'] as int);
+                  }
+                },
+                selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                labelStyle: context.bodySmall.copyWith(
+                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+                side: BorderSide(
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.inactiveBorder,
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
@@ -243,15 +306,6 @@ class PrintOptionsScreen extends ConsumerWidget {
         ) ??
         printData.administration;
 
-    // Determine period text based on multi-week or single week
-    String periodText;
-    if (printData.isMultiWeek) {
-      final weekNums = printData.weekNumbers;
-      periodText = 'الأسابيع ${weekNums.first} - ${weekNums.last}';
-    } else {
-      periodText = '${AppStrings.weekly.tr()} ${printData.periodNumber}';
-    }
-
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -262,7 +316,6 @@ class PrintOptionsScreen extends ConsumerWidget {
             school: printData.classEntity.school,
             className: printData.classEntity.name,
             subject: printData.classEntity.subject,
-            period: periodText,
           ),
 
           // Students preview (simplified)

@@ -1,2609 +1,818 @@
-﻿import 'dart:convert';
-import 'dart:io';
-import 'dart:ui';
+﻿import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
-import 'package:excel/excel.dart' as excel_pkg;
+import 'package:excel/excel.dart';
 import 'package:flutter/services.dart' show rootBundle, ByteData;
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
-import 'package:moalem/core/constants/app_enums.dart' hide AttendanceStatus;
-import 'package:moalem/features/attendance/domain/entities/weekly_attendance_entity.dart';
+import 'package:moalem/core/constants/app_enums.dart';
 import 'package:moalem/features/print/domain/entities/print_data_entity.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:syncfusion_flutter_xlsio/xlsio.dart' as xlsio;
 
-/// Service to export print data to Excel
-/// Creates Excel files from scratch (Syncfusion xlsio can only create, not read)
 @injectable
 class ExcelExportService {
-  ExcelExportService();
-
-  /// Export print data to Excel file
   Future<String> exportToExcel(PrintDataEntity printData) async {
+    // Use existing excel package for all groups
+    final config = _configFor(printData.classEntity.evaluationGroup);
+    final excel = await config.loadTemplate();
+
+    excel.setDefaultSheet(excel.tables.keys.first);
+
+    // Standard single-sheet export for all configs
+    final sheet = excel.tables.values.first;
+    sheet.isRTL = true;
+    config.fillMetadata(sheet, printData);
+    config.fillStudents(sheet, printData);
+
+    return config.save(excel, printData);
+  }
+
+  ExcelTemplateConfig _configFor(EvaluationGroup g) {
+    switch (g) {
+      case EvaluationGroup.prePrimary:
+        return PrePrimaryConfig();
+      case EvaluationGroup.primary:
+        return Primary36Config();
+      case EvaluationGroup.secondary:
+        return PreparatoryConfig();
+      case EvaluationGroup.high:
+        return SecondaryMonthlyConfig();
+    }
+  }
+}
+
+// =======================================================
+// Core Template Config
+// =======================================================
+
+abstract class ExcelTemplateConfig {
+  String get templateName;
+
+  Future<Excel> loadTemplate() async {
+    final ByteData data = await rootBundle.load('assets/files/$templateName');
+    final bytes = data.buffer.asUint8List();
     try {
-      // Create a new workbook
-      final workbook = xlsio.Workbook();
-      final sheet = workbook.worksheets[0];
-      sheet.name = 'التقرير';
-
-      // Enable RTL for the sheet
-      sheet.isRightToLeft = true;
-
-      // Build the Excel structure
-      if (printData.printType == PrintType.scores &&
-          printData.classEntity.evaluationGroup == EvaluationGroup.prePrimary) {
-        return await _exportFromPrePrimaryTemplate(printData);
-      }
-
-      if (printData.printType == PrintType.scores &&
-          printData.classEntity.evaluationGroup == EvaluationGroup.primary) {
-        return await _exportFromPrimaryTemplate(printData);
-      }
-
-      if (printData.printType == PrintType.scores &&
-          printData.classEntity.evaluationGroup == EvaluationGroup.secondary) {
-        return await _exportFromSecondaryTemplate(printData);
-      }
-
-      if (printData.printType == PrintType.attendance) {
-        await _buildStyledAttendanceStructure(sheet, printData);
-      } else {
-        await _buildExcelStructure(sheet, printData);
-      }
-
-      // Yield to UI thread
-      await Future.delayed(Duration.zero);
-
-      // Save the file
-      final filePath = await _saveAndShareExcelFile(
-        workbook.saveAsStream(),
-        printData,
-      );
-
-      // Dispose workbook
-      workbook.dispose();
-
-      return filePath;
-    } catch (e) {
-      throw Exception('Failed to export Excel: $e');
+      return Excel.decodeBytes(bytes);
+    } catch (_) {
+      return Excel.decodeBytes(await _patchNumFmtId(bytes));
     }
   }
 
-  /// Build the entire Excel structure
-  Future<void> _buildExcelStructure(
-    xlsio.Worksheet sheet,
-    PrintDataEntity printData,
-  ) async {
-    int currentRow = 1;
-
-    // Create title
-    final titleCell = sheet.getRangeByIndex(currentRow, 1);
-    String titleText;
-    if (printData.isMultiWeek) {
-      titleText = printData.printType == PrintType.scores
-          ? 'سجل رصد درجات فصل'
-          : 'سجل الحضور والغياب';
-    } else {
-      titleText =
-          'تقرير ${printData.printType == PrintType.scores ? 'الدرجات' : 'الحضور'}';
-    }
-    titleCell.setText(titleText);
-    titleCell.cellStyle.bold = true;
-    titleCell.cellStyle.fontSize = 16;
-    titleCell.cellStyle.hAlign = xlsio.HAlignType.right;
-    sheet.getRangeByIndex(currentRow, 1, currentRow, 6).merge();
-    currentRow += 2;
-
-    // Create metadata section
-    currentRow = _addMetadataRow(
-      sheet,
-      currentRow,
-      'المحافظة',
-      printData.governorate,
-    );
-    currentRow = _addMetadataRow(
-      sheet,
-      currentRow,
-      'الإدارة التعليمية',
-      printData.administration,
-    );
-    currentRow = _addMetadataRow(
-      sheet,
-      currentRow,
-      'المدرسة',
-      printData.classEntity.school,
-    );
-    currentRow = _addMetadataRow(
-      sheet,
-      currentRow,
-      'الفصل',
-      printData.classEntity.name,
-    );
-    currentRow = _addMetadataRow(
-      sheet,
-      currentRow,
-      'المادة',
-      printData.classEntity.subject,
-    );
-    // Period info - show week dates for attendance or multi-week range
-    if (printData.isMultiWeek) {
-      final weekNums = printData.weekNumbers;
-      currentRow = _addMetadataRow(
-        sheet,
-        currentRow,
-        'الفترة',
-        'الأسابيع ${weekNums.first} - ${weekNums.last}',
-      );
-    } else if (printData.printType == PrintType.attendance &&
-        printData.weekStartDate != null) {
-      final dateFormat = DateFormat('d/M/yyyy', 'ar');
-      currentRow = _addMetadataRow(
-        sheet,
-        currentRow,
-        'الأسبوع',
-        '${dateFormat.format(printData.weekStartDate!)} - ${dateFormat.format(printData.weekEndDate!)}',
-      );
-    } else {
-      currentRow = _addMetadataRow(
-        sheet,
-        currentRow,
-        'الفترة',
-        'الأسبوع ${printData.periodNumber}',
-      );
-    }
-    currentRow += 1;
-
-    // Yield to UI thread
-    await Future.delayed(Duration.zero);
-
-    // Create table headers (multi-week has two header rows)
-    if (printData.isMultiWeek) {
-      currentRow = _createMultiWeekHeaders(sheet, currentRow, printData);
-      currentRow += 1;
-    } else {
-      currentRow = _createTableHeaders(sheet, currentRow, printData);
-      currentRow += 1;
-    }
-
-    // Yield to UI thread
-    await Future.delayed(Duration.zero);
-
-    // Add student data
-    if (printData.isMultiWeek) {
-      await _addMultiWeekStudentData(sheet, currentRow, printData);
-    } else {
-      await _addStudentData(sheet, currentRow, printData);
-    }
-
-    // Auto-fit columns (more columns for multi-week)
-    final maxCols = printData.isMultiWeek ? 50 : 20;
-    for (var col = 1; col <= maxCols; col++) {
-      sheet.autoFitColumn(col);
-    }
-  }
-
-  int _addMetadataRow(
-    xlsio.Worksheet sheet,
-    int row,
-    String label,
-    String value,
-  ) {
-    final labelCell = sheet.getRangeByIndex(row, 1);
-    labelCell.setText(label);
-    labelCell.cellStyle.bold = true;
-    labelCell.cellStyle.hAlign = xlsio.HAlignType.right;
-
-    final valueCell = sheet.getRangeByIndex(row, 2);
-    valueCell.setText(value);
-    valueCell.cellStyle.hAlign = xlsio.HAlignType.right;
-
-    return row + 1;
-  }
-
-  int _createTableHeaders(
-    xlsio.Worksheet sheet,
-    int row,
-    PrintDataEntity printData,
-  ) {
-    int col = 1;
-
-    // Student number header
-    var cell = sheet.getRangeByIndex(row, col);
-    cell.setText('رقم الطالب');
-    _styleHeaderCell(cell);
-    col++;
-
-    // Student name header
-    cell = sheet.getRangeByIndex(row, col);
-    cell.setText('اسم الطالب');
-    _styleHeaderCell(cell);
-    col++;
-
-    if (printData.printType == PrintType.scores &&
-        printData.evaluations != null) {
-      // Evaluation headers
-      for (final evaluation in printData.evaluations!) {
-        cell = sheet.getRangeByIndex(row, col);
-        cell.setText(_getEvaluationShortName(evaluation.name));
-        _styleHeaderCell(cell);
-        col++;
-      }
-
-      // Total header
-      cell = sheet.getRangeByIndex(row, col);
-      cell.setText('المجموع');
-      _styleHeaderCell(cell);
-    } else if (printData.printType == PrintType.attendance) {
-      // Weekly attendance with day columns (Sat-Thu)
-      if (printData.weekStartDate != null) {
-        final weekDays = printData.weekDays;
-        final dateFormat = DateFormat('d/M', 'ar');
-
-        for (final day in weekDays) {
-          cell = sheet.getRangeByIndex(row, col);
-          final dayName = WeekHelper.getShortDayNameArabic(day.weekday);
-          cell.setText('$dayName\n${dateFormat.format(day)}');
-          _styleHeaderCell(cell);
-          col++;
-        }
-      } else {
-        // Legacy single status header
-        cell = sheet.getRangeByIndex(row, col);
-        cell.setText('الحالة');
-        _styleHeaderCell(cell);
-      }
-    }
-
-    return row;
-  }
-
-  void _styleHeaderCell(xlsio.Range cell) {
-    cell.cellStyle.bold = true;
-    cell.cellStyle.backColor = '#4472C4';
-    cell.cellStyle.fontColor = '#FFFFFF';
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-  }
-
-  /// Create multi-week headers with two rows:
-  /// Row 1: Week group headers (merged across evaluation/day columns)
-  /// Row 2: Evaluation or day sub-headers for each week
-  int _createMultiWeekHeaders(
-    xlsio.Worksheet sheet,
-    int row,
-    PrintDataEntity printData,
-  ) {
-    final weekNumbers = printData.weekNumbers;
-    final dateFormat = DateFormat('d/M', 'ar');
-
-    // Determine columns per week based on print type
-    int colsPerWeek;
-    if (printData.printType == PrintType.scores &&
-        printData.evaluations != null) {
-      colsPerWeek = printData.evaluations!.length + 1; // evaluations + total
-    } else if (printData.printType == PrintType.attendance) {
-      colsPerWeek = 6; // Sat, Sun, Mon, Tue, Wed, Thu (6 days)
-    } else {
-      return row;
-    }
-
-    // Row 1: Student number, name, then week group headers
-    int col = 1;
-
-    // Student number header (spans 2 rows)
-    var cell = sheet.getRangeByIndex(row, col);
-    cell.setText('م');
-    _styleHeaderCell(cell);
-    sheet.getRangeByIndex(row, col, row + 1, col).merge();
-    col++;
-
-    // Student name header (spans 2 rows)
-    cell = sheet.getRangeByIndex(row, col);
-    cell.setText('الاسم');
-    _styleHeaderCell(cell);
-    sheet.getRangeByIndex(row, col, row + 1, col).merge();
-    col++;
-
-    // Week group headers (row 1)
-    for (final weekNum in weekNumbers) {
-      final startCol = col;
-      final endCol = col + colsPerWeek - 1;
-
-      // Merged week header
-      cell = sheet.getRangeByIndex(row, startCol);
-      final weekStartDate = printData.weekStartDates?[weekNum];
-      String weekLabel = 'الأسبوع ${_getArabicOrdinal(weekNum)}';
-      if (weekStartDate != null) {
-        weekLabel += ' ${dateFormat.format(weekStartDate)}';
-      }
-      cell.setText(weekLabel);
-      _styleWeekHeaderCell(cell);
-      sheet.getRangeByIndex(row, startCol, row, endCol).merge();
-
-      col = endCol + 1;
-    }
-
-    // Row 2: Sub-headers for each week
-    col = 3; // Start after م and الاسم
-
-    if (printData.printType == PrintType.scores &&
-        printData.evaluations != null) {
-      // Evaluation sub-headers
-      for (final _ in weekNumbers) {
-        for (final evaluation in printData.evaluations!) {
-          cell = sheet.getRangeByIndex(row + 1, col);
-          cell.setText(_getEvaluationShortName(evaluation.name));
-          _styleSubHeaderCell(cell);
-          col++;
-        }
-
-        // Total header
-        cell = sheet.getRangeByIndex(row + 1, col);
-        cell.setText('المجموع');
-        _styleTotalHeaderCell(cell);
-        col++;
-      }
-    } else if (printData.printType == PrintType.attendance) {
-      // Day sub-headers (Sat to Thu)
-      final dayNames = ['سبت', 'أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس'];
-      for (final weekNum in weekNumbers) {
-        final weekStartDate = printData.weekStartDates?[weekNum];
-        final weekDays = weekStartDate != null
-            ? WeekHelper.getWeekDays(weekStartDate)
-            : <DateTime>[];
-
-        for (var i = 0; i < 6; i++) {
-          cell = sheet.getRangeByIndex(row + 1, col);
-          if (weekDays.isNotEmpty && i < weekDays.length) {
-            cell.setText('${dayNames[i]}\n${dateFormat.format(weekDays[i])}');
-          } else {
-            cell.setText(dayNames[i]);
-          }
-          _styleSubHeaderCell(cell);
-          col++;
-        }
-      }
-    }
-
-    return row + 1; // Return the row after the second header row
-  }
-
-  void _styleWeekHeaderCell(xlsio.Range cell) {
-    cell.cellStyle.bold = true;
-    cell.cellStyle.backColor = '#305496'; // Darker blue
-    cell.cellStyle.fontColor = '#FFFFFF';
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-    cell.cellStyle.vAlign = xlsio.VAlignType.center;
-  }
-
-  void _styleSubHeaderCell(xlsio.Range cell) {
-    cell.cellStyle.bold = true;
-    cell.cellStyle.backColor = '#BDD7EE'; // Light blue
-    cell.cellStyle.fontColor = '#000000';
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-  }
-
-  void _styleTotalHeaderCell(xlsio.Range cell) {
-    cell.cellStyle.bold = true;
-    cell.cellStyle.backColor = '#FFE699'; // Light yellow
-    cell.cellStyle.fontColor = '#000000';
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-  }
-
-  String _getArabicOrdinal(int number) {
-    const ordinals = {
-      1: 'الأول',
-      2: 'الثاني',
-      3: 'الثالث',
-      4: 'الرابع',
-      5: 'الخامس',
-      6: 'السادس',
-      7: 'السابع',
-      8: 'الثامن',
-      9: 'التاسع',
-      10: 'العاشر',
-      11: 'الحادي عشر',
-      12: 'الثاني عشر',
-      13: 'الثالث عشر',
-      14: 'الرابع عشر',
-      15: 'الخامس عشر',
-    };
-    return ordinals[number] ?? '$number';
-  }
-
-  /// Add multi-week student data
-  Future<void> _addMultiWeekStudentData(
-    xlsio.Worksheet sheet,
-    int startRow,
-    PrintDataEntity printData,
-  ) async {
-    const batchSize = 10;
-
-    for (var i = 0; i < printData.studentsData.length; i += batchSize) {
-      final end = (i + batchSize < printData.studentsData.length)
-          ? i + batchSize
-          : printData.studentsData.length;
-
-      for (var j = i; j < end; j++) {
-        final studentData = printData.studentsData[j];
-        final rowIndex = startRow + j;
-
-        _addMultiWeekStudentRow(sheet, rowIndex, studentData, printData);
-      }
-
-      // Yield to UI thread after each batch
-      await Future.delayed(Duration.zero);
-    }
-  }
-
-  void _addMultiWeekStudentRow(
-    xlsio.Worksheet sheet,
-    int rowIndex,
-    StudentPrintData studentData,
-    PrintDataEntity printData,
-  ) {
-    final weekNumbers = printData.weekNumbers;
-    int col = 1;
-
-    // Student number
-    var cell = sheet.getRangeByIndex(rowIndex, col);
-    cell.setNumber(
-      (int.tryParse(studentData.student.number.toString()) ?? 0).toDouble(),
-    );
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-    col++;
-
-    // Student name
-    cell = sheet.getRangeByIndex(rowIndex, col);
-    cell.setText(studentData.student.name);
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-    col++;
-
-    if (printData.printType == PrintType.scores &&
-        printData.evaluations != null) {
-      // Scores for each week
-      final evaluations = printData.evaluations!;
-      for (final weekNum in weekNumbers) {
-        // Evaluation scores
-        for (final evaluation in evaluations) {
-          final score = studentData.getScoreForWeek(weekNum, evaluation.id);
-          cell = sheet.getRangeByIndex(rowIndex, col);
-          cell.setNumber(score.toDouble());
-          cell.cellStyle.hAlign = xlsio.HAlignType.center;
-          col++;
-        }
-
-        // Week total
-        final weekTotal = studentData.getTotalForWeek(weekNum);
-        cell = sheet.getRangeByIndex(rowIndex, col);
-        cell.setNumber(weekTotal.toDouble());
-        cell.cellStyle.hAlign = xlsio.HAlignType.center;
-        cell.cellStyle.bold = true;
-        cell.cellStyle.backColor =
-            '#FFF2CC'; // Light yellow background for totals
-        col++;
-      }
-    } else if (printData.printType == PrintType.attendance) {
-      // Attendance for each week (6 days per week)
-      for (final weekNum in weekNumbers) {
-        final weekStartDate = printData.weekStartDates?[weekNum];
-        final weekDays = weekStartDate != null
-            ? WeekHelper.getWeekDays(weekStartDate)
-            : <DateTime>[];
-
-        for (var i = 0; i < 6; i++) {
-          cell = sheet.getRangeByIndex(rowIndex, col);
-          if (weekDays.isNotEmpty && i < weekDays.length) {
-            final day = weekDays[i];
-            final status = studentData.getAttendanceForWeekDate(weekNum, day);
-            if (status != null) {
-              cell.setText(_getAttendanceStatusSymbol(status));
-              _styleAttendanceCell(cell, status);
-            } else {
-              cell.setText('-');
-              cell.cellStyle.hAlign = xlsio.HAlignType.center;
-            }
-          } else {
-            cell.setText('-');
-            cell.cellStyle.hAlign = xlsio.HAlignType.center;
-          }
-          col++;
-        }
-      }
-    }
-  }
-
-  Future<void> _addStudentData(
-    xlsio.Worksheet sheet,
-    int startRow,
-    PrintDataEntity printData,
-  ) async {
-    const batchSize = 10;
-
-    for (var i = 0; i < printData.studentsData.length; i += batchSize) {
-      final end = (i + batchSize < printData.studentsData.length)
-          ? i + batchSize
-          : printData.studentsData.length;
-
-      for (var j = i; j < end; j++) {
-        final studentData = printData.studentsData[j];
-        final rowIndex = startRow + j;
-
-        _addStudentRow(sheet, rowIndex, studentData, printData);
-      }
-
-      // Yield to UI thread after each batch
-      await Future.delayed(Duration.zero);
-    }
-  }
-
-  void _addStudentRow(
-    xlsio.Worksheet sheet,
-    int rowIndex,
-    StudentPrintData studentData,
-    PrintDataEntity printData,
-  ) {
-    int col = 1;
-
-    // Student number
-    var cell = sheet.getRangeByIndex(rowIndex, col);
-    cell.setNumber(
-      (int.tryParse(studentData.student.number.toString()) ?? 0).toDouble(),
-    );
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-    col++;
-
-    // Student name
-    cell = sheet.getRangeByIndex(rowIndex, col);
-    cell.setText(studentData.student.name);
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-    col++;
-
-    if (printData.printType == PrintType.scores &&
-        printData.evaluations != null) {
-      // Scores for each evaluation
-      for (final evaluation in printData.evaluations!) {
-        final score = studentData.scores[evaluation.id] ?? 0;
-        cell = sheet.getRangeByIndex(rowIndex, col);
-        cell.setNumber(score.toDouble());
-        cell.cellStyle.hAlign = xlsio.HAlignType.center;
-
-        col++;
-      }
-
-      // Total score
-      cell = sheet.getRangeByIndex(rowIndex, col);
-      cell.setNumber(studentData.totalScore.toDouble());
-      cell.cellStyle.hAlign = xlsio.HAlignType.center;
-      cell.cellStyle.bold = true;
-    } else if (printData.printType == PrintType.attendance) {
-      // Weekly attendance with day columns (Sat-Thu)
-      if (printData.weekStartDate != null &&
-          studentData.attendanceDaily != null) {
-        final weekDays = printData.weekDays;
-
-        for (final day in weekDays) {
-          cell = sheet.getRangeByIndex(rowIndex, col);
-          final status = studentData.getAttendanceForDate(day);
-          if (status != null) {
-            cell.setText(_getAttendanceStatusSymbol(status));
-            _styleAttendanceCell(cell, status);
-          } else {
-            cell.setText('-');
-            cell.cellStyle.hAlign = xlsio.HAlignType.center;
-          }
-          col++;
-        }
-      } else {
-        // Legacy single status
-        final attendanceData = studentData.attendance ?? {};
-        final status = attendanceData.values.isNotEmpty
-            ? _getAttendanceStatusText(attendanceData.values.first)
-            : '-';
-
-        cell = sheet.getRangeByIndex(rowIndex, col);
-        cell.setText(status);
-        cell.cellStyle.hAlign = xlsio.HAlignType.right;
-      }
-    }
-  }
-
-  /// Style attendance cell based on status
-  void _styleAttendanceCell(xlsio.Range cell, AttendanceStatus status) {
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-    switch (status) {
-      case AttendanceStatus.present:
-        cell.cellStyle.backColor = '#C6EFCE'; // Light green
-        cell.cellStyle.fontColor = '#006100'; // Dark green
-        break;
-      case AttendanceStatus.absent:
-        cell.cellStyle.backColor = '#FFC7CE'; // Light red
-        cell.cellStyle.fontColor = '#9C0006'; // Dark red
-        break;
-      case AttendanceStatus.excused:
-        cell.cellStyle.backColor = '#FFEB9C'; // Light yellow
-        cell.cellStyle.fontColor = '#9C5700'; // Dark yellow
-        break;
-    }
-  }
-
-  /// Get short symbol for attendance status
-  String _getAttendanceStatusSymbol(AttendanceStatus status) {
-    switch (status) {
-      case AttendanceStatus.present:
-        return '√';
-      case AttendanceStatus.absent:
-        return 'غ';
-      case AttendanceStatus.excused:
-        return 'إ';
-    }
-  }
-
-  String _getAttendanceStatusText(AttendanceStatus status) {
-    switch (status) {
-      case AttendanceStatus.present:
-        return 'حاضر';
-      case AttendanceStatus.absent:
-        return 'غائب';
-      case AttendanceStatus.excused:
-        return 'إذن';
-    }
-  }
-
-  String _getEvaluationShortName(String name) {
-    final Map<String, String> shortNames = {
-      'classroom_performance': 'الأداء الصفي',
-      'homework_book': 'الواجب',
-      'activity_book': 'النشاط',
-      'weekly_review': 'التقييم',
-      'oral_tasks': 'الشفهي',
-      'skill_tasks': 'المهارية',
-      'skills_performance': 'الأدائية',
-      'months_exam_average': 'الامتحانات',
-      'attendance_and_diligence': 'الحضور',
-      'first_month_exam': 'الشهر الأول',
-      'second_month_exam': 'الشهر الثاني',
-    };
-
-    return shortNames[name] ?? name;
-  }
-
-  /// Export preprimary scores by loading the exact template and filling data
-  Future<String> _exportFromPrePrimaryTemplate(
-    PrintDataEntity printData,
-  ) async {
-    try {
-      // 1. Load the template from assets
-      final ByteData data = await rootBundle.load(
-        'assets/files/كشف فارغ اعمال السنة اولى وتانية ابتدائى.xlsx',
-      );
-      final List<int> rawBytes = data.buffer.asUint8List();
-
-      // 1.1 Sanitize the template to fix 'custom numFmtId' issues
-      final List<int> bytes = _sanitizeExcelFile(rawBytes);
-
-      // 2. Decode the workbook
-      var excel = excel_pkg.Excel.decodeBytes(bytes);
-
-      print('DEBUG: Available sheets: ${excel.tables.keys}');
-
-      String sheetName = excel.tables.keys.first;
-      if (excel.getDefaultSheet() != null) {
-        sheetName = excel.getDefaultSheet()!;
-      }
-      print('DEBUG: Using sheet: $sheetName');
-
-      final sheet = excel[sheetName];
-      sheet.isRTL = true; // Enforce RTL layout
-
-      // 3. Fill Metadata
-      // Using 0-based indexing for package:excel
-
-      // Constants
-      const int weekBlockSize = 8;
-      // Adjusted based on user feedback (Serial is in Col B)
-      // firstWeekStartCol matches Col D -> Index 3
-      const int firstWeekStartColIndex = 3;
-      // serialNumberCol matches Col B -> Index 1
-      const int serialNumberColIndex = 1;
-      // studentNameCol matches Col C -> Index 2
-      const int studentNameColIndex = 2;
-
-      final evalIds = [
-        'classroom_performance',
-        'homework_book',
-        'activity_book',
-        'weekly_review',
-        'oral_tasks',
-        'skill_tasks',
-        'attendance_and_diligence',
-      ];
-
-      final weekNumbers = printData.weekNumbers;
-
-      // 3. Process Weeks in Chunks of 5
-      List<List<int>> weekChunks = [];
-      for (var i = 0; i < weekNumbers.length; i += 5) {
-        weekChunks.add(
-          weekNumbers.sublist(
-            i,
-            (i + 5 < weekNumbers.length) ? i + 5 : weekNumbers.length,
-          ),
+  Future<Uint8List> _patchNumFmtId(Uint8List bytes) async {
+    final archive = ZipDecoder().decodeBytes(bytes);
+    final newArchive = Archive();
+    for (final file in archive.files) {
+      if (file.name == 'xl/styles.xml') {
+        String content = String.fromCharCodes(file.content as List<int>);
+        content = content.replaceAllMapped(
+          RegExp(r'<numFmt\s+numFmtId="(\d+)"[^>]*/?>'),
+          (m) {
+            final id = int.parse(m.group(1)!);
+            return id < 164 ? '' : m.group(0)!;
+          },
         );
-      }
-
-      const String templateSheetName = 'Sheet1';
-      // Ensure we have the template sheet name right
-      String baseSheet = excel.tables.keys.first;
-      if (excel.getDefaultSheet() != null) {
-        baseSheet = excel.getDefaultSheet()!;
-      }
-      if (baseSheet != templateSheetName &&
-          excel.tables.containsKey(templateSheetName)) {
-        baseSheet = templateSheetName;
-      }
-
-      for (var chunkIdx = 0; chunkIdx < weekChunks.length; chunkIdx++) {
-        final currentWeeks = weekChunks[chunkIdx];
-        String currentSheetName = baseSheet;
-
-        // Handle Sheet Creation/Selection
-        if (chunkIdx > 0) {
-          currentSheetName = '${baseSheet}_${chunkIdx + 1}';
-          excel.copy(baseSheet, currentSheetName);
-        }
-
-        final sheet = excel[currentSheetName];
-        sheet.isRTL = true;
-
-        final arabicSubHeaders = [
-          'أداء صفي',
-          'كراسة الواجب',
-          'كراسة النشاط',
-          'تقييم أسبوعي',
-          'مهام شفوية',
-          'مهام مهارية',
-          'مواظبة وسلوك',
-        ];
-
-        // A. HEADERS FOR THIS CHUNK
-        for (var w = 0; w < currentWeeks.length; w++) {
-          final weekNum = currentWeeks[w];
-          final startCol = firstWeekStartColIndex + (w * weekBlockSize);
-
-          // Update Week Header (Row 5 -> Index 4)
-          // We only update the text to match the selected week number.
-          // We assume the template already has the correct borders, rotation, and background.
-
-          // Use _safeUpdateCell to attempt to preserve style, or just update value.
-          // Since we want to be very careful not to break the "merged" look if it exists,
-          // we just update the value.
-
-          _safeUpdateCell(
-            sheet,
-            startCol,
-            4,
-            excel_pkg.TextCellValue('الأسبوع $weekNum'),
-          );
-
-          // Sub-headers
-          for (var s = 0; s < arabicSubHeaders.length; s++) {
-            _safeUpdateCell(
-              sheet,
-              startCol + s,
-              6,
-              excel_pkg.TextCellValue(arabicSubHeaders[s]),
-              rotation: 90,
-            );
-          }
-          // Total
-          _safeUpdateCell(
-            sheet,
-            startCol + 7,
-            6,
-            excel_pkg.TextCellValue('المجموع'),
-            rotation: 90,
-          );
-        }
-
-        // Clear empty slots
-        for (var w = currentWeeks.length; w < 5; w++) {
-          final startCol = firstWeekStartColIndex + (w * weekBlockSize);
-          _safeUpdateCell(sheet, startCol, 4, excel_pkg.TextCellValue(''));
-          for (var s = 0; s <= 7; s++) {
-            _safeUpdateCell(
-              sheet,
-              startCol + s,
-              6,
-              excel_pkg.TextCellValue(''),
-            );
-          }
-        }
-
-        // 4. Fill Metadata (Dynamic Search)
-        // Scan the first 10 rows and 5 columns to find the metadata placeholders.
-        // This is robust against template shifts or RTL/LTR indexing issues.
-        for (var r = 0; r < 10; r++) {
-          for (var c = 0; c < 5; c++) {
-            final cellIndex = excel_pkg.CellIndex.indexByColumnRow(
-              columnIndex: c,
-              rowIndex: r,
-            );
-            final cell = sheet.cell(cellIndex);
-            final value = cell.value?.toString() ?? '';
-
-            if (value.contains('مديرية')) {
-              _safeUpdateCell(
-                sheet,
-                c,
-                r,
-                excel_pkg.TextCellValue(
-                  'مديرية التربية والتعليم ${printData.governorate}',
-                ),
-              );
-            } else if (value.contains('إدارة')) {
-              _safeUpdateCell(
-                sheet,
-                c,
-                r,
-                excel_pkg.TextCellValue('إدارة ${printData.administration}'),
-              );
-            } else if (value.contains('مدرسة')) {
-              _safeUpdateCell(
-                sheet,
-                c,
-                r,
-                excel_pkg.TextCellValue(
-                  'مدرسة / ${printData.classEntity.school}',
-                ),
-              );
-            } else if (value.contains('سجل') && value.contains('درجات')) {
-              // Title Row
-              final titleText =
-                  'سجل رصد درجات فصل ${printData.classEntity.grade} / ${printData.classEntity.name}                                               مادة : ${printData.classEntity.subject}';
-              _safeUpdateCell(sheet, c, r, excel_pkg.TextCellValue(titleText));
-            }
-          }
-        }
-
-        // Start row for students matches template (Row 9 -> Index 8)
-        int currentRowIndex = 8;
-
-        // We want to export ALL students, but ensure at least 50 rows for empty templates if needed.
-        // "Export until the last" implies we shouldn't cut off data.
-        final int totalRows = printData.studentsData.length > 50
-            ? printData.studentsData.length
-            : 50;
-
-        // Loop for total rows
-        for (var i = 0; i < totalRows; i++) {
-          final studentData = i < printData.studentsData.length
-              ? printData.studentsData[i]
-              : null;
-
-          // Name
-          // Determine style source: If we are beyond row 58 (approx 50 rows),
-          // we might need to copy style from a previous row (e.g., Row 10/Index 9)
-          // However, `_safeUpdateCell` works by reading the current cell.
-          // If current cell is null (outside template), we need to inject style.
-
-          // Helper to get consistent style for Name column
-          excel_pkg.CellStyle? nameStyle;
-          if (i >= 50) {
-            // Copy from first student row (Index 9), Name column (Index 2)
-            final refCell = sheet.cell(
-              excel_pkg.CellIndex.indexByColumnRow(
-                columnIndex: studentNameColIndex,
-                rowIndex: 9,
-              ),
-            );
-            nameStyle = refCell.cellStyle;
-          }
-
-          if (studentData != null) {
-            _safeUpdateCell(
-              sheet,
-              studentNameColIndex,
-              currentRowIndex,
-              excel_pkg.TextCellValue(studentData.student.name),
-              fallbackStyle: nameStyle,
-            );
-
-            // Weeks Data
-            for (var weekIdx = 0; weekIdx < currentWeeks.length; weekIdx++) {
-              final weekNum = currentWeeks[weekIdx];
-              final weekStartColIndex =
-                  firstWeekStartColIndex + (weekIdx * weekBlockSize);
-
-              // Individual scores
-              for (var evalIdx = 0; evalIdx < evalIds.length; evalIdx++) {
-                final evalId = evalIds[evalIdx];
-                final colIndex = weekStartColIndex + evalIdx;
-
-                // Style Fallback:
-                // If we are in a new week column (beyond template) or new row,
-                // copy style from Week 1 (Index 0), corresponding eval column, first student row.
-                // Actually, simply copying from Week 1's column in the CURRENT row
-                // (or Ref Row if new row) is safest for borders.
-
-                // Ref Column: Week 1 is at `firstWeekStartColIndex` (3)
-                // This eval's offset is `evalIdx`
-                final int refColIndex = firstWeekStartColIndex + evalIdx;
-
-                // Ref Row: If i >= 50, use Row 9. Else use currentRowIndex.
-                final int refRowIndex = i >= 50 ? 9 : currentRowIndex;
-
-                excel_pkg.CellStyle? scoreStyle;
-                // If we suspect missing style (New Week OR New Row)
-                if (weekIdx >= 5 || i >= 50) {
-                  final refCell = sheet.cell(
-                    excel_pkg.CellIndex.indexByColumnRow(
-                      columnIndex: refColIndex,
-                      rowIndex: refRowIndex,
-                    ),
-                  );
-                  scoreStyle = refCell.cellStyle;
-                }
-
-                final score = studentData.getScoreForWeek(weekNum, evalId);
-                if (score > 0) {
-                  final cellValue = score % 1 == 0
-                      ? excel_pkg.IntCellValue(score.toInt())
-                      : excel_pkg.DoubleCellValue(score.toDouble());
-
-                  _safeUpdateCell(
-                    sheet,
-                    colIndex,
-                    currentRowIndex,
-                    cellValue,
-                    fallbackStyle: scoreStyle,
-                  );
-                } else {
-                  // Even if empty, ensure style is applied if we are extending
-                  if (scoreStyle != null) {
-                    _safeUpdateCell(
-                      sheet,
-                      colIndex,
-                      currentRowIndex,
-                      excel_pkg.TextCellValue(''),
-                      fallbackStyle: scoreStyle,
-                    );
-                  }
-                }
-              }
-
-              // Total at the end of the week block (Index 7 relative to start)
-              final totalColIndex = weekStartColIndex + 7;
-              final weekTotal = studentData.getTotalForWeek(weekNum);
-
-              // Ref Col for Total: Week 1 Total is at 3 + 7 = 10
-              final int refTotalColIndex = firstWeekStartColIndex + 7;
-              final int refRowIndex = i >= 50 ? 9 : currentRowIndex;
-
-              excel_pkg.CellStyle? totalStyle;
-              if (weekIdx >= 5 || i >= 50) {
-                final refCell = sheet.cell(
-                  excel_pkg.CellIndex.indexByColumnRow(
-                    columnIndex: refTotalColIndex,
-                    rowIndex: refRowIndex,
-                  ),
-                );
-                totalStyle = refCell.cellStyle;
-              }
-
-              if (weekTotal > 0) {
-                final totalValue = weekTotal % 1 == 0
-                    ? excel_pkg.IntCellValue(weekTotal.toInt())
-                    : excel_pkg.DoubleCellValue(weekTotal.toDouble());
-
-                _safeUpdateCell(
-                  sheet,
-                  totalColIndex,
-                  currentRowIndex,
-                  totalValue,
-                  fallbackStyle: totalStyle,
-                );
-              } else if (totalStyle != null) {
-                _safeUpdateCell(
-                  sheet,
-                  totalColIndex,
-                  currentRowIndex,
-                  excel_pkg.TextCellValue(''),
-                  fallbackStyle: totalStyle,
-                );
-              }
-            }
-          }
-          currentRowIndex++;
-        }
-      } // End Chunk Loop
-
-      // Cleanup: Delete any sheets not in our expected list
-      final expectedSheets = <String>{'Sheet1'};
-      for (var i = weekBlockSize; i < weekNumbers.length; i += weekBlockSize) {
-        expectedSheets.add('Sheet${(i ~/ weekBlockSize) + 1}');
-      }
-
-      for (final sheetName in excel.tables.keys.toList()) {
-        if (!expectedSheets.contains(sheetName)) {
-          // Only delete if it's not one of our generated sheets (double check)
-          // But expectedSheets contains ALL the generated sheets.
-          excel.delete(sheetName);
-        }
-      }
-
-      final encoded = excel.encode();
-      if (encoded == null) throw Exception('Failed to encode Excel file');
-
-      // 6. Save
-      // Cast to List<int> as encode returns List<int>?
-      final filePath = await _saveAndShareExcelFile(encoded, printData);
-
-      return filePath;
-    } catch (e) {
-      throw Exception('Failed to export from template: $e');
-    }
-  }
-
-  Future<String> _saveAndShareExcelFile(
-    List<int> fileBytes,
-    PrintDataEntity printData,
-  ) async {
-    try {
-      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-      final typePrefix = printData.printType == PrintType.scores
-          ? 'scores'
-          : 'attendance';
-      final className = printData.classEntity.name.replaceAll('/', '_');
-      final filename = '${typePrefix}_${className}_$timestamp.xlsx';
-
-      final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/$filename';
-
-      final file = File(filePath);
-      await file.writeAsBytes(fileBytes);
-
-      await Share.shareXFiles(
-        [XFile(filePath)],
-        subject: filename,
-        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
-      );
-
-      return filePath;
-    } catch (e) {
-      throw Exception('Failed to save Excel file: $e');
-    }
-  }
-
-  /// Export an empty attendance sheet matching the template structure
-  Future<String> exportEmptyAttendanceSheet(PrintDataEntity printData) async {
-    try {
-      final workbook = xlsio.Workbook();
-      final sheet = workbook.worksheets[0];
-      sheet.name = 'كشف الغياب';
-      sheet.isRightToLeft = true;
-
-      await _buildEmptyAttendanceStructure(sheet, printData);
-
-      await Future.delayed(Duration.zero);
-
-      final filePath = await _saveEmptySheetFile(
-        workbook.saveAsStream(),
-        printData,
-      );
-
-      workbook.dispose();
-      return filePath;
-    } catch (e) {
-      throw Exception('Failed to export empty attendance sheet: $e');
-    }
-  }
-
-  /// Build the empty attendance sheet structure matching exact template
-  /// Based on XML analysis: B=م, C=الاسم, D-I=Week1, J-O=Week2, P-U=Week3, V-AA=Week4, AB-AG=Week5
-  Future<void> _buildEmptyAttendanceStructure(
-    xlsio.Worksheet sheet,
-    PrintDataEntity printData,
-  ) async {
-    // Page Setup: Landscape and Fit to Page
-    sheet.pageSetup.orientation = xlsio.ExcelPageOrientation.landscape;
-    sheet.pageSetup.isFitToPage = true;
-    sheet.pageSetup.fitToPagesWide = 1;
-    sheet.pageSetup.fitToPagesTall = 1;
-    sheet.pageSetup.topMargin = 0.5;
-    sheet.pageSetup.bottomMargin = 0.5;
-    sheet.pageSetup.leftMargin = 0.5;
-    sheet.pageSetup.rightMargin = 0.5;
-
-    final dateFormat = DateFormat('d\\M\\yyyy');
-    final weekNumbers = printData.weekNumbers;
-    final weekStartDates = printData.weekStartDates ?? {};
-
-    // Row 1: Directorate header (column C, merged across)
-    var cell = sheet.getRangeByIndex(1, 3);
-    cell.setText(
-      'مديرية التربية والتعليم ........................................',
-    );
-    cell.cellStyle.fontSize = 12;
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-
-    // Row 2: Administration header
-    cell = sheet.getRangeByIndex(2, 3);
-    cell.setText('ادارة ........................................');
-    cell.cellStyle.fontSize = 12;
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-
-    // Row 3: School header
-    cell = sheet.getRangeByIndex(3, 3);
-    cell.setText('مدرسة ........................................');
-    cell.cellStyle.fontSize = 12;
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-
-    // Logo (Other side - Left side)
-    // Sheet is RTL, so high column index is Left.
-    try {
-      List<int> bytes;
-      try {
-        final ByteData data = await rootBundle.load(
-          'assets/images/minist_logo.png',
+        newArchive.addFile(
+          ArchiveFile(file.name, content.length, content.codeUnits),
         );
-        bytes = data.buffer.asUint8List();
-      } catch (_) {
-        // Fallback: Try reading from file directly (useful in debug/simulator if bundle not updated)
-        final file = File('assets/images/minist_logo.png');
-        if (await file.exists()) {
-          bytes = await file.readAsBytes();
-        } else {
-          rethrow;
-        }
-      }
-
-      // Calculate approximate left column based on week count
-      // Week 5 ends at column 33 (3 + 5*6).
-      // We want it roughly at the start of the last week or slightly before.
-      final leftColIndex = 3 + (weekNumbers.length * 6) - 4;
-
-      final picture = sheet.pictures.addStream(1, leftColIndex, bytes);
-      picture.height = 90;
-      picture.width = 90;
-    } catch (e) {
-      // Log error but don't fail the whole export, just missing logo
-      print('Warning: Failed to add logo to sheet: $e');
-      // For now, let's rethrow to see it in the UI if the user is failing entirely
-      // throw Exception('Logo load failed: $e');
-      // Actually, keep it non-fatal but log it clearly.
-    }
-
-    // Row 4: Title (columns F-K merged) and Subject (columns Q-T merged)
-    // Title: سجل رصد غياب فصل
-    cell = sheet.getRangeByIndex(4, 6);
-    cell.setText('سجل رصد غياب فصل           /');
-    cell.cellStyle.fontSize = 13;
-    cell.cellStyle.bold = true;
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-    cell.cellStyle.vAlign = xlsio.VAlignType.center;
-    sheet.getRangeByIndex(4, 6, 4, 11).merge();
-
-    // Subject: مادة
-    cell = sheet.getRangeByIndex(4, 17);
-    cell.setText('مادة : ..................');
-    cell.cellStyle.fontSize = 13;
-    cell.cellStyle.bold = true;
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-    cell.cellStyle.vAlign = xlsio.VAlignType.center;
-    sheet.getRangeByIndex(4, 17, 4, 20).merge();
-
-    // Set row height for title/subject row
-    sheet.getRangeByIndex(4, 1).rowHeight = 35;
-
-    // Row 5: Week headers (merged across 6 days each)
-    // Row 6: Day sub-headers
-    // Column B (2): م, Column C (3): الاسم, Columns D+ (4+): week days
-
-    // "م" column header (B5:B6 merged)
-    var range = sheet.getRangeByIndex(5, 2, 6, 2);
-    range.merge();
-    range.setText('م');
-    _styleEmptySheetHeaderCell(range);
-
-    // "الاسم" column header (C5:C6 merged)
-    range = sheet.getRangeByIndex(5, 3, 6, 3);
-    range.merge();
-    range.setText('الاســـــــــــــــــــــــــــــــم');
-    _styleEmptySheetHeaderCell(range);
-
-    // Week headers and day sub-headers (starting from column D = 4)
-    final dayNames = [
-      'السبت',
-      'الاحد',
-      'الإثنين',
-      'الثلاثاء',
-      'الأربعاء',
-      'الخميس',
-    ];
-    int col = 4; // Start at column D
-
-    for (final weekNum in weekNumbers) {
-      final startCol = col;
-      final endCol = col + 5; // 6 days
-
-      // Week header (row 5, merged across 6 columns)
-      range = sheet.getRangeByIndex(5, startCol, 5, endCol);
-      range.merge();
-
-      final weekStartDate = weekStartDates[weekNum];
-      String weekLabel = 'الأسبوع ${_getArabicOrdinal(weekNum)}';
-      if (weekStartDate != null) {
-        weekLabel += ' ${dateFormat.format(weekStartDate)}';
-      }
-      range.setText(weekLabel);
-      _styleEmptySheetHeaderCell(range);
-
-      // Day sub-headers (row 6)
-      for (var i = 0; i < 6; i++) {
-        cell = sheet.getRangeByIndex(6, col + i);
-        cell.setText(dayNames[i]);
-        _styleEmptySheetSubHeaderCell(cell);
-
-        // Alternating colors
-        if (i % 2 != 0) {
-          cell.cellStyle.backColor = '#D9D9D9';
-        }
-
-        // Thick border between weeks
-        if (i == 5) {
-          cell.cellStyle.borders.left.lineStyle = xlsio.LineStyle.thick;
-        }
-      }
-
-      col = endCol + 1;
-    }
-
-    await Future.delayed(Duration.zero);
-
-    // Student data rows (starting from row 7)
-    // Use existing students or default to 50 blank rows
-    final studentCount = printData.studentsData.isEmpty
-        ? 50
-        : printData.studentsData.length;
-
-    int rowIndex = 7;
-    for (var i = 0; i < studentCount; i++) {
-      // Student number (column B)
-      cell = sheet.getRangeByIndex(rowIndex, 2);
-      cell.setNumber((i + 1).toDouble());
-      cell.cellStyle.hAlign = xlsio.HAlignType.center;
-      cell.cellStyle.vAlign = xlsio.VAlignType.center;
-      _addBorder(cell);
-
-      // Student name (column C) - empty or from data
-      cell = sheet.getRangeByIndex(rowIndex, 3);
-      if (printData.studentsData.isNotEmpty &&
-          i < printData.studentsData.length) {
-        cell.setText(printData.studentsData[i].student.name);
       } else {
-        cell.setText(''); // Empty for blank template
-      }
-      cell.cellStyle.hAlign = xlsio.HAlignType.right;
-      cell.cellStyle.vAlign = xlsio.VAlignType.center;
-      _addBorder(cell);
-
-      // Empty attendance cells for each week (6 days * number of weeks)
-      int dataCol = 4; // Start at column D
-      for (final _ in weekNumbers) {
-        for (var d = 0; d < 6; d++) {
-          cell = sheet.getRangeByIndex(rowIndex, dataCol);
-          cell.setText(''); // Empty cell for manual entry
-          cell.cellStyle.hAlign = xlsio.HAlignType.center;
-          cell.cellStyle.vAlign = xlsio.VAlignType.center;
-          _addBorder(cell);
-
-          // Alternating colors
-          if (d % 2 != 0) {
-            cell.cellStyle.backColor = '#D9D9D9';
-          }
-
-          // Thick border between weeks (last column of week)
-          if (d == 5) {
-            cell.cellStyle.borders.left.lineStyle = xlsio.LineStyle.thick;
-          }
-
-          dataCol++;
-        }
-      }
-
-      rowIndex++;
-
-      // Yield every 10 students
-      if (i % 10 == 0) {
-        await Future.delayed(Duration.zero);
-      }
-    }
-
-    // Set column widths to match template
-    sheet.getRangeByIndex(1, 2).columnWidth = 4; // م column narrow
-    sheet.getRangeByIndex(1, 3).columnWidth = 30; // Name column wider
-    for (var c = 4; c <= 3 + (weekNumbers.length * 6); c++) {
-      sheet.getRangeByIndex(1, c).columnWidth = 5; // Day columns narrow
-    }
-
-    // Set row heights for header rows
-    sheet.getRangeByIndex(5, 1).rowHeight = 30;
-    sheet.getRangeByIndex(6, 1).rowHeight = 80;
-  }
-
-  /// Style for empty sheet header cells
-  void _styleEmptySheetHeaderCell(xlsio.Range cell) {
-    cell.cellStyle.bold = true;
-    cell.cellStyle.fontSize = 11;
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-    cell.cellStyle.vAlign = xlsio.VAlignType.center;
-    cell.cellStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    cell.cellStyle.borders.all.color = '#000000';
-  }
-
-  /// Style for empty sheet sub-header cells (day names)
-  void _styleEmptySheetSubHeaderCell(xlsio.Range cell) {
-    cell.cellStyle.bold = true;
-    cell.cellStyle.fontSize = 9;
-    cell.cellStyle.rotation = 180;
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-    cell.cellStyle.vAlign = xlsio.VAlignType.center;
-    cell.cellStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    cell.cellStyle.borders.all.color = '#000000';
-  }
-
-  /// Add border to cell
-  void _addBorder(xlsio.Range cell) {
-    cell.cellStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    cell.cellStyle.borders.all.color = '#000000';
-  }
-
-  /// Build the styled attendance sheet structure with actual data
-  Future<void> _buildStyledAttendanceStructure(
-    xlsio.Worksheet sheet,
-    PrintDataEntity printData,
-  ) async {
-    // Page Setup: Landscape and Fit to Page
-    sheet.pageSetup.orientation = xlsio.ExcelPageOrientation.landscape;
-    sheet.pageSetup.isFitToPage = true;
-    sheet.pageSetup.fitToPagesWide = 1;
-    sheet.pageSetup.fitToPagesTall = 1;
-    sheet.pageSetup.topMargin = 0.5;
-    sheet.pageSetup.bottomMargin = 0.5;
-    sheet.pageSetup.leftMargin = 0.5;
-    sheet.pageSetup.rightMargin = 0.5;
-
-    final dateFormat = DateFormat('d\\M\\yyyy');
-    final weekNumbers = printData.weekNumbers;
-    final weekStartDates = printData.weekStartDates ?? {};
-
-    // Row 1: Directorate header
-    var cell = sheet.getRangeByIndex(1, 3);
-    cell.setText('مديرية التربية والتعليم ${printData.governorate}');
-    cell.cellStyle.fontSize = 12;
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-    cell.cellStyle.fontColor = '#000000';
-    sheet.getRangeByIndex(1, 1).rowHeight = 25;
-
-    // Row 2: Administration header
-    cell = sheet.getRangeByIndex(2, 3);
-    cell.setText('ادارة ${printData.administration}');
-    cell.cellStyle.fontSize = 12;
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-    cell.cellStyle.fontColor = '#000000';
-    sheet.getRangeByIndex(2, 1).rowHeight = 25;
-
-    // Row 3: School header
-    cell = sheet.getRangeByIndex(3, 3);
-    cell.setText('مدرسة ${printData.classEntity.school}');
-    cell.cellStyle.fontSize = 12;
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-    cell.cellStyle.fontColor = '#000000';
-    sheet.getRangeByIndex(3, 1).rowHeight = 25;
-
-    // Logo
-    try {
-      List<int> bytes;
-      try {
-        final ByteData data = await rootBundle.load(
-          'assets/images/minist_logo.png',
-        );
-        bytes = data.buffer.asUint8List();
-      } catch (_) {
-        final file = File('assets/images/minist_logo.png');
-        if (await file.exists()) {
-          bytes = await file.readAsBytes();
-        } else {
-          rethrow;
-        }
-      }
-
-      final leftColIndex = 3 + (weekNumbers.length * 6) - 4;
-      final picture = sheet.pictures.addStream(1, leftColIndex, bytes);
-      picture.height = 90;
-      picture.width = 90;
-    } catch (e) {
-      print('Warning: Failed to add logo to sheet: $e');
-    }
-
-    // Row 4: Title and Subject
-    cell = sheet.getRangeByIndex(4, 6);
-    cell.setText('سجل رصد غياب فصل           ${printData.classEntity.name}');
-    cell.cellStyle.fontSize = 13;
-    cell.cellStyle.bold = true;
-    cell.cellStyle.hAlign = xlsio.HAlignType.center;
-    cell.cellStyle.vAlign = xlsio.VAlignType.center;
-    sheet.getRangeByIndex(4, 6, 4, 11).merge();
-
-    cell = sheet.getRangeByIndex(4, 17);
-    cell.setText('مادة : ${printData.classEntity.subject}');
-    cell.cellStyle.fontSize = 13;
-    cell.cellStyle.bold = true;
-    cell.cellStyle.hAlign = xlsio.HAlignType.right;
-    cell.cellStyle.vAlign = xlsio.VAlignType.center;
-    sheet.getRangeByIndex(4, 17, 4, 20).merge();
-
-    sheet.getRangeByIndex(4, 1).rowHeight = 35;
-
-    // Row 5 & 6: Headers
-    var range = sheet.getRangeByIndex(5, 2, 6, 2);
-    range.merge();
-    range.setText('م');
-    _styleEmptySheetHeaderCell(range);
-
-    range = sheet.getRangeByIndex(5, 3, 6, 3);
-    range.merge();
-    range.setText('الاســـــــــــــــــــــــــــــــم');
-    _styleEmptySheetHeaderCell(range);
-
-    final dayNames = [
-      'السبت',
-      'الاحد',
-      'الإثنين',
-      'الثلاثاء',
-      'الأربعاء',
-      'الخميس',
-    ];
-    int col = 4;
-
-    for (final weekNum in weekNumbers) {
-      final startCol = col;
-      final endCol = col + 5;
-
-      range = sheet.getRangeByIndex(5, startCol, 5, endCol);
-      range.merge();
-
-      final weekStartDate = weekStartDates[weekNum];
-      String weekLabel = 'الأسبوع ${_getArabicOrdinal(weekNum)}';
-      if (weekStartDate != null) {
-        weekLabel += ' ${dateFormat.format(weekStartDate)}';
-      }
-      range.setText(weekLabel);
-      _styleEmptySheetHeaderCell(range);
-
-      for (var i = 0; i < 6; i++) {
-        cell = sheet.getRangeByIndex(6, col + i);
-        cell.setText(dayNames[i]);
-        _styleEmptySheetSubHeaderCell(cell);
-
-        if (i % 2 != 0) {
-          cell.cellStyle.backColor = '#D9D9D9';
-        }
-
-        if (i == 5) {
-          cell.cellStyle.borders.left.lineStyle = xlsio.LineStyle.thick;
-        }
-      }
-      col = endCol + 1;
-    }
-
-    await Future.delayed(Duration.zero);
-
-    // Data Rows
-    int rowIndex = 7;
-    for (var i = 0; i < printData.studentsData.length; i++) {
-      final studentData = printData.studentsData[i];
-
-      // Number
-      cell = sheet.getRangeByIndex(rowIndex, 2);
-      cell.setNumber((i + 1).toDouble());
-      cell.cellStyle.hAlign = xlsio.HAlignType.center;
-      cell.cellStyle.vAlign = xlsio.VAlignType.center;
-      _addBorder(cell);
-
-      // Name
-      cell = sheet.getRangeByIndex(rowIndex, 3);
-      cell.setText(studentData.student.name);
-      cell.cellStyle.hAlign = xlsio.HAlignType.right;
-      cell.cellStyle.vAlign = xlsio.VAlignType.center;
-      _addBorder(cell);
-
-      // Attendance
-      int dataCol = 4;
-      for (final weekNum in weekNumbers) {
-        final weekStartDate = weekStartDates[weekNum];
-        final weekDays = weekStartDate != null
-            ? WeekHelper.getWeekDays(weekStartDate)
-            : <DateTime>[];
-
-        for (var d = 0; d < 6; d++) {
-          cell = sheet.getRangeByIndex(rowIndex, dataCol);
-
-          // Default alternating background
-          if (d % 2 != 0) {
-            cell.cellStyle.backColor = '#D9D9D9';
-          }
-
-          if (weekDays.isNotEmpty && d < weekDays.length) {
-            final day = weekDays[d];
-            final status = studentData.getAttendanceForWeekDate(weekNum, day);
-            if (status != null) {
-              cell.setText(_getAttendanceStatusSymbol(status));
-              _styleAttendanceCell(cell, status);
-            }
-          }
-
-          cell.cellStyle.hAlign = xlsio.HAlignType.center;
-          cell.cellStyle.vAlign = xlsio.VAlignType.center;
-          _addBorder(cell);
-
-          if (d == 5) {
-            cell.cellStyle.borders.left.lineStyle = xlsio.LineStyle.thick;
-          }
-
-          dataCol++;
-        }
-      }
-
-      rowIndex++;
-      if (i % 10 == 0) await Future.delayed(Duration.zero);
-    }
-
-    // Column widths
-    sheet.getRangeByIndex(1, 2).columnWidth = 4;
-    sheet.getRangeByIndex(1, 3).columnWidth = 30;
-    for (var c = 4; c <= 3 + (weekNumbers.length * 6); c++) {
-      sheet.getRangeByIndex(1, c).columnWidth = 5;
-    }
-
-    // Header Heights
-    sheet.getRangeByIndex(5, 1).rowHeight = 30;
-    sheet.getRangeByIndex(6, 1).rowHeight = 80;
-  }
-
-  /// Save empty sheet file
-  Future<String> _saveEmptySheetFile(
-    List<int> fileBytes,
-    PrintDataEntity printData,
-  ) async {
-    try {
-      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-      final className = printData.classEntity.name.replaceAll('/', '_');
-      final filename = 'empty_attendance_${className}_$timestamp.xlsx';
-
-      final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/$filename';
-
-      final file = File(filePath);
-      await file.writeAsBytes(fileBytes);
-
-      await Share.shareXFiles(
-        [XFile(filePath)],
-        subject: filename,
-        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
-      );
-
-      return filePath;
-    } catch (e) {
-      throw Exception('Failed to save empty sheet file: $e');
-    }
-  }
-
-  /// Export primary (3-6) scores by creating Excel from scratch with proper styling
-  Future<String> _exportFromPrimaryTemplate(PrintDataEntity printData) async {
-    final workbook = xlsio.Workbook();
-    final sheet = workbook.worksheets[0];
-    sheet.name = 'كشف درجات 3-6';
-    sheet.isRightToLeft = true; // RTL for Arabic layout
-
-    // Configuration constants
-    const int weekBlockSize = 6; // 1 total + 5 evaluations per week
-    const int firstWeekStartCol = 4; // Column D (Shifted from C)
-    const int serialNumberCol = 2; // Column B (Shifted from A)
-    const int studentNameCol = 3; // Column C (Shifted from B)
-
-    // Evaluation IDs (Primary 3-6)
-    // Ordered: Homework, Activity, Weekly, Performance, Attendance
-    final evalIds = [
-      'primary_homework',
-      'primary_activity',
-      'primary_weekly',
-      'primary_performance',
-      'primary_attendance',
-    ];
-
-    // Headers for the evaluations
-    // Matches template exactly
-    final subNames = [
-      'كراس الواجب',
-      'كراس النشاط',
-      'تقييم أسبوعى',
-      'المهام الادائية',
-      'المواظبة والسلوك',
-    ];
-
-    // Max scores: 5, 5, 5, 10, 5 = 30
-    final maxScores = [5, 5, 5, 10, 5];
-
-    final weekNumbers = printData.weekNumbers;
-    final dateFormat = DateFormat('yyyy\\M\\d');
-
-    // =========================================================================
-    // DEFINE STYLES
-    // =========================================================================
-
-    // Base header style
-    final baseHeaderStyle = workbook.styles.add('BaseHeaderStylePrimary');
-    baseHeaderStyle.bold = true;
-    baseHeaderStyle.fontSize = 12;
-    baseHeaderStyle.hAlign = xlsio.HAlignType.center;
-    baseHeaderStyle.vAlign = xlsio.VAlignType.center;
-    baseHeaderStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    baseHeaderStyle.borders.all.color = '#000000';
-
-    // Week header style
-    final weekHeaderStyle = workbook.styles.add('WeekHeaderStylePrimary');
-    weekHeaderStyle.backColor = '#FFFFFF';
-    weekHeaderStyle.bold = true;
-    weekHeaderStyle.fontSize = 14;
-    weekHeaderStyle.hAlign = xlsio.HAlignType.center;
-    weekHeaderStyle.vAlign = xlsio.VAlignType.center;
-    weekHeaderStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    weekHeaderStyle.borders.all.color = '#000000';
-
-    // Vertical Headers
-    final verticalGrayHeader = workbook.styles.add('VerticalGrayHeaderPrimary');
-    verticalGrayHeader.backColor = '#D9D9D9';
-    verticalGrayHeader.hAlign = xlsio.HAlignType.center;
-    verticalGrayHeader.vAlign = xlsio.VAlignType.center;
-    verticalGrayHeader.borders.all.lineStyle = xlsio.LineStyle.thin;
-    verticalGrayHeader.borders.all.color = '#000000';
-    verticalGrayHeader.rotation = 180;
-    verticalGrayHeader.bold = true;
-    verticalGrayHeader.fontSize = 14;
-
-    final verticalWhiteHeader = workbook.styles.add(
-      'VerticalWhiteHeaderPrimary',
-    );
-    verticalWhiteHeader.backColor = '#FFFFFF';
-    verticalWhiteHeader.hAlign = xlsio.HAlignType.center;
-    verticalWhiteHeader.vAlign = xlsio.VAlignType.center;
-    verticalWhiteHeader.borders.all.lineStyle = xlsio.LineStyle.thin;
-    verticalWhiteHeader.borders.all.color = '#000000';
-    verticalWhiteHeader.rotation = 180;
-    verticalWhiteHeader.bold = true;
-    verticalWhiteHeader.fontSize = 14;
-
-    // Student name style
-    final studentNameStyle = workbook.styles.add('StudentNameStylePrimary');
-    studentNameStyle.hAlign = xlsio.HAlignType.right;
-    studentNameStyle.vAlign = xlsio.VAlignType.center;
-    studentNameStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    studentNameStyle.borders.all.color = '#000000';
-    studentNameStyle.fontSize = 15;
-    studentNameStyle.bold = true;
-
-    // Data cell styles
-    final grayDataStyle = workbook.styles.add('GrayDataStylePrimary');
-    grayDataStyle.backColor = '#D9D9D9';
-    grayDataStyle.hAlign = xlsio.HAlignType.center;
-    grayDataStyle.vAlign = xlsio.VAlignType.center;
-    grayDataStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    grayDataStyle.borders.all.color = '#000000';
-    grayDataStyle.fontSize = 14;
-    grayDataStyle.bold = true;
-
-    final whiteDataStyle = workbook.styles.add('WhiteDataStylePrimary');
-    whiteDataStyle.backColor = '#FFFFFF';
-    whiteDataStyle.hAlign = xlsio.HAlignType.center;
-    whiteDataStyle.vAlign = xlsio.VAlignType.center;
-    whiteDataStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    whiteDataStyle.borders.all.color = '#000000';
-    whiteDataStyle.fontSize = 14;
-    whiteDataStyle.bold = true;
-
-    // Gray Style for simple headers
-    final grayStyle = workbook.styles.add('GrayStylePrimary');
-    grayStyle.backColor = '#D9D9D9';
-    grayStyle.hAlign = xlsio.HAlignType.center;
-    grayStyle.vAlign = xlsio.VAlignType.center;
-    grayStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    grayStyle.borders.all.color = '#000000';
-    grayStyle.fontSize = 14;
-    grayStyle.bold = true;
-
-    final whiteStyle = workbook.styles.add('WhiteStylePrimary');
-    whiteStyle.backColor = '#FFFFFF';
-    whiteStyle.hAlign = xlsio.HAlignType.center;
-    whiteStyle.vAlign = xlsio.VAlignType.center;
-    whiteStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    whiteStyle.borders.all.color = '#000000';
-    whiteStyle.fontSize = 14;
-    whiteStyle.bold = true;
-
-    // =========================================================================
-    // HEADER SECTION
-    // =========================================================================
-    int currentRow = 1;
-    final int lastTableCol =
-        firstWeekStartCol + (weekNumbers.length * weekBlockSize) - 1;
-    xlsio.Range cell;
-
-    // 1. Logo
-    try {
-      final ByteData logoData = await rootBundle.load(
-        'assets/images/minist_logo.png',
-      );
-      final List<int> bytes = logoData.buffer.asUint8List();
-      final int logoCol = (lastTableCol > 10) ? lastTableCol - 1 : 10;
-      final xlsio.Picture picture = sheet.pictures.addStream(
-        currentRow,
-        logoCol,
-        bytes,
-      );
-      picture.height = 85;
-      picture.width = 85;
-    } catch (e) {
-      // ignore
-    }
-
-    // 2. Metadata
-    void setLeftHeaderCell(int row, String text) {
-      final c = sheet.getRangeByIndex(row, 1, row, 10);
-      c.merge();
-      c.setText(text);
-      c.cellStyle.fontSize = 14;
-      c.cellStyle.hAlign = xlsio.HAlignType.center;
-      c.cellStyle.bold = true;
-      sheet.getRangeByIndex(row, 1).rowHeight = 30;
-    }
-
-    setLeftHeaderCell(
-      currentRow++,
-      'مديرية التربية والتعليم ${printData.governorate}',
-    );
-    setLeftHeaderCell(currentRow++, 'إدارة ${printData.administration}');
-    setLeftHeaderCell(currentRow++, 'مدرسة / ${printData.classEntity.school}');
-
-    // 3. Title row
-    final rowRange = sheet.getRangeByIndex(
-      currentRow,
-      1,
-      currentRow,
-      lastTableCol,
-    );
-    rowRange.merge();
-    rowRange.setText(
-      'سجل رصد درجات فصل ${printData.classEntity.grade} / ${printData.classEntity.name}                                               مادة : ${printData.classEntity.subject}',
-    );
-    rowRange.cellStyle.bold = true;
-    rowRange.cellStyle.fontSize = 18;
-    rowRange.cellStyle.hAlign = xlsio.HAlignType.center;
-    sheet.getRangeByIndex(currentRow, 1).rowHeight = 40;
-
-    currentRow += 2;
-
-    // =========================================================================
-    // TABLE HEADERS
-    // =========================================================================
-    int headerRow = currentRow;
-
-    // م and الاسم
-    cell = sheet.getRangeByIndex(headerRow, serialNumberCol);
-    cell.setText('م');
-    cell.cellStyle = baseHeaderStyle;
-    cell.cellStyle.backColor = '#D9D9D9';
-    sheet
-        .getRangeByIndex(
-          headerRow,
-          serialNumberCol,
-          headerRow + 2, // Spans 3 rows
-          serialNumberCol,
-        )
-        .merge();
-
-    cell = sheet.getRangeByIndex(headerRow, studentNameCol);
-    cell.setText('الاسم');
-    cell.cellStyle = baseHeaderStyle;
-    sheet
-        .getRangeByIndex(
-          headerRow,
-          studentNameCol,
-          headerRow + 2, // Spans 3 rows
-          studentNameCol,
-        )
-        .merge();
-
-    // Week headers
-    for (var weekIdx = 0; weekIdx < weekNumbers.length; weekIdx++) {
-      final weekNum = weekNumbers[weekIdx];
-      final weekStartCol = firstWeekStartCol + (weekIdx * weekBlockSize);
-      final weekEndCol = weekStartCol + weekBlockSize - 1;
-
-      String weekLabel = 'الأسبوع ${_getArabicOrdinal(weekNum)}';
-      final DateTime baseStartDate = DateTime(2026, 2, 7);
-      final DateTime weekStartDate = baseStartDate.add(
-        Duration(days: weekIdx * 7),
-      );
-      weekLabel += ' ${dateFormat.format(weekStartDate)}';
-
-      cell = sheet.getRangeByIndex(headerRow, weekStartCol);
-      cell.setText(weekLabel);
-      cell.cellStyle = weekHeaderStyle;
-      sheet
-          .getRangeByIndex(headerRow, weekStartCol, headerRow, weekEndCol)
-          .merge();
-
-      // Row 2: Evaluation Sub-Headers
-      // Columns: Homework, Activity, Weekly, Performance, Attendance, Total
-      for (var sIdx = 0; sIdx < subNames.length; sIdx++) {
-        cell = sheet.getRangeByIndex(headerRow + 1, weekStartCol + sIdx);
-        cell.setText(subNames[sIdx]);
-        cell.cellStyle = (sIdx % 2 == 0)
-            ? verticalWhiteHeader
-            : verticalGrayHeader;
-
-        sheet
-            .getRangeByIndex(
-              headerRow + 1,
-              weekStartCol + sIdx,
-              headerRow + 2,
-              weekStartCol + sIdx,
-            )
-            .merge();
-      }
-
-      // Total Column (last one)
-      cell = sheet.getRangeByIndex(headerRow + 1, weekStartCol + 5);
-      cell.setText('المجموع');
-      cell.cellStyle = verticalGrayHeader;
-      sheet
-          .getRangeByIndex(
-            headerRow + 1,
-            weekStartCol + 5,
-            headerRow + 2,
-            weekStartCol + 5,
-          )
-          .merge();
-    }
-    currentRow += 3;
-
-    // =========================================================================
-    // MAX SCORES ROW
-    // =========================================================================
-    sheet.getRangeByIndex(currentRow, serialNumberCol).cellStyle = grayStyle;
-    sheet.getRangeByIndex(currentRow, studentNameCol).setText('الدرجة');
-    sheet.getRangeByIndex(currentRow, studentNameCol).cellStyle = grayStyle;
-
-    for (var weekIdx = 0; weekIdx < weekNumbers.length; weekIdx++) {
-      final weekStartCol = firstWeekStartCol + (weekIdx * weekBlockSize);
-
-      for (var evalIdx = 0; evalIdx < maxScores.length; evalIdx++) {
-        cell = sheet.getRangeByIndex(currentRow, weekStartCol + evalIdx);
-        cell.setNumber(maxScores[evalIdx].toDouble());
-        cell.cellStyle = (evalIdx % 2 == 0) ? whiteStyle : grayStyle;
-      }
-
-      // Total max score (30)
-      cell = sheet.getRangeByIndex(currentRow, weekStartCol + 5);
-      cell.setNumber(30);
-      cell.cellStyle = grayStyle;
-    }
-    currentRow++;
-
-    // =========================================================================
-    // STUDENT DATA ROWS
-    // =========================================================================
-    for (var i = 0; i < 50; i++) {
-      final studentData = i < printData.studentsData.length
-          ? printData.studentsData[i]
-          : null;
-
-      cell = sheet.getRangeByIndex(currentRow, serialNumberCol);
-      cell.setNumber((i + 1).toDouble());
-      cell.cellStyle = whiteDataStyle;
-
-      cell = sheet.getRangeByIndex(currentRow, studentNameCol);
-      if (studentData != null) {
-        cell.setText(studentData.student.name);
-      }
-      cell.cellStyle = studentNameStyle;
-
-      for (var weekIdx = 0; weekIdx < weekNumbers.length; weekIdx++) {
-        final weekNum = weekNumbers[weekIdx];
-        final weekStartCol = firstWeekStartCol + (weekIdx * weekBlockSize);
-
-        // Individual scores
-        for (var evalIdx = 0; evalIdx < evalIds.length; evalIdx++) {
-          final evalId = evalIds[evalIdx];
-          cell = sheet.getRangeByIndex(currentRow, weekStartCol + evalIdx);
-
-          if (studentData != null) {
-            final score = studentData.getScoreForWeek(weekNum, evalId);
-            if (score > 0) cell.setNumber(score.toDouble());
-          }
-          cell.cellStyle = (evalIdx % 2 == 0) ? whiteDataStyle : grayDataStyle;
-        }
-
-        // Total at the end
-        cell = sheet.getRangeByIndex(currentRow, weekStartCol + 5);
-        if (studentData != null) {
-          // Calculate local total for this template
-          int weekTotal = 0;
-          for (var evalId in evalIds) {
-            weekTotal += studentData.getScoreForWeek(weekNum, evalId);
-          }
-          if (weekTotal > 0) cell.setNumber(weekTotal.toDouble());
-        }
-        cell.cellStyle = grayDataStyle;
-        cell.cellStyle.bold = true;
-      }
-      currentRow++;
-    }
-
-    final int lastStudentRow = currentRow - 1;
-
-    // =========================================================================
-    // SIGNATURE SECTION
-    // =========================================================================
-    currentRow += 2;
-
-    // Calculate center for better positioning
-    final int midCol = (firstWeekStartCol + lastTableCol) ~/ 2;
-
-    // Teacher: Closer to center
-    final teacherRange = sheet.getRangeByIndex(
-      currentRow,
-      midCol - 4,
-      currentRow,
-      midCol - 1,
-    );
-    teacherRange.merge();
-    teacherRange.setText('مدرس المادة: ........................');
-    teacherRange.cellStyle.bold = true;
-    teacherRange.cellStyle.fontSize = 18;
-    teacherRange.cellStyle.hAlign = xlsio.HAlignType.center;
-
-    // Principal: Closer to center
-    final principalRange = sheet.getRangeByIndex(
-      currentRow,
-      midCol + 1,
-      currentRow,
-      midCol + 4,
-    );
-    principalRange.merge();
-    principalRange.setText('مدير المدرسة: ........................');
-    principalRange.cellStyle.bold = true;
-    principalRange.cellStyle.fontSize = 18;
-    principalRange.cellStyle.hAlign = xlsio.HAlignType.center;
-
-    sheet.getRangeByIndex(currentRow, 1).rowHeight =
-        40; // Increase height for clarity
-
-    // =========================================================================
-    // SET COLUMN WIDTHS & BORDERS
-    // =========================================================================
-    sheet.getRangeByIndex(1, 1).columnWidth = 2; // Margin column
-    sheet.getRangeByIndex(1, serialNumberCol).columnWidth = 6;
-    sheet.getRangeByIndex(1, studentNameCol).columnWidth = 40;
-    for (var col = firstWeekStartCol; col <= lastTableCol; col++) {
-      sheet.getRangeByIndex(1, col).columnWidth = 10;
-    }
-
-    // Name column border
-    final nameColRange = sheet.getRangeByIndex(
-      headerRow,
-      studentNameCol,
-      lastStudentRow,
-      studentNameCol,
-    );
-    nameColRange.cellStyle.borders.right.lineStyle = xlsio.LineStyle.thick;
-    nameColRange.cellStyle.borders.left.lineStyle = xlsio.LineStyle.thick;
-
-    // Week borders
-    for (var weekIdx = 0; weekIdx < weekNumbers.length; weekIdx++) {
-      final weekStartCol = firstWeekStartCol + (weekIdx * weekBlockSize);
-      final weekEndCol = weekStartCol + weekBlockSize - 1;
-
-      final weekRange = sheet.getRangeByIndex(
-        headerRow,
-        weekEndCol,
-        lastStudentRow,
-        weekEndCol,
-      );
-      weekRange.cellStyle.borders.right.lineStyle = xlsio.LineStyle.thick;
-    }
-
-    final fullTableBottom = sheet.getRangeByIndex(
-      lastStudentRow,
-      serialNumberCol,
-      lastStudentRow,
-      lastTableCol,
-    );
-    fullTableBottom.cellStyle.borders.bottom.lineStyle = xlsio.LineStyle.thick;
-
-    // Row heights
-    sheet.getRangeByIndex(headerRow, 1).rowHeight = 30; // Week header
-    sheet.getRangeByIndex(headerRow + 1, 1).rowHeight = 110; // Vertical text
-
-    for (int i = headerRow + 3; i <= lastStudentRow; i++) {
-      sheet.getRangeByIndex(i, 1).rowHeight = 30;
-    }
-
-    sheet.pageSetup.orientation = xlsio.ExcelPageOrientation.landscape;
-    sheet.pageSetup.paperSize = xlsio.ExcelPaperSize.paperA4;
-    sheet.pageSetup.leftMargin = 0.25;
-    sheet.pageSetup.rightMargin = 0.25;
-    sheet.pageSetup.topMargin = 0.25;
-    sheet.pageSetup.bottomMargin = 0.25;
-    sheet.pageSetup.isFitToPage = true;
-    sheet.pageSetup.fitToPagesWide = 1;
-    sheet.pageSetup.fitToPagesTall = 1;
-
-    final filePath = await _saveAndShareExcelFile(
-      workbook.saveAsStream(),
-      printData,
-    );
-
-    workbook.dispose();
-    return filePath;
-  }
-
-  /// Export secondary (Preparatory 1-2) scores by creating Excel from scratch with proper styling
-  Future<String> _exportFromSecondaryTemplate(PrintDataEntity printData) async {
-    final workbook = xlsio.Workbook();
-    final sheet = workbook.worksheets[0];
-    sheet.name = 'كشف درجات 1-2 اعدادي';
-    sheet.isRightToLeft = true; // RTL for Arabic layout
-
-    // Configuration constants
-    const int weekBlockSize = 6; // 1 total + 5 evaluations per week
-    const int firstWeekStartCol = 4; // Column D
-    const int serialNumberCol = 2; // Column B
-    const int studentNameCol = 3; // Column C
-
-    // Evaluation IDs (Preparatory/Secondary)
-    // Ordered: Homework, Activity, Weekly, Performance, Attendance
-    final evalIds = [
-      'secondary_homework',
-      'secondary_activity',
-      'secondary_weekly',
-      'secondary_performance',
-      'secondary_attendance',
-    ];
-
-    // Headers for the evaluations
-    // Matches template exactly (Same as Primary as requested)
-    final subNames = [
-      'كراس الواجب',
-      'كراس النشاط',
-      'تقييم أسبوعى',
-      'المهام الادائية',
-      'المواظبة والسلوك',
-    ];
-
-    // Max scores: 5, 5, 5, 10, 5 = 30 (Same as Primary as requested)
-    final maxScores = [5, 5, 5, 10, 5];
-
-    final weekNumbers = printData.weekNumbers;
-    final dateFormat = DateFormat('yyyy\\M\\d');
-
-    // =========================================================================
-    // DEFINE STYLES
-    // =========================================================================
-
-    // Base header style
-    final baseHeaderStyle = workbook.styles.add('BaseHeaderStyleSecondary');
-    baseHeaderStyle.bold = true;
-    baseHeaderStyle.fontSize = 12;
-    baseHeaderStyle.hAlign = xlsio.HAlignType.center;
-    baseHeaderStyle.vAlign = xlsio.VAlignType.center;
-    baseHeaderStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    baseHeaderStyle.borders.all.color = '#000000';
-
-    // Week header style
-    final weekHeaderStyle = workbook.styles.add('WeekHeaderStyleSecondary');
-    weekHeaderStyle.backColor = '#FFFFFF';
-    weekHeaderStyle.bold = true;
-    weekHeaderStyle.fontSize = 14;
-    weekHeaderStyle.hAlign = xlsio.HAlignType.center;
-    weekHeaderStyle.vAlign = xlsio.VAlignType.center;
-    weekHeaderStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    weekHeaderStyle.borders.all.color = '#000000';
-
-    // Vertical Headers
-    final verticalGrayHeader = workbook.styles.add(
-      'VerticalGrayHeaderSecondary',
-    );
-    verticalGrayHeader.backColor = '#D9D9D9';
-    verticalGrayHeader.hAlign = xlsio.HAlignType.center;
-    verticalGrayHeader.vAlign = xlsio.VAlignType.center;
-    verticalGrayHeader.borders.all.lineStyle = xlsio.LineStyle.thin;
-    verticalGrayHeader.borders.all.color = '#000000';
-    verticalGrayHeader.rotation = 180;
-    verticalGrayHeader.bold = true;
-    verticalGrayHeader.fontSize = 14;
-
-    final verticalWhiteHeader = workbook.styles.add(
-      'VerticalWhiteHeaderSecondary',
-    );
-    verticalWhiteHeader.backColor = '#FFFFFF';
-    verticalWhiteHeader.hAlign = xlsio.HAlignType.center;
-    verticalWhiteHeader.vAlign = xlsio.VAlignType.center;
-    verticalWhiteHeader.borders.all.lineStyle = xlsio.LineStyle.thin;
-    verticalWhiteHeader.borders.all.color = '#000000';
-    verticalWhiteHeader.rotation = 180;
-    verticalWhiteHeader.bold = true;
-    verticalWhiteHeader.fontSize = 14;
-
-    // Student name style
-    final studentNameStyle = workbook.styles.add('StudentNameStyleSecondary');
-    studentNameStyle.hAlign = xlsio.HAlignType.right;
-    studentNameStyle.vAlign = xlsio.VAlignType.center;
-    studentNameStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    studentNameStyle.borders.all.color = '#000000';
-    studentNameStyle.fontSize = 15;
-    studentNameStyle.bold = true;
-
-    // Data cell styles
-    final grayDataStyle = workbook.styles.add('GrayDataStyleSecondary');
-    grayDataStyle.backColor = '#D9D9D9';
-    grayDataStyle.hAlign = xlsio.HAlignType.center;
-    grayDataStyle.vAlign = xlsio.VAlignType.center;
-    grayDataStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    grayDataStyle.borders.all.color = '#000000';
-    grayDataStyle.fontSize = 14;
-    grayDataStyle.bold = true;
-
-    final whiteDataStyle = workbook.styles.add('WhiteDataStyleSecondary');
-    whiteDataStyle.backColor = '#FFFFFF';
-    whiteDataStyle.hAlign = xlsio.HAlignType.center;
-    whiteDataStyle.vAlign = xlsio.VAlignType.center;
-    whiteDataStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    whiteDataStyle.borders.all.color = '#000000';
-    whiteDataStyle.fontSize = 14;
-    whiteDataStyle.bold = true;
-
-    // Gray Style for simple headers
-    final grayStyle = workbook.styles.add('GrayStyleSecondary');
-    grayStyle.backColor = '#D9D9D9';
-    grayStyle.hAlign = xlsio.HAlignType.center;
-    grayStyle.vAlign = xlsio.VAlignType.center;
-    grayStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    grayStyle.borders.all.color = '#000000';
-    grayStyle.fontSize = 14;
-    grayStyle.bold = true;
-
-    final whiteStyle = workbook.styles.add('WhiteStyleSecondary');
-    whiteStyle.backColor = '#FFFFFF';
-    whiteStyle.hAlign = xlsio.HAlignType.center;
-    whiteStyle.vAlign = xlsio.VAlignType.center;
-    whiteStyle.borders.all.lineStyle = xlsio.LineStyle.thin;
-    whiteStyle.borders.all.color = '#000000';
-    whiteStyle.fontSize = 14;
-    whiteStyle.bold = true;
-
-    // =========================================================================
-    // HEADER SECTION
-    // =========================================================================
-    int currentRow = 1;
-    final int lastTableCol =
-        firstWeekStartCol + (weekNumbers.length * weekBlockSize) - 1;
-    xlsio.Range cell;
-
-    // 1. Logo
-    try {
-      final ByteData logoData = await rootBundle.load(
-        'assets/images/minist_logo.png',
-      );
-      final List<int> bytes = logoData.buffer.asUint8List();
-      final int logoCol = (lastTableCol > 10) ? lastTableCol - 1 : 10;
-      final xlsio.Picture picture = sheet.pictures.addStream(
-        currentRow,
-        logoCol,
-        bytes,
-      );
-      picture.height = 85;
-      picture.width = 85;
-    } catch (e) {
-      // ignore
-    }
-
-    // 2. Metadata
-    void setLeftHeaderCell(int row, String text) {
-      final c = sheet.getRangeByIndex(row, 1, row, 10);
-      c.merge();
-      c.setText(text);
-      c.cellStyle.fontSize = 14;
-      c.cellStyle.hAlign = xlsio.HAlignType.center;
-      c.cellStyle.bold = true;
-      sheet.getRangeByIndex(row, 1).rowHeight = 30;
-    }
-
-    setLeftHeaderCell(
-      currentRow++,
-      'مديرية التربية والتعليم ${printData.governorate}',
-    );
-    setLeftHeaderCell(currentRow++, 'إدارة ${printData.administration}');
-    setLeftHeaderCell(currentRow++, 'مدرسة / ${printData.classEntity.school}');
-
-    // 3. Title row
-    final rowRange = sheet.getRangeByIndex(
-      currentRow,
-      1,
-      currentRow,
-      lastTableCol,
-    );
-    rowRange.merge();
-    rowRange.setText(
-      'سجل رصد درجات فصل ${printData.classEntity.grade} / ${printData.classEntity.name}                                               مادة : ${printData.classEntity.subject}',
-    );
-    rowRange.cellStyle.bold = true;
-    rowRange.cellStyle.fontSize = 18;
-    rowRange.cellStyle.hAlign = xlsio.HAlignType.center;
-    sheet.getRangeByIndex(currentRow, 1).rowHeight = 40;
-
-    currentRow += 2;
-
-    // =========================================================================
-    // TABLE HEADERS
-    // =========================================================================
-    int headerRow = currentRow;
-
-    // م and الاسم
-    cell = sheet.getRangeByIndex(headerRow, serialNumberCol);
-    cell.setText('م');
-    cell.cellStyle = baseHeaderStyle;
-    cell.cellStyle.backColor = '#D9D9D9';
-    sheet
-        .getRangeByIndex(
-          headerRow,
-          serialNumberCol,
-          headerRow + 2, // Spans 3 rows
-          serialNumberCol,
-        )
-        .merge();
-
-    cell = sheet.getRangeByIndex(headerRow, studentNameCol);
-    cell.setText('الاسم');
-    cell.cellStyle = baseHeaderStyle;
-    sheet
-        .getRangeByIndex(
-          headerRow,
-          studentNameCol,
-          headerRow + 2, // Spans 3 rows
-          studentNameCol,
-        )
-        .merge();
-
-    // Week headers
-    for (var weekIdx = 0; weekIdx < weekNumbers.length; weekIdx++) {
-      final weekNum = weekNumbers[weekIdx];
-      final weekStartCol = firstWeekStartCol + (weekIdx * weekBlockSize);
-      final weekEndCol = weekStartCol + weekBlockSize - 1;
-
-      String weekLabel = 'الأسبوع ${_getArabicOrdinal(weekNum)}';
-      final DateTime baseStartDate = DateTime(2026, 2, 7);
-      final DateTime weekStartDate = baseStartDate.add(
-        Duration(days: weekIdx * 7),
-      );
-      weekLabel += ' ${dateFormat.format(weekStartDate)}';
-
-      cell = sheet.getRangeByIndex(headerRow, weekStartCol);
-      cell.setText(weekLabel);
-      cell.cellStyle = weekHeaderStyle;
-      sheet
-          .getRangeByIndex(headerRow, weekStartCol, headerRow, weekEndCol)
-          .merge();
-
-      // Row 2: Evaluation Sub-Headers
-      // Columns: Homework, Activity, Weekly, Performance, Attendance, Total
-      for (var sIdx = 0; sIdx < subNames.length; sIdx++) {
-        cell = sheet.getRangeByIndex(headerRow + 1, weekStartCol + sIdx);
-        cell.setText(subNames[sIdx]);
-        cell.cellStyle = (sIdx % 2 == 0)
-            ? verticalWhiteHeader
-            : verticalGrayHeader;
-
-        sheet
-            .getRangeByIndex(
-              headerRow + 1,
-              weekStartCol + sIdx,
-              headerRow + 2,
-              weekStartCol + sIdx,
-            )
-            .merge();
-      }
-
-      // Total Column (last one)
-      cell = sheet.getRangeByIndex(headerRow + 1, weekStartCol + 5);
-      cell.setText('المجموع');
-      cell.cellStyle = verticalGrayHeader;
-      sheet
-          .getRangeByIndex(
-            headerRow + 1,
-            weekStartCol + 5,
-            headerRow + 2,
-            weekStartCol + 5,
-          )
-          .merge();
-    }
-    currentRow += 3;
-
-    // =========================================================================
-    // MAX SCORES ROW
-    // =========================================================================
-    sheet.getRangeByIndex(currentRow, serialNumberCol).cellStyle = grayStyle;
-    sheet.getRangeByIndex(currentRow, studentNameCol).setText('الدرجة');
-    sheet.getRangeByIndex(currentRow, studentNameCol).cellStyle = grayStyle;
-
-    for (var weekIdx = 0; weekIdx < weekNumbers.length; weekIdx++) {
-      final weekStartCol = firstWeekStartCol + (weekIdx * weekBlockSize);
-
-      for (var evalIdx = 0; evalIdx < maxScores.length; evalIdx++) {
-        cell = sheet.getRangeByIndex(currentRow, weekStartCol + evalIdx);
-        cell.setNumber(maxScores[evalIdx].toDouble());
-        cell.cellStyle = (evalIdx % 2 == 0) ? whiteStyle : grayStyle;
-      }
-
-      // Total max score (30)
-      cell = sheet.getRangeByIndex(currentRow, weekStartCol + 5);
-      cell.setNumber(30);
-      cell.cellStyle = grayStyle;
-    }
-    currentRow++;
-
-    // =========================================================================
-    // STUDENT DATA ROWS
-    // =========================================================================
-    for (var i = 0; i < 50; i++) {
-      final studentData = i < printData.studentsData.length
-          ? printData.studentsData[i]
-          : null;
-
-      cell = sheet.getRangeByIndex(currentRow, serialNumberCol);
-      cell.setNumber((i + 1).toDouble());
-      cell.cellStyle = whiteDataStyle;
-
-      cell = sheet.getRangeByIndex(currentRow, studentNameCol);
-      if (studentData != null) {
-        cell.setText(studentData.student.name);
-      }
-      cell.cellStyle = studentNameStyle;
-
-      for (var weekIdx = 0; weekIdx < weekNumbers.length; weekIdx++) {
-        final weekNum = weekNumbers[weekIdx];
-        final weekStartCol = firstWeekStartCol + (weekIdx * weekBlockSize);
-
-        // Individual scores
-        for (var evalIdx = 0; evalIdx < evalIds.length; evalIdx++) {
-          final evalId = evalIds[evalIdx];
-          cell = sheet.getRangeByIndex(currentRow, weekStartCol + evalIdx);
-
-          if (studentData != null) {
-            final score = studentData.getScoreForWeek(weekNum, evalId);
-            if (score > 0) cell.setNumber(score.toDouble());
-          }
-          cell.cellStyle = (evalIdx % 2 == 0) ? whiteDataStyle : grayDataStyle;
-        }
-
-        // Total at the end
-        cell = sheet.getRangeByIndex(currentRow, weekStartCol + 5);
-        if (studentData != null) {
-          // Calculate local total for this template
-          int weekTotal = 0;
-          for (var evalId in evalIds) {
-            weekTotal += studentData.getScoreForWeek(weekNum, evalId);
-          }
-          if (weekTotal > 0) cell.setNumber(weekTotal.toDouble());
-        }
-        cell.cellStyle = grayDataStyle;
-        cell.cellStyle.bold = true;
-      }
-      currentRow++;
-    }
-
-    final int lastStudentRow = currentRow - 1;
-
-    // =========================================================================
-    // SIGNATURE SECTION
-    // =========================================================================
-    currentRow += 2;
-
-    // Calculate center for better positioning
-    final int midCol = (firstWeekStartCol + lastTableCol) ~/ 2;
-
-    // Teacher: Closer to center
-    final teacherRange = sheet.getRangeByIndex(
-      currentRow,
-      midCol - 4,
-      currentRow,
-      midCol - 1,
-    );
-    teacherRange.merge();
-    teacherRange.setText('مدرس المادة: ........................');
-    teacherRange.cellStyle.bold = true;
-    teacherRange.cellStyle.fontSize = 18;
-    teacherRange.cellStyle.hAlign = xlsio.HAlignType.center;
-
-    // Principal: Closer to center
-    final principalRange = sheet.getRangeByIndex(
-      currentRow,
-      midCol + 1,
-      currentRow,
-      midCol + 4,
-    );
-    principalRange.merge();
-    principalRange.setText('مدير المدرسة: ........................');
-    principalRange.cellStyle.bold = true;
-    principalRange.cellStyle.fontSize = 18;
-    principalRange.cellStyle.hAlign = xlsio.HAlignType.center;
-
-    sheet.getRangeByIndex(currentRow, 1).rowHeight =
-        40; // Increase height for clarity
-
-    // =========================================================================
-    // SET COLUMN WIDTHS & BORDERS
-    // =========================================================================
-    sheet.getRangeByIndex(1, 1).columnWidth = 2; // Margin column
-    sheet.getRangeByIndex(1, serialNumberCol).columnWidth = 6;
-    sheet.getRangeByIndex(1, studentNameCol).columnWidth = 40;
-    for (var col = firstWeekStartCol; col <= lastTableCol; col++) {
-      sheet.getRangeByIndex(1, col).columnWidth = 10;
-    }
-
-    // Name column border
-    final nameColRange = sheet.getRangeByIndex(
-      headerRow,
-      studentNameCol,
-      lastStudentRow,
-      studentNameCol,
-    );
-    nameColRange.cellStyle.borders.right.lineStyle = xlsio.LineStyle.thick;
-    nameColRange.cellStyle.borders.left.lineStyle = xlsio.LineStyle.thick;
-
-    // Week borders
-    for (var weekIdx = 0; weekIdx < weekNumbers.length; weekIdx++) {
-      final weekStartCol = firstWeekStartCol + (weekIdx * weekBlockSize);
-      final weekEndCol = weekStartCol + weekBlockSize - 1;
-
-      final weekRange = sheet.getRangeByIndex(
-        headerRow,
-        weekEndCol, // The "Total" column
-        lastStudentRow,
-        weekEndCol,
-      );
-      weekRange.cellStyle.borders.right.lineStyle = xlsio.LineStyle.thick;
-    }
-
-    final fullTableBottom = sheet.getRangeByIndex(
-      lastStudentRow,
-      serialNumberCol,
-      lastStudentRow,
-      lastTableCol,
-    );
-    fullTableBottom.cellStyle.borders.bottom.lineStyle = xlsio.LineStyle.thick;
-
-    // Row heights
-    sheet.getRangeByIndex(headerRow, 1).rowHeight = 30; // Week header
-    sheet.getRangeByIndex(headerRow + 1, 1).rowHeight = 110; // Vertical text
-
-    for (int i = headerRow + 3; i <= lastStudentRow; i++) {
-      sheet.getRangeByIndex(i, 1).rowHeight = 30;
-    }
-
-    sheet.pageSetup.orientation = xlsio.ExcelPageOrientation.landscape;
-    sheet.pageSetup.paperSize = xlsio.ExcelPaperSize.paperA4;
-    sheet.pageSetup.leftMargin = 0.25;
-    sheet.pageSetup.rightMargin = 0.25;
-    sheet.pageSetup.topMargin = 0.25;
-    sheet.pageSetup.bottomMargin = 0.25;
-    sheet.pageSetup.isFitToPage = true;
-    sheet.pageSetup.fitToPagesWide = 1;
-    sheet.pageSetup.fitToPagesTall = 1;
-
-    final filePath = await _saveAndShareExcelFile(
-      workbook.saveAsStream(),
-      printData,
-    );
-
-    workbook.dispose();
-    return filePath;
-  }
-
-  /// Sanitize Excel file bytes to remove invalid custom formats
-  /// This fixes the "custom numFmtId starts at 164 but found a value of 42" error in package:excel
-  List<int> _sanitizeExcelFile(List<int> bytes) {
-    try {
-      final decoder = ZipDecoder();
-      final archive = decoder.decodeBytes(bytes);
-      final newArchive = Archive();
-      bool modified = false;
-
-      for (final file in archive) {
-        if (file.name == 'xl/styles.xml') {
-          // Decode content
-          final contentBytes = file.content as List<int>;
-          var content = utf8.decode(contentBytes);
-
-          // Regex to match <numFmt ... numFmtId="<value>" ... />
-          // We look for built-in IDs (< 164) incorrectly defined in custom formats
-          final regex = RegExp(r'<numFmt\s+[^>]*numFmtId="(\d+)"[^>]*/>');
-
-          if (regex.hasMatch(content)) {
-            content = content.replaceAllMapped(regex, (match) {
-              final idStr = match.group(1);
-              final id = int.tryParse(idStr ?? '');
-
-              // If ID is standard (0-163), removing it from custom definitions fixes the crash.
-              if (id != null && id < 164) {
-                modified = true;
-                return '';
-              }
-              return match.group(0)!;
-            });
-
-            if (modified) {
-              final encoded = utf8.encode(content);
-              final newFile = ArchiveFile(file.name, encoded.length, encoded);
-              newArchive.addFile(newFile);
-              continue;
-            }
-          }
-        }
         newArchive.addFile(file);
       }
+    }
+    return Uint8List.fromList(ZipEncoder().encode(newArchive)!);
+  }
 
-      if (modified) {
-        final encoder = ZipEncoder();
-        final encoded = encoder.encode(newArchive);
-        if (encoded != null) return encoded;
+  void fillMetadata(Sheet sheet, PrintDataEntity data);
+  void fillStudents(Sheet sheet, PrintDataEntity data);
+
+  Future<String> save(Excel excel, PrintDataEntity data) async {
+    final ts = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    String safe(String v) => v.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+
+    final fileName =
+        '${safe(data.classEntity.name)}_'
+        '${data.classEntity.evaluationGroup.name}_'
+        '$ts.xlsx';
+
+    final dir = await getTemporaryDirectory();
+    final path = '${dir.path}/$fileName';
+    final bytes = excel.save();
+    if (bytes == null) {
+      throw Exception('Failed to save excel file');
+    }
+    final f = File(path);
+    await f.writeAsBytes(bytes);
+    await Share.shareXFiles([XFile(path)]);
+    return path;
+  }
+
+  // helpers
+  int min3(int a, int b, int c) => [a, b, c].reduce((x, y) => x < y ? x : y);
+}
+
+// =======================================================
+// 1) أولى / تانية ابتدائي (PrePrimary)
+// =======================================================
+
+class PrePrimaryConfig extends ExcelTemplateConfig {
+  @override
+  String get templateName => 'كشف فارغ اعمال السنة اولى وتانية ابتدائى.xlsx';
+
+  // metadata (حسب التمبلت الفعلي)
+  final Map<String, CellIndex> meta = {
+    'governorate': CellIndex.indexByColumnRow(
+      columnIndex: 2,
+      rowIndex: 0,
+    ), // C1
+    'administration': CellIndex.indexByColumnRow(
+      columnIndex: 2,
+      rowIndex: 1,
+    ), // C2
+    'school': CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 2), // C3
+    'class': CellIndex.indexByColumnRow(columnIndex: 12, rowIndex: 3), // M4
+    'subject': CellIndex.indexByColumnRow(columnIndex: 26, rowIndex: 3), // AA4
+  };
+
+  // Student data starts at row 8 (0-indexed) = Row 9 in Excel
+  final int studentStartRow = 8;
+  final int serialColumn = 1; // Column B
+  final int nameColumn = 2; // Column C
+
+  // Each week has 8 columns: 7 evaluations + 1 total
+  // Week structure starts at column 3 (D)
+  final int firstWeekStartCol = 3;
+  final int columnsPerWeek = 8;
+
+  // Evaluation IDs matching template order
+  final List<String> evalIds = [
+    'pre_classwork', // كراس أداء صفى
+    'pre_homework', // كراس الواجب
+    'pre_activity', // كراس النشاط
+    'pre_weekly', // تقييم أسبوعى
+    'pre_oral', // مهام شفهية
+    'pre_skill', // مهام مهارية
+    'pre_attendance', // حضور ومواظبة
+  ];
+
+  @override
+  Future<Excel> loadTemplate() async {
+    // Just load the template as-is (single sheet with 5 weeks)
+    return await super.loadTemplate();
+  }
+
+  @override
+  void fillMetadata(Sheet sheet, PrintDataEntity d) {
+    // Read existing template text and append data
+    // C1: "مديرية التربية والتعليم …..................................."
+    final govCell = sheet.cell(meta['governorate']!);
+    final govTemplate = govCell.value?.toString() ?? 'مديرية التربية والتعليم ';
+    // Replace the dots with the actual governorate name
+    final govText = govTemplate.replaceAll(RegExp(r'[\.…]+'), d.governorate);
+    sheet.updateCell(meta['governorate']!, TextCellValue(govText));
+
+    // C2: "ادارة  ….........................................................."
+    final adminCell = sheet.cell(meta['administration']!);
+    final adminTemplate = adminCell.value?.toString() ?? 'ادارة  ';
+    final adminText = adminTemplate.replaceAll(
+      RegExp(r'[\.…]+'),
+      d.administration,
+    );
+    sheet.updateCell(meta['administration']!, TextCellValue(adminText));
+
+    // C3: "مدرسة / ….........................................................."
+    final schoolCell = sheet.cell(meta['school']!);
+    final schoolTemplate = schoolCell.value?.toString() ?? 'مدرسة / ';
+    final schoolText = schoolTemplate.replaceAll(
+      RegExp(r'[\.…]+'),
+      d.classEntity.school,
+    );
+    sheet.updateCell(meta['school']!, TextCellValue(schoolText));
+
+    // M4: "سجل رصد درجات فصل            /"
+    final classCell = sheet.cell(meta['class']!);
+    final classTemplate =
+        classCell.value?.toString() ?? 'سجل رصد درجات فصل            /';
+    // Replace spaces before / with the class info (e.g., "1/3")
+    final classInfo = '${d.classEntity.grade}/${d.classEntity.name}';
+    final classText = classTemplate.replaceAll(
+      RegExp(r'\s+/'),
+      '   $classInfo',
+    );
+    sheet.updateCell(meta['class']!, TextCellValue(classText));
+
+    // AA4: "مادة : …...................."
+    final subjectCell = sheet.cell(meta['subject']!);
+    final subjectTemplate = subjectCell.value?.toString() ?? 'مادة : ';
+    final subjectText = subjectTemplate.replaceAll(
+      RegExp(r'[\.…]+'),
+      d.classEntity.subject,
+    );
+    sheet.updateCell(meta['subject']!, TextCellValue(subjectText));
+
+    // Set column width for subject cell (column AA = 26) to ensure full text is visible
+    sheet.setColumnWidth(26, 30); // Width in characters
+  }
+
+  @override
+  void fillStudents(Sheet sheet, PrintDataEntity data) {
+    // Determine which weeks to fill based on weekGroup
+    final weekNumbers =
+        data.weekNumbers; // This already handles weekGroup logic
+    final isLastPage = data.weekGroup == 4; // Page 4 includes semester average
+
+    for (int i = 0; i < data.studentsData.length; i++) {
+      final student = data.studentsData[i];
+      // Students start at row 8 (0-indexed) which is Row 9 in Excel
+      final row = studentStartRow + i;
+
+      // Student name in column C (nameColumn = 2)
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: nameColumn, rowIndex: row),
+        TextCellValue(student.student.name),
+      );
+
+      // Fill scores for each week in the selected group
+      for (int w = 0; w < weekNumbers.length && w < 5; w++) {
+        final weekNo = weekNumbers[w];
+        final weekStartCol = firstWeekStartCol + (w * columnsPerWeek);
+
+        // Fill each evaluation type for this week
+        for (int e = 0; e < evalIds.length; e++) {
+          final score = student.getScoreForWeek(weekNo, evalIds[e]);
+          if (score > 0) {
+            sheet.updateCell(
+              CellIndex.indexByColumnRow(
+                columnIndex: weekStartCol + e,
+                rowIndex: row,
+              ),
+              IntCellValue(score),
+            );
+          }
+        }
+
+        // Fill total for this week (8th column in the week block)
+        final total = student.getTotalForWeek(weekNo);
+        if (total > 0) {
+          sheet.updateCell(
+            CellIndex.indexByColumnRow(
+              columnIndex: weekStartCol + 7, // Total column
+              rowIndex: row,
+            ),
+            IntCellValue(total),
+          );
+        }
       }
-      return bytes;
-    } catch (e) {
-      print('Warning: Failed to sanitize Excel template: $e');
-      return bytes;
+
+      // If this is page 4 (weeks 16-18), add semester 2 average
+      if (isLastPage) {
+        _addSemesterAverage(sheet, student, row, weekNumbers.length);
+      }
     }
   }
 
-  /// Helper to update a cell while preserving its existing style (borders, etc.)
-  /// Helper to update a cell while preserving its existing style (borders, etc.)
-  void _safeUpdateCell(
-    excel_pkg.Sheet sheet,
-    int col,
+  void _addSemesterAverage(
+    Sheet sheet,
+    StudentPrintData student,
     int row,
-    excel_pkg.CellValue value, {
-    excel_pkg.CellStyle? fallbackStyle,
-    int? rotation,
-  }) {
-    final cellIndex = excel_pkg.CellIndex.indexByColumnRow(
-      columnIndex: col,
-      rowIndex: row,
-    );
+    int weekCount,
+  ) {
+    // Calculate semester 2 average (weeks 1-18)
+    int totalScore = 0;
+    int weeksCounted = 0;
 
-    // Attempt to get existing style
-    // Accessing the cell creates it if it doesn't exist, but we hope to preserve style if it does.
-    // In package:excel, accessing via sheet.cell(cellIndex) gives the Data object.
-    final existingCell = sheet.cell(cellIndex);
-    excel_pkg.CellStyle style =
-        existingCell.cellStyle ?? fallbackStyle ?? excel_pkg.CellStyle();
-
-    if (rotation != null) {
-      style.rotation = rotation;
+    for (int w = 1; w <= 18; w++) {
+      final weekTotal = student.getTotalForWeek(w);
+      if (weekTotal > 0) {
+        totalScore += weekTotal;
+        weeksCounted++;
+      }
     }
 
-    sheet.updateCell(cellIndex, value, cellStyle: style);
+    if (weeksCounted > 0) {
+      final average = (totalScore / weeksCounted).round();
+
+      // Place average in column after the last week
+      // Last week ends at: firstWeekStartCol + (weekCount * columnsPerWeek) - 1
+      // Average column: firstWeekStartCol + (weekCount * columnsPerWeek)
+      final averageCol = firstWeekStartCol + (weekCount * columnsPerWeek);
+
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: averageCol, rowIndex: row),
+        IntCellValue(average),
+      );
+    }
+  }
+}
+
+// =======================================================
+// 2) 3–6 ابتدائي (Primary)
+// =======================================================
+
+class Primary36Config extends ExcelTemplateConfig {
+  @override
+  String get templateName => 'كشف فارغ اعمال السنة من 3ل6 ابتدائى.xlsx';
+
+  /* =====================================================
+   * 1) Metadata cells (من التمبلت حرفيًا)
+   * ===================================================== */
+  final Map<String, CellIndex> metaCells = {
+    'governorate': CellIndex.indexByString('C1'),
+    'administration': CellIndex.indexByString('C2'),
+    'school': CellIndex.indexByString('C3'),
+    'subject': CellIndex.indexByString('T4'),
+  };
+
+  /* =====================================================
+   * 2) Students table basics
+   * ===================================================== */
+  final int studentStartRow = 8; // Row 9 in Excel (0-indexed)
+  final int serialColumn = 1; // B
+  final int nameColumn = 2; // C
+
+  /* =====================================================
+   * 3) 18 Weeks – Based on template analysis
+   * Template: First week at D5 (col 3), 6 columns per week
+   * Evaluation order in each week block (LTR):
+   * [0] أداء الطالب (Performance)
+   * [1] الواجب (Homework)
+   * [2] النشاط (Activity)  
+   * [3] أسبوعي (Weekly)
+   * [4] مهاري ومواظبة (Attendance)
+   * [5] المجموع (Total)
+   * ===================================================== */
+
+  // First week starts at column 3 (D), each week is 6 columns
+  final int firstWeekCol = 3;
+  final int colsPerWeek = 6;
+
+  // Evaluation IDs in template order
+  final List<String> evalOrder = [
+    'primary_performance', // أداء الطالب
+    'primary_homework', // الواجب
+    'primary_activity', // النشاط
+    'primary_weekly', // أسبوعي
+    'primary_attendance', // مهاري ومواظبة
+  ];
+
+  /* =====================================================
+   * 4) Fill metadata
+   * ===================================================== */
+  @override
+  void fillMetadata(Sheet sheet, PrintDataEntity data) {
+    sheet.updateCell(
+      metaCells['governorate']!,
+      TextCellValue(data.governorate),
+    );
+    sheet.updateCell(
+      metaCells['administration']!,
+      TextCellValue(data.administration),
+    );
+    sheet.updateCell(
+      metaCells['school']!,
+      TextCellValue(data.classEntity.school),
+    );
+    sheet.updateCell(
+      metaCells['subject']!,
+      TextCellValue(data.classEntity.subject),
+    );
+  }
+
+  /* =====================================================
+   * 5) Fill students & scores
+   * ===================================================== */
+  @override
+  void fillStudents(Sheet sheet, PrintDataEntity data) {
+    final weekNumbers = data.weekNumbers;
+
+    for (int i = 0; i < data.studentsData.length; i++) {
+      final student = data.studentsData[i];
+      final row = studentStartRow + i;
+
+      // Serial number
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: serialColumn, rowIndex: row),
+        IntCellValue(i + 1),
+      );
+
+      // Student name
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: nameColumn, rowIndex: row),
+        TextCellValue(student.student.name),
+      );
+
+      // Fill scores for each week
+      for (int w = 0; w < weekNumbers.length; w++) {
+        final weekNo = weekNumbers[w];
+        final weekStartCol = firstWeekCol + (w * colsPerWeek);
+
+        // Fill each evaluation in order
+        for (int e = 0; e < evalOrder.length; e++) {
+          final score = student.getScoreForWeek(weekNo, evalOrder[e]);
+          if (score > 0) {
+            sheet.updateCell(
+              CellIndex.indexByColumnRow(
+                columnIndex: weekStartCol + e,
+                rowIndex: row,
+              ),
+              IntCellValue(score),
+            );
+          }
+        }
+
+        // Fill total (last column in the week block)
+        final total = student.getTotalForWeek(weekNo);
+        if (total > 0) {
+          sheet.updateCell(
+            CellIndex.indexByColumnRow(
+              columnIndex: weekStartCol + evalOrder.length,
+              rowIndex: row,
+            ),
+            IntCellValue(total),
+          );
+        }
+      }
+    }
+  }
+}
+
+/* =====================================================
+ * Helper class
+ * ===================================================== */
+class WeekBlock {
+  final int homework;
+  final int activity;
+  final int weekly;
+  final int performance;
+  final int attendance;
+  final int total;
+
+  const WeekBlock(
+    this.homework,
+    this.activity,
+    this.weekly,
+    this.performance,
+    this.attendance,
+    this.total,
+  );
+}
+/* ========================= */
+
+/* =========================
+ * Helper
+ * ========================= */
+// 3) إعدادي (Preparatory)
+// =======================================================
+
+class PreparatoryConfig extends ExcelTemplateConfig {
+  @override
+  String get templateName => 'كشف فارغ اعمال السنة اعدادى.xlsx';
+
+  // Metadata positions based on template analysis:
+  // C1 = Governorate, C2 = Administration, C3 = School, L4 = Subject, D4 = Title
+  final Map<String, CellIndex> meta = {
+    'governorate': CellIndex.indexByColumnRow(
+      columnIndex: 2,
+      rowIndex: 0,
+    ), // C1
+    'administration': CellIndex.indexByColumnRow(
+      columnIndex: 2,
+      rowIndex: 1,
+    ), // C2
+    'school': CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 2), // C3
+    'subject': CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: 3), // L4
+  };
+
+  // Student data starts at row 8 (0-indexed: 7) based on analysis
+  final int studentStartRow = 7;
+  final int serialColumn = 1; // B
+  final int nameColumn = 2; // C
+
+  // Week structure: 5 weeks visible at a time, 4 cols per week
+  final int firstWeekCol = 3; // D
+  final int colsPerWeek = 4;
+
+  final List<String> evalIds = [
+    'prep_hw',
+    'prep_activity',
+    'prep_weekly',
+    'prep_attendance',
+  ];
+
+  @override
+  void fillMetadata(Sheet sheet, PrintDataEntity d) {
+    sheet.updateCell(meta['governorate']!, TextCellValue(d.governorate));
+    sheet.updateCell(meta['administration']!, TextCellValue(d.administration));
+    sheet.updateCell(meta['school']!, TextCellValue(d.classEntity.school));
+    sheet.updateCell(meta['subject']!, TextCellValue(d.classEntity.subject));
+  }
+
+  @override
+  void fillStudents(Sheet sheet, PrintDataEntity d) {
+    final weekNumbers = d.weekNumbers;
+
+    for (int i = 0; i < d.studentsData.length; i++) {
+      final student = d.studentsData[i];
+      final row = studentStartRow + i;
+
+      // Serial number
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: serialColumn, rowIndex: row),
+        IntCellValue(i + 1),
+      );
+
+      // Student name
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: nameColumn, rowIndex: row),
+        TextCellValue(student.student.name),
+      );
+
+      // Fill scores for each week (up to 5 weeks visible in template)
+      for (int w = 0; w < weekNumbers.length && w < 5; w++) {
+        final weekNo = weekNumbers[w];
+        final weekStartCol = firstWeekCol + (w * colsPerWeek);
+
+        // Fill each evaluation type for this week
+        for (int e = 0; e < evalIds.length; e++) {
+          final score = student.getScoreForWeek(weekNo, evalIds[e]);
+          if (score > 0) {
+            sheet.updateCell(
+              CellIndex.indexByColumnRow(
+                columnIndex: weekStartCol + e,
+                rowIndex: row,
+              ),
+              IntCellValue(score),
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
+// =======================================================
+// 4) ثانوي (نظام شهور) – لا نكسر الفورمولات
+// =======================================================
+
+class SecondaryMonthlyConfig extends ExcelTemplateConfig {
+  @override
+  String get templateName => 'كشف فارغ اعمال السنة ثانوى نظام شهور.xlsx';
+
+  // Metadata positions
+  final Map<String, CellIndex> meta = {
+    'school': CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 2), // A3
+    'subject': CellIndex.indexByColumnRow(columnIndex: 22, rowIndex: 0), // W1
+  };
+
+  // Student data starts at row 9 (0-indexed: 8)
+  final int studentStartRow = 8;
+  final int serialColumn = 0; // A - م
+  final int nameColumn = 1; // B - الاسم
+
+  // Template structure per month (RTL - right to left):
+  // Each month has 8 columns:
+  // Col offset 0: سلوك و مواظبة (10)
+  // Col offset 1: كشكول الحصة والواجب (15)
+  // Col offset 2: الأسبوع الرابع (15)
+  // Col offset 3: الأسبوع الثالث (15)
+  // Col offset 4: الأسبوع الثاني (15)
+  // Col offset 5: الأسبوع الأول (15)
+  // Col offset 6: متوسط التقييمات (40) - calculated
+  // Col offset 7: المجموع - calculated
+
+  // Month start columns (0-indexed) - from template analysis
+  // February (فبراير) is rightmost, then March, then April
+  // Based on template: columns go RTL
+  final Map<int, int> monthStartColumns = {
+    1: 2, // Month 1 (فبراير) starts at column C (index 2)
+    2: 10, // Month 2 (مارس) starts at column K (index 10)
+    3: 18, // Month 3 (أبريل) starts at column S (index 18)
+  };
+
+  final int columnsPerMonth = 8;
+  final int weeksPerMonth = 4;
+
+  @override
+  void fillMetadata(Sheet sheet, PrintDataEntity d) {
+    // 1. Right side (A1, A2, A3)
+    // Governorate
+    final govCell = sheet.cell(
+      CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0),
+    );
+    final govTemplate = govCell.value?.toString() ?? 'محافظة ';
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0),
+      TextCellValue(govTemplate.replaceAll(RegExp(r'[\.…]+'), d.governorate)),
+    );
+
+    // Administration
+    final adminCell = sheet.cell(
+      CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1),
+    );
+    final adminTemplate = adminCell.value?.toString() ?? 'إدارة ';
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 1),
+      TextCellValue(
+        adminTemplate.replaceAll(RegExp(r'[\.…]+'), d.administration),
+      ),
+    );
+
+    // School
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 2),
+      TextCellValue(d.classEntity.school),
+    );
+
+    // 2. Left side (W1, W2, W3 -> Col 22)
+    // Subject
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: 22, rowIndex: 0),
+      TextCellValue('المادة / ${d.classEntity.subject}'),
+    );
+
+    // Grade
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: 22, rowIndex: 1),
+      TextCellValue('الصف / ${d.classEntity.grade}'),
+    );
+
+    // Class
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: 22, rowIndex: 2),
+      TextCellValue('الفصل / ${d.classEntity.name}'),
+    );
+  }
+
+  @override
+  void fillStudents(Sheet sheet, PrintDataEntity d) {
+    // Student indices
+    final int colTotal3Months = 26; // AA
+    final int colAvg3Months = 27; // AB
+    final int colExam1 = 28; // AC
+    final int colExam2 = 29; // AD
+    final int colTotalYear = 30; // AE
+
+    // Map evaluation IDs by name for dynamic lookup
+    final evalMap = {for (var e in d.evaluations!) e.name: e.id};
+    final weeklyId = evalMap['weekly_review'] ?? 'weekly_review';
+    final behId =
+        evalMap['attendance_and_diligence'] ?? 'attendance_and_diligence';
+    final bookId = evalMap['homework_book'] ?? 'homework_book';
+    final ex1Id = evalMap['first_month_exam'] ?? 'first_month_exam';
+    final ex2Id = evalMap['second_month_exam'] ?? 'second_month_exam';
+
+    for (int i = 0; i < d.studentsData.length; i++) {
+      final student = d.studentsData[i];
+      final row = studentStartRow + i;
+
+      // Serial
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: serialColumn, rowIndex: row),
+        IntCellValue(i + 1),
+      );
+
+      // Name
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: nameColumn, rowIndex: row),
+        TextCellValue(student.student.name),
+      );
+
+      int sumMonthlyTotals = 0;
+
+      // Fill Month Data (1=Feb, 2=Mar, 3=Apr)
+      for (int m = 1; m <= 3; m++) {
+        final monthTotal = _fillMonthData(
+          sheet,
+          student,
+          row,
+          m,
+          weeklyId: weeklyId,
+          behId: behId,
+          bookId: bookId,
+        );
+        sumMonthlyTotals += monthTotal;
+      }
+
+      // Exam Scores
+      int exam1 = 0;
+      int exam2 = 0;
+
+      if (student.weeklyScores != null) {
+        for (var weekScores in student.weeklyScores!.values) {
+          if (weekScores.containsKey(ex1Id)) exam1 = weekScores[ex1Id]!;
+          if (weekScores.containsKey(ex2Id)) exam2 = weekScores[ex2Id]!;
+        }
+      }
+
+      // Aggregates
+      if (sumMonthlyTotals > 0) {
+        sheet.updateCell(
+          CellIndex.indexByColumnRow(
+            columnIndex: colTotal3Months,
+            rowIndex: row,
+          ),
+          IntCellValue(sumMonthlyTotals),
+        );
+      }
+      final avg3Months = (sumMonthlyTotals / 3).round();
+      if (avg3Months > 0) {
+        sheet.updateCell(
+          CellIndex.indexByColumnRow(columnIndex: colAvg3Months, rowIndex: row),
+          IntCellValue(avg3Months),
+        );
+      }
+      if (exam1 > 0) {
+        sheet.updateCell(
+          CellIndex.indexByColumnRow(columnIndex: colExam1, rowIndex: row),
+          IntCellValue(exam1),
+        );
+      }
+      if (exam2 > 0) {
+        sheet.updateCell(
+          CellIndex.indexByColumnRow(columnIndex: colExam2, rowIndex: row),
+          IntCellValue(exam2),
+        );
+      }
+      final totalYear = avg3Months + exam1 + exam2;
+      if (totalYear > 0) {
+        sheet.updateCell(
+          CellIndex.indexByColumnRow(columnIndex: colTotalYear, rowIndex: row),
+          IntCellValue(totalYear),
+        );
+      }
+    }
+  }
+
+  int _fillMonthData(
+    Sheet sheet,
+    StudentPrintData student,
+    int row,
+    int month, {
+    required String weeklyId,
+    required String behId,
+    required String bookId,
+  }) {
+    if (!monthStartColumns.containsKey(month)) return 0;
+    final startCol = monthStartColumns[month]!;
+
+    // Base week for this month
+    final baseWeek = (month - 1) * 4 + 1;
+
+    int monthWeeklySum = 0;
+    int monthBehSum = 0;
+    int monthBookSum = 0;
+    int weeksCountRow = 0;
+
+    for (int w = 0; w < 4; w++) {
+      final weekNo = baseWeek + w;
+      final wkScore = student.getScoreForWeek(weekNo, weeklyId);
+      final behScore = student.getScoreForWeek(weekNo, behId);
+      final bookScore = student.getScoreForWeek(weekNo, bookId);
+
+      if (wkScore > 0) {
+        sheet.updateCell(
+          CellIndex.indexByColumnRow(
+            columnIndex: startCol + 2 + w,
+            rowIndex: row,
+          ),
+          IntCellValue(wkScore),
+        );
+        monthWeeklySum += wkScore;
+        weeksCountRow++;
+      }
+      monthBehSum += behScore;
+      monthBookSum += bookScore;
+    }
+
+    final avgWeekly = weeksCountRow > 0
+        ? (monthWeeklySum / weeksCountRow).round()
+        : 0;
+    final avgBeh = (monthBehSum / 4).round();
+    final avgBook = (monthBookSum / 4).round();
+
+    if (avgBeh > 0)
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: startCol, rowIndex: row),
+        IntCellValue(avgBeh),
+      );
+    if (avgBook > 0)
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: startCol + 1, rowIndex: row),
+        IntCellValue(avgBook),
+      );
+    if (avgWeekly > 0)
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: startCol + 6, rowIndex: row),
+        IntCellValue(avgWeekly),
+      );
+
+    final total = avgBeh + avgBook + avgWeekly;
+    if (total > 0)
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: startCol + 7, rowIndex: row),
+        IntCellValue(total),
+      );
+
+    return total;
   }
 }

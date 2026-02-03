@@ -45,8 +45,15 @@ class GenerateMultiWeekAttendanceReportUseCase {
     final students = await _studentRepository.getStudentsByClassId(classId);
 
     // Calculate week numbers for this group
-    final startWeek = (weekGroup - 1) * 5 + 1;
-    final weekNumbers = List.generate(5, (i) => startWeek + i);
+    final List<int> weekNumbers;
+    final int startWeek;
+    if (weekGroup == 0) {
+      startWeek = 1;
+      weekNumbers = List.generate(18, (i) => i + 1);
+    } else {
+      startWeek = (weekGroup - 1) * 5 + 1;
+      weekNumbers = List.generate(5, (i) => startWeek + i);
+    }
 
     // Calculate week start dates
     final effectiveSemesterStart =

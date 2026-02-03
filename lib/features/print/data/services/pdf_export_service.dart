@@ -66,22 +66,19 @@ class PdfExportService {
   /// Build PDF header with metadata
   pw.Widget _buildHeader(PrintDataEntity printData) {
     // Determine period text
-    String periodText;
-    String periodLabel;
+    String? periodText;
+    String? periodLabel;
 
-    if (printData.isMultiWeek) {
-      final weekNums = printData.weekNumbers;
-      periodText = 'الأسابيع ${weekNums.first} - ${weekNums.last}';
-      periodLabel = 'الفترة';
-    } else if (printData.printType == PrintType.attendance &&
+    if (!printData.isMultiWeek &&
+        printData.printType == PrintType.attendance &&
         printData.weekStartDate != null) {
       final dateFormat = DateFormat('d/M/yyyy', 'ar');
       periodText =
           '${dateFormat.format(printData.weekStartDate!)} - ${dateFormat.format(printData.weekEndDate!)}';
       periodLabel = 'الأسبوع';
-    } else {
+    } else if (!printData.isMultiWeek) {
       periodText = 'الأسبوع ${printData.periodNumber}';
-      periodLabel = 'الفترة';
+      periodLabel = 'الأسبوع';
     }
 
     String titleText;
@@ -114,7 +111,8 @@ class PdfExportService {
           _buildMetadataRow('المدرسة/', printData.classEntity.school),
           _buildMetadataRow('الفصل/', printData.classEntity.name),
           _buildMetadataRow('المادة/', printData.classEntity.subject),
-          _buildMetadataRow(periodLabel, periodText),
+          if (periodLabel != null && periodText != null)
+            _buildMetadataRow(periodLabel, periodText),
         ],
       ),
     );
@@ -235,9 +233,12 @@ class PdfExportService {
     );
   }
 
-  /// Build multi-week data table with all 5 weeks
+  /// Build multi-week data table with all weeks
   pw.Widget _buildMultiWeekDataTable(PrintDataEntity printData) {
     final weekNumbers = printData.weekNumbers;
+    final fontSize = weekNumbers.length > 15
+        ? 4.5
+        : (weekNumbers.length > 5 ? 5.5 : 8.0);
     final dateFormat = DateFormat('d/M', 'ar');
     final dayNames = ['سبت', 'أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس'];
 
@@ -366,9 +367,9 @@ class PdfExportService {
       headerStyle: pw.TextStyle(
         fontWeight: pw.FontWeight.bold,
         color: PdfColors.white,
-        fontSize: 8,
+        fontSize: fontSize,
       ),
-      cellStyle: const pw.TextStyle(fontSize: 8),
+      cellStyle: pw.TextStyle(fontSize: fontSize),
       headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey700),
       cellHeight: 25,
       cellAlignments: cellAlignments,

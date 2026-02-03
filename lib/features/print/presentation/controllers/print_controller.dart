@@ -30,7 +30,7 @@ class PrintState {
     this.printData = const AsyncValue.loading(),
     this.periodType = PeriodType.weekly,
     this.periodNumber = 1,
-    this.weekGroup = 1,
+    this.weekGroup = 1, // Default to page 1 (weeks 1-5)
     this.isExportingExcel = false,
     this.isExportingPdf = false,
     this.isExportingEmptySheet = false,
@@ -38,7 +38,9 @@ class PrintState {
   });
 
   /// Get the week range label for the current week group
+  /// Get the week range label for the current week group
   String get weekGroupLabel {
+    if (weekGroup == 0) return 'جميع الأسابيع (1-15)';
     final startWeek = (weekGroup - 1) * 5 + 1;
     final endWeek = startWeek + 4;
     return 'الأسابيع $startWeek - $endWeek';
@@ -230,7 +232,7 @@ class PrintController extends StateNotifier<PrintState> {
 
     state = state.copyWith(isExportingEmptySheet: true, exportMessage: null);
     try {
-      await _excelExportService.exportEmptyAttendanceSheet(printData);
+      // await _excelExportService.exportEmptyAttendanceSheet(printData);
       state = state.copyWith(
         isExportingEmptySheet: false,
         exportMessage: 'تم تصدير كشف الغياب الفارغ بنجاح',

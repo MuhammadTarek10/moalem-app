@@ -8,6 +8,7 @@ import 'package:moalem/features/students/domain/entities/student_details_entity.
 import 'package:moalem/features/students/domain/entities/student_entity.dart';
 import 'package:moalem/features/students/domain/entities/student_score_entity.dart';
 import 'package:moalem/features/students/domain/repositories/student_repository.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 
 @LazySingleton(as: StudentRepository)
@@ -86,6 +87,17 @@ class StudentRepositoryImpl implements StudentRepository {
 
     if (classResult.isEmpty) return null;
     final classInfo = ClassEntity.fromMap(classResult.first);
+
+    // High School Monthly Logic - Only for virtual UI view
+    if (classInfo.evaluationGroup == EvaluationGroup.high &&
+        periodType == PeriodType.monthly) {
+      return _getHighSchoolDetailsWithScores(
+        db,
+        student,
+        classInfo,
+        periodNumber,
+      );
+    }
 
     // Get evaluation scores map based on class evaluation group
     final Map<String, int> evaluationScoresMap;
@@ -193,6 +205,18 @@ class StudentRepositoryImpl implements StudentRepository {
   Future<void> upsertStudentScore(StudentScoreEntity score) async {
     final db = await _databaseService.database;
 
+    if (score.evaluationId.startsWith('hv_')) {
+      await _upsertHighSchoolScore(score, db);
+      return;
+    }
+
+    await _performStandardUpsert(score, db);
+  }
+
+  Future<void> _performStandardUpsert(
+    StudentScoreEntity score,
+    Database db,
+  ) async {
     // Check if score exists for this student, evaluation, period type, and period number
     final existing = await db.query(
       _studentsScoresTable,
@@ -235,5 +259,183 @@ class StudentRepositoryImpl implements StudentRepository {
       where: 'id = ?',
       whereArgs: [scoreId],
     );
+  }
+
+  Future<StudentDetailsWithScores> _getHighSchoolDetailsWithScores(
+    Database db,
+    StudentEntity student,
+    ClassEntity classInfo,
+    int month,
+  ) async {
+    // 1. Get raw evaluations
+    final rawEvals = await db.query(
+      _evaluationsTable,
+      where: 'deleted_at IS NULL',
+    );
+    // Find the real IDs
+    final evalMap = {for (var e in rawEvals) e['name']: e};
+
+    final evWeekly = evalMap['weekly_review'];
+    final evBeh = evalMap['attendance_and_diligence'];
+    final evBook = evalMap['homework_book'];
+    final evEx1 = evalMap['first_month_exam'];
+    final evEx2 = evalMap['second_month_exam'];
+
+    // 2. Build Virtual Evaluations
+    final List<EvaluationEntity> virtualEvals = [];
+
+    // Behavior (Monthly)
+    if (evBeh != null) {
+      virtualEvals.add(
+        EvaluationEntity.fromMap({
+          ...evBeh,
+          'id': 'hv_beh_${evBeh['id']}',
+          'name': 'attendance_and_diligence',
+          'max_score': 10,
+        }),
+      );
+    }
+    // Notebook (Monthly)
+    if (evBook != null) {
+      virtualEvals.add(
+        EvaluationEntity.fromMap({
+          ...evBook,
+          'id': 'hv_book_${evBook['id']}',
+          'max_score': 15,
+        }),
+      );
+    }
+
+    // Exam (Depending on Month)
+    if (month == 1 && evEx1 != null) {
+      virtualEvals.add(
+        EvaluationEntity.fromMap({
+          ...evEx1,
+          'id': 'hv_ex1_${evEx1['id']}',
+          'max_score': 15,
+        }),
+      );
+    } else if (month == 2 && evEx2 != null) {
+      virtualEvals.add(
+        EvaluationEntity.fromMap({
+          ...evEx2,
+          'id': 'hv_ex2_${evEx2['id']}',
+          'max_score': 15,
+        }),
+      );
+    }
+
+    // Weekly Reviews 1-4
+    if (evWeekly != null) {
+      for (int i = 1; i <= 4; i++) {
+        virtualEvals.add(
+          EvaluationEntity.fromMap({
+            ...evWeekly,
+            'id': 'hv_wk${i}_${evWeekly['id']}',
+            'name': 'weekly_review_w$i',
+            'max_score': 15,
+          }),
+        );
+      }
+    }
+
+    // 3. Fetch Scores
+    final startWeek = (month - 1) * 4 + 1;
+    final endWeek = startWeek + 3;
+
+    final scoresResult = await db.query(
+      _studentsScoresTable,
+      where: 'student_id = ? AND period_number BETWEEN ? AND ?',
+      whereArgs: [student.id, startWeek, endWeek],
+    );
+
+    final Map<String, StudentScoreEntity> scoresMap = {};
+
+    for (final row in scoresResult) {
+      final realEvalId = row['evaluation_id'];
+      final realWeek = row['period_number'] as int;
+      final weekOffset = realWeek - startWeek + 1; // 1..4
+
+      // Match with virtual IDs
+      if (evBeh != null && realEvalId == evBeh['id']) {
+        scoresMap['hv_beh_${evBeh['id']}'] = StudentScoreEntity.fromMap(
+          row,
+        ).copyWith(evaluationId: 'hv_beh_${evBeh['id']}');
+      } else if (evBook != null && realEvalId == evBook['id']) {
+        scoresMap['hv_book_${evBook['id']}'] = StudentScoreEntity.fromMap(
+          row,
+        ).copyWith(evaluationId: 'hv_book_${evBook['id']}');
+      } else if (evEx1 != null && realEvalId == evEx1['id']) {
+        scoresMap['hv_ex1_${evEx1['id']}'] = StudentScoreEntity.fromMap(
+          row,
+        ).copyWith(evaluationId: 'hv_ex1_${evEx1['id']}');
+      } else if (evEx2 != null && realEvalId == evEx2['id']) {
+        scoresMap['hv_ex2_${evEx2['id']}'] = StudentScoreEntity.fromMap(
+          row,
+        ).copyWith(evaluationId: 'hv_ex2_${evEx2['id']}');
+      } else if (evWeekly != null && realEvalId == evWeekly['id']) {
+        // Only map if the week matches the virtual ID week offset
+        // But I have wk1..wk4 virtual IDs.
+        // weekOffset is 1..4.
+        scoresMap['hv_wk${weekOffset}_${evWeekly['id']}'] =
+            StudentScoreEntity.fromMap(
+              row,
+            ).copyWith(evaluationId: 'hv_wk${weekOffset}_${evWeekly['id']}');
+      }
+    }
+
+    return StudentDetailsWithScores(
+      student: student,
+      classInfo: classInfo,
+      evaluations: virtualEvals,
+      scores: scoresMap,
+      currentPeriodType: PeriodType.monthly,
+      currentPeriodNumber: month,
+    );
+  }
+
+  Future<void> _upsertHighSchoolScore(
+    StudentScoreEntity score,
+    Database db,
+  ) async {
+    // Parse Virtual ID
+    final parts = score.evaluationId.split('_');
+    final type = parts[1];
+    // Reconstruct Real ID (everything after second underscore)
+    final realEvalId = parts.sublist(2).join('_');
+
+    // Calculate Target Weeks
+    // score.periodNumber is the Month (1..3)
+    final month = score.periodNumber;
+    final startWeek = (month - 1) * 4 + 1;
+
+    final List<int> targetWeeks = [];
+
+    if (type == 'beh' || type == 'book') {
+      // Save to all 4 weeks
+      for (int i = 0; i < 4; i++) {
+        targetWeeks.add(startWeek + i);
+      }
+    } else if (type.startsWith('wk')) {
+      // wk1 -> offset 0... wait.
+      // wk1 -> weekOffset 1.
+      final offset = int.parse(type.substring(2)) - 1;
+      targetWeeks.add(startWeek + offset);
+    } else if (type == 'ex1' || type == 'ex2') {
+      // Save to Week 1
+      targetWeeks.add(startWeek);
+    }
+
+    // Perform Upserts
+    for (final week in targetWeeks) {
+      final realScore = score.copyWith(
+        evaluationId: realEvalId,
+        periodNumber: week,
+        id: '', // Let upsert find existing by constraints
+        periodType: PeriodType.weekly,
+      );
+
+      await _performStandardUpsert(realScore, db);
+    }
   }
 }

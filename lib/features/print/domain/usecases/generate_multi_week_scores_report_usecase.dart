@@ -49,27 +49,49 @@ class GenerateMultiWeekScoresReportUseCase {
     );
 
     // Calculate week numbers for this group
-    final startWeek = (weekGroup - 1) * 5 + 1;
-    final weekNumbers = List.generate(5, (i) => startWeek + i);
+    final List<int> weekNumbers;
+    final int startWeek;
+    if (weekGroup == 0) {
+      startWeek = 1;
+      weekNumbers = List.generate(18, (i) => i + 1);
+    } else {
+      startWeek = (weekGroup - 1) * 5 + 1;
+      weekNumbers = List.generate(5, (i) => startWeek + i);
+    }
+
+    // Determine if we are in Semester 2 (Approx Feb - Aug)
+    final now = DateTime.now();
+    // Check if we strictly need semester 2 logic (e.g. current date is well into Sem 2)
+    // Using Feb 1st as a rough cutoff
+    final isSemester2 = now.month >= 2 && now.month <= 8;
+    // Offset for Semester 2 (starts approx week 22, so offset 21)
+    // This maps "Week 1" of Sem 2 to "Week 22" of the absolute year
+    final int semesterOffset = isSemester2 ? 21 : 0;
 
     // Calculate week start dates
     final effectiveSemesterStart =
         semesterStartDate ?? _getDefaultSemesterStart();
     final weekStartDates = <int, DateTime>{};
-    for (final weekNum in weekNumbers) {
+
+    // Use adjusted weeks for data fetching
+    final fetchWeekNumbers = weekNumbers
+        .map((w) => w + semesterOffset)
+        .toList();
+
+    for (final weekNum in fetchWeekNumbers) {
       weekStartDates[weekNum] = effectiveSemesterStart.add(
         Duration(days: (weekNum - 1) * 7),
       );
     }
 
-    // Get scores for each student for all 5 weeks
+    // Get scores for each student for all weeks
     final List<StudentPrintData> studentsData = [];
 
     for (final student in students) {
       final weeklyScores = <int, Map<String, int>>{};
       final weeklyTotals = <int, int>{};
 
-      for (final weekNum in weekNumbers) {
+      for (final weekNum in fetchWeekNumbers) {
         final studentDetails = await _studentRepository
             .getStudentDetailsWithScores(
               student.id,
@@ -124,6 +146,7 @@ class GenerateMultiWeekScoresReportUseCase {
       isMultiWeek: true,
       weekGroup: weekGroup,
       weekStartDates: weekStartDates,
+      semesterOffset: semesterOffset,
     );
   }
 

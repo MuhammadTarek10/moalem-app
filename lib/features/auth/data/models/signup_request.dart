@@ -9,14 +9,14 @@ abstract class SignupRequest with _$SignupRequest {
     required String email,
     required String password,
     required String name,
-    @JsonKey(name: 'group_name') required String groupName,
+    @JsonKey(name: 'group_name') String? groupName,
     required List<String> subjects,
     required String governorate,
     @JsonKey(name: 'educational_administration')
     required String educationalAdministration,
     @JsonKey(name: 'whatsapp_number') required String whatsappNumber,
     required List<String> schools,
-    required List<String> grades,
+    List<String>? grades,
   }) = _SignupRequest;
 
   factory SignupRequest.fromJson(Map<String, dynamic> json) =>

@@ -53,7 +53,7 @@ class HomeHeader extends StatelessWidget {
                       '${AppStrings.yourIdLabel.tr()}: ${user?.id ?? ''}',
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -63,7 +63,7 @@ class HomeHeader extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(8.w),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(

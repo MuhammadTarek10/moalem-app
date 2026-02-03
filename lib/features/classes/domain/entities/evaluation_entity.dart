@@ -53,7 +53,9 @@ class EvaluationEntity {
     return EvaluationEntity(
       id: map['id'] as String,
       name: map['name'] as String,
-      isBinary: map['is_binary'] as bool,
+      isBinary: map['is_binary'] is int
+          ? (map['is_binary'] as int) == 1
+          : (map['is_binary'] as bool? ?? false),
       maxScore: map['max_score'] as int,
       createdAt: DateTime.parse(map['created_at'] as String),
       updatedAt: map['updated_at'] != null

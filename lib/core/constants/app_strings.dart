@@ -271,4 +271,15 @@ class AppStrings {
   static const String wednesday = 'wednesday';
   static const String thursday = 'thursday';
   static const String friday = 'friday';
+
+  // High School Months
+  static const String february = 'february';
+  static const String march = 'march';
+  static const String april = 'april';
+
+  // Weeks
+  static const String week1Label = 'week1_label';
+  static const String week2Label = 'week2_label';
+  static const String week3Label = 'week3_label';
+  static const String week4Label = 'week4_label';
 }

@@ -116,18 +116,6 @@ class SignupStepThree extends StatelessWidget {
             hint: AppStrings.schoolHint.tr(),
             validator: listValidator,
           ),
-          SizedBox(height: 16.h),
-          // Grade Field (Chip Input)
-          InputLabel(label: AppStrings.gradeLabel.tr()),
-          SizedBox(height: 8.h),
-          ChipInputField(
-            selectedItems: formData.grades,
-            onItemsChanged: (items) {
-              onDataChanged(formData.copyWith(grades: items));
-            },
-            hint: AppStrings.gradeHint.tr(),
-            validator: listValidator,
-          ),
         ],
       ),
     );
