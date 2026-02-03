@@ -8,6 +8,7 @@ import 'package:moalem/features/reports/domain/usecases/get_class_report_usecase
 /// State for the reports screen
 class ReportsState {
   final AsyncValue<List<ClassEntity>> classes;
+  final String? selectedStage;
   final String? selectedClassId;
   final AsyncValue<ClassReportData?> reportData;
   final PeriodType periodType;
@@ -17,6 +18,7 @@ class ReportsState {
 
   const ReportsState({
     this.classes = const AsyncValue.loading(),
+    this.selectedStage,
     this.selectedClassId,
     this.reportData = const AsyncValue.loading(),
     this.periodType = PeriodType.weekly,
@@ -27,6 +29,7 @@ class ReportsState {
 
   ReportsState copyWith({
     AsyncValue<List<ClassEntity>>? classes,
+    String? selectedStage,
     String? selectedClassId,
     AsyncValue<ClassReportData?>? reportData,
     PeriodType? periodType,
@@ -36,6 +39,7 @@ class ReportsState {
   }) {
     return ReportsState(
       classes: classes ?? this.classes,
+      selectedStage: selectedStage ?? this.selectedStage,
       selectedClassId: selectedClassId ?? this.selectedClassId,
       reportData: reportData ?? this.reportData,
       periodType: periodType ?? this.periodType,
@@ -74,9 +78,11 @@ class ReportsController extends StateNotifier<ReportsState> {
     state = state.copyWith(classes: const AsyncValue.loading());
     try {
       final classes = await _getClassesUseCase();
+      final firstClass = classes.isNotEmpty ? classes.first : null;
       state = state.copyWith(
         classes: AsyncValue.data(classes),
-        selectedClassId: classes.isNotEmpty ? classes.first.id : null,
+        selectedStage: firstClass?.stage,
+        selectedClassId: firstClass?.id,
       );
 
       // Auto-load report for first class
@@ -86,6 +92,27 @@ class ReportsController extends StateNotifier<ReportsState> {
     } catch (e, stack) {
       state = state.copyWith(classes: AsyncValue.error(e, stack));
     }
+  }
+
+  /// Select a stage and filter classes
+  Future<void> selectStage(String? stage) async {
+    if (state.selectedStage == stage) return;
+
+    final allClasses = state.classes.value ?? [];
+    final filteredClasses = allClasses
+        .where((c) => stage == null || c.stage == stage)
+        .toList();
+
+    state = state.copyWith(
+      selectedStage: stage,
+      selectedClassId: filteredClasses.isNotEmpty
+          ? filteredClasses.first.id
+          : null,
+      selectedStudentIds: {},
+      selectAll: false,
+    );
+
+    await loadReport();
   }
 
   /// Select a class

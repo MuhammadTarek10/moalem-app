@@ -12,6 +12,7 @@ class AddClassUseCase {
 
   Future<ClassEntity> call({
     required String name,
+    required String stage,
     required String grade,
     required String subject,
     required String semester,
@@ -21,6 +22,7 @@ class AddClassUseCase {
     final classEntity = ClassEntity(
       id: const Uuid().v4(),
       name: name,
+      stage: stage,
       grade: grade,
       subject: subject,
       semester: semester,

@@ -46,6 +46,7 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
 
   Future<void> addClass({
     required String name,
+    required String stage,
     required String grade,
     required String subject,
     required String semester,
@@ -55,6 +56,7 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
     try {
       final newClass = await _addClassUseCase(
         name: name,
+        stage: stage,
         grade: grade,
         subject: subject,
         semester: semester,
@@ -93,6 +95,15 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
         final updatedList = classes.where((c) => c.id != id).toList();
         state = AsyncValue.data(updatedList);
       });
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
+
+  Future<void> reloadClasses() async {
+    try {
+      final classes = await _getClassesUseCase();
+      state = AsyncValue.data(classes);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }

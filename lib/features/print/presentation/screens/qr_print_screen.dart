@@ -142,7 +142,7 @@ class QrPrintScreen extends ConsumerWidget {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       Text(
-                                        'ID: ${student.number}',
+                                        '${AppStrings.idLabel.tr()}: ${index + 1}',
                                         style: context.bodySmall.copyWith(
                                           color: AppColors.textLight,
                                         ),

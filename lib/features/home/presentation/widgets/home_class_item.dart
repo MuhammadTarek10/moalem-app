@@ -3,13 +3,17 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class HomeClassItem extends StatelessWidget {
   final String className;
-  final String section;
+  final String stage;
+  final String grade;
+  final String subject;
   final VoidCallback onTap;
 
   const HomeClassItem({
     super.key,
     required this.className,
-    required this.section,
+    required this.stage,
+    required this.grade,
+    required this.subject,
     required this.onTap,
   });
 
@@ -79,10 +83,27 @@ class HomeClassItem extends StatelessWidget {
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            section,
+                            stage,
                             style: TextStyle(
-                              fontSize: 14.sp,
+                              fontSize: 13.sp,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            grade,
+                            style: TextStyle(
+                              fontSize: 12.sp,
                               color: Colors.grey,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            subject,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF7A1C9A),
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/utils/error_handler.dart';
+import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/reports/presentation/controllers/reports_controller.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
@@ -100,20 +101,48 @@ class ReportsScreen extends ConsumerWidget {
     BuildContext context,
     ReportsState state,
     ReportsController controller,
-    List classes,
+    List<ClassEntity> classes,
   ) {
+    final stages = classes.map((c) => c.stage).toSet().toList();
+    final filteredClasses = classes
+        .where(
+          (c) => state.selectedStage == null || c.stage == state.selectedStage,
+        )
+        .toList();
+
     return Container(
       padding: EdgeInsets.all(16.w),
       color: Colors.white,
       child: Column(
         children: [
+          // Stage selector
+          if (stages.isNotEmpty) ...[
+            _buildDropdown<String>(
+              context,
+              state.selectedStage ?? AppStrings.educationalStageHint.tr(),
+              stages
+                  .map<DropdownMenuItem<String>>(
+                    (s) => DropdownMenuItem(value: s, child: Text(s)),
+                  )
+                  .toList(),
+              (value) {
+                if (value != null) controller.selectStage(value);
+              },
+            ),
+            SizedBox(height: 12.h),
+          ],
           // Class selector
           _buildDropdown<String>(
             context,
-            state.selectedClassId != null
-                ? classes.firstWhere((c) => c.id == state.selectedClassId!).name
-                : classes.first.name,
-            classes
+            state.selectedClassId != null &&
+                    filteredClasses.any((c) => c.id == state.selectedClassId)
+                ? filteredClasses
+                      .firstWhere((c) => c.id == state.selectedClassId!)
+                      .name
+                : (filteredClasses.isNotEmpty
+                      ? filteredClasses.first.name
+                      : AppStrings.selectClass.tr()),
+            filteredClasses
                 .map<DropdownMenuItem<String>>(
                   (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
                 )
@@ -257,7 +286,9 @@ class ReportsScreen extends ConsumerWidget {
               ),
             ),
           ],
-          rows: reportData.studentReports.map<DataRow>((studentReport) {
+          rows: reportData.studentReports.asMap().entries.map<DataRow>((entry) {
+            final index = entry.key;
+            final studentReport = entry.value;
             final isSelected = state.isStudentSelected(
               studentReport.student.id,
             );
@@ -276,10 +307,7 @@ class ReportsScreen extends ConsumerWidget {
                 ),
                 // Student number
                 DataCell(
-                  Text(
-                    studentReport.student.number.toString(),
-                    style: context.bodyMedium,
-                  ),
+                  Text((index + 1).toString(), style: context.bodyMedium),
                 ),
                 // Student name
                 DataCell(

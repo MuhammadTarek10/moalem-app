@@ -89,7 +89,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
       obscureText: widget.obscureText,
       validator: widget.validator,
       decoration: InputDecoration(
-        labelText: widget.hint,
+        labelText: widget.label,
         labelStyle: context.bodySmall.copyWith(color: Colors.black),
         hintText: widget.hint,
         hintStyle: context.bodySmall.copyWith(color: Colors.grey),

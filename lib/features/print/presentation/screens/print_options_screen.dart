@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/utils/error_handler.dart';
+import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/print/presentation/controllers/print_controller.dart';
 import 'package:moalem/features/print/presentation/widgets/export_buttons.dart';
 import 'package:moalem/features/print/presentation/widgets/metadata_header.dart';
@@ -74,6 +75,9 @@ class PrintOptionsScreen extends ConsumerWidget {
 
           return Column(
             children: [
+              // Stage selector dropdown
+              _buildStageSelector(context, state, controller, classes),
+
               // Class selector dropdown
               _buildClassSelector(context, state, controller, classes),
 
@@ -136,12 +140,70 @@ class PrintOptionsScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildStageSelector(
+    BuildContext context,
+    PrintState state,
+    PrintController controller,
+    List<ClassEntity> classes,
+  ) {
+    final stages = classes.map((c) => c.stage).toSet().toList();
+    if (stages.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            AppStrings.educationalStageHint.tr(),
+            style: context.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          ),
+          SizedBox(height: 8.h),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLightest,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: AppColors.inactiveBorder),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                value: state.selectedStage,
+                items: stages
+                    .map<DropdownMenuItem<String>>(
+                      (s) => DropdownMenuItem(value: s, child: Text(s)),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value != null) controller.selectStage(value);
+                },
+                icon: Icon(
+                  Icons.keyboard_arrow_down,
+                  color: AppColors.textLight,
+                  size: 20.sp,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildClassSelector(
     BuildContext context,
     PrintState state,
     PrintController controller,
-    List classes,
+    List<ClassEntity> classes,
   ) {
+    final filteredClasses = classes
+        .where(
+          (c) => state.selectedStage == null || c.stage == state.selectedStage,
+        )
+        .toList();
+
     return Container(
       padding: EdgeInsets.all(16.w),
       color: Colors.white,
@@ -164,7 +226,7 @@ class PrintOptionsScreen extends ConsumerWidget {
               child: DropdownButton<String>(
                 isExpanded: true,
                 value: state.selectedClassId,
-                items: classes
+                items: filteredClasses
                     .map<DropdownMenuItem<String>>(
                       (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
                     )

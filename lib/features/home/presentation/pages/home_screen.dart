@@ -42,7 +42,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(classesControllerProvider.notifier)
           .addClass(
             name: result.className!,
-            grade: result.educationalStage!,
+            stage: result.educationalStage!,
+            grade: result.gradeLevel!,
             subject: result.subject!,
             semester: result.semester!,
             school: result.school!,
@@ -149,8 +150,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 final classEntity = classes[index];
                                 return HomeClassItem(
                                   className: classEntity.name,
-                                  section:
-                                      '${AppStrings.semesterLabel.tr()} ${classEntity.grade}',
+                                  stage: classEntity.stage,
+                                  grade: classEntity.grade,
+                                  subject: classEntity.subject,
                                   onTap: () {
                                     context.pushNewScreen(
                                       ClassDetailsScreen(id: classEntity.id),

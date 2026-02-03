@@ -27,7 +27,8 @@ class ClassesScreen extends ConsumerWidget {
           .read(classesControllerProvider.notifier)
           .addClass(
             name: result.className!,
-            grade: result.educationalStage!,
+            stage: result.educationalStage!,
+            grade: result.gradeLevel!,
             subject: result.subject!,
             semester: result.semester!,
             school: result.school!,
@@ -136,7 +137,9 @@ class ClassesScreen extends ConsumerWidget {
             child: ClassCard(
               id: classEntity.id,
               className: classEntity.name,
-              section: classEntity.grade,
+              stage: classEntity.stage,
+              grade: classEntity.grade,
+              subject: classEntity.subject,
               studentCount: classEntity.studentsCount,
               onViewStudents: () =>
                   context.pushNewScreen(ClassDetailsScreen(id: classEntity.id)),

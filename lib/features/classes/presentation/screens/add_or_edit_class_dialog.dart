@@ -10,6 +10,7 @@ import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/utils/validators.dart';
 import 'package:moalem/shared/widgets/app_button.dart';
 import 'package:moalem/shared/widgets/dropdown_field.dart';
+import 'package:moalem/shared/widgets/text_input.dart';
 
 class AddOrEditClassDialog extends ConsumerStatefulWidget {
   final ClassFormData? initialData;
@@ -40,40 +41,50 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
 
   bool get _isEditing => widget.initialData?.isEditing ?? false;
 
+  // Educational Stages
+  late final List<String> _stages = [
+    AppStrings.prePrimaryGroup.tr(),
+    AppStrings.primaryGroup.tr(),
+    AppStrings.secondaryGroup.tr(),
+    AppStrings.highSchoolGroup.tr(),
+  ];
+
+  // Grade options mapping
+  late final Map<String, List<String>> _gradeOptions = {
+    AppStrings.prePrimaryGroup.tr(): ['الأول', 'الثاني'],
+    AppStrings.primaryGroup.tr(): ['الثالث', 'الرابع', 'الخامس', 'السادس'],
+    AppStrings.secondaryGroup.tr(): ['الأول الإعدادي', 'الثاني الإعدادي'],
+    AppStrings.highSchoolGroup.tr(): ['الأول الثانوي', 'الثاني الثانوي'],
+  };
+
   // Semesters are static as they're not user-specific
   final List<String> _semesters = [
     'الفصل الدراسى الأول',
     'الفصل الدراسى الثانى',
   ];
 
-  Map<EvaluationGroup, String> get _evaluationGroups => {
-    EvaluationGroup.prePrimary: AppStrings.prePrimaryGroup.tr(),
-    EvaluationGroup.primary: AppStrings.primaryGroup.tr(),
-    EvaluationGroup.secondary: AppStrings.secondaryGroup.tr(),
-    EvaluationGroup.high: AppStrings.highSchoolGroup.tr(),
-  };
-
-  EvaluationGroup? _getEvaluationGroupFromLabel(String label) {
-    for (var entry in _evaluationGroups.entries) {
-      if (entry.value == label) return entry.key;
-    }
-    return null;
-  }
-
   @override
   void initState() {
     super.initState();
     _formData = widget.initialData ?? const ClassFormData();
+
+    // If editing and educationalStage is null, derive it from evaluationGroup
+    if (_isEditing && _formData.educationalStage == null) {
+      String? stage;
+      if (_formData.evaluationGroup == EvaluationGroup.prePrimary) {
+        stage = AppStrings.prePrimaryGroup.tr();
+      } else if (_formData.evaluationGroup == EvaluationGroup.primary) {
+        stage = AppStrings.primaryGroup.tr();
+      } else if (_formData.evaluationGroup == EvaluationGroup.secondary) {
+        stage = AppStrings.secondaryGroup.tr();
+      } else if (_formData.evaluationGroup == EvaluationGroup.high) {
+        stage = AppStrings.highSchoolGroup.tr();
+      }
+      _formData = _formData.copyWith(educationalStage: stage);
+    }
   }
 
   void _onSubmit() {
-    // Auto-generate class name if empty
-    if (_formData.className == null || _formData.className!.isEmpty) {
-      final name =
-          '${_formData.educationalStage ?? ""} - ${_formData.subject ?? ""}';
-      _formData = _formData.copyWith(className: name);
-    }
-
     if (_formKey.currentState?.validate() ?? false) {
       Navigator.of(context).pop(_formData);
     }
@@ -147,32 +158,22 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
                       // Educational Stage (grades from user)
                       DropdownField(
                         value: _formData.educationalStage,
-                        items: user.grades,
+                        items: _stages,
                         hint: AppStrings.educationalStageHint.tr(),
                         onChanged: (value) {
                           EvaluationGroup? group;
                           if (value != null) {
                             // Auto-detect evaluation group
-                            final v = value.toLowerCase();
-                            if (v.contains('الإعدادي') ||
-                                v.contains('اعدادي') ||
-                                v.contains('prep')) {
-                              group = EvaluationGroup.secondary;
-                            } else if (v.contains('الثانوي') ||
-                                v.contains('ثانوي') ||
-                                v.contains('sec')) {
-                              group = EvaluationGroup.high;
-                            } else if (v.contains('الثالث') ||
-                                v.contains('الرابع') ||
-                                v.contains('الخامس') ||
-                                v.contains('السادس') ||
-                                v.contains('3') ||
-                                v.contains('4') ||
-                                v.contains('5') ||
-                                v.contains('6')) {
-                              group = EvaluationGroup.primary;
-                            } else {
+                            if (value == AppStrings.prePrimaryGroup.tr()) {
                               group = EvaluationGroup.prePrimary;
+                            } else if (value == AppStrings.primaryGroup.tr()) {
+                              group = EvaluationGroup.primary;
+                            } else if (value ==
+                                AppStrings.secondaryGroup.tr()) {
+                              group = EvaluationGroup.secondary;
+                            } else if (value ==
+                                AppStrings.highSchoolGroup.tr()) {
+                              group = EvaluationGroup.high;
                             }
                           }
 
@@ -181,9 +182,26 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
                               educationalStage: value,
                               evaluationGroup:
                                   group ?? _formData.evaluationGroup,
+                              gradeLevel:
+                                  null, // Reset grade when stage changes
                             );
                           });
                         },
+                        validator: requiredValidator,
+                      ),
+                      SizedBox(height: 20.h),
+
+                      // Grade Level (Dynamic based on stage)
+                      DropdownField(
+                        key: ValueKey(_formData.educationalStage),
+                        value: _formData.gradeLevel,
+                        items: _formData.educationalStage != null
+                            ? _gradeOptions[_formData.educationalStage!] ?? []
+                            : [],
+                        hint: AppStrings.gradeHint.tr(),
+                        onChanged: (value) => setState(() {
+                          _formData = _formData.copyWith(gradeLevel: value);
+                        }),
                         validator: requiredValidator,
                       ),
                       SizedBox(height: 20.h),
@@ -193,8 +211,9 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
                         value: _formData.subject,
                         items: user.subjects,
                         hint: AppStrings.subjectFieldHint.tr(),
-                        onChanged: (value) =>
-                            _formData = _formData.copyWith(subject: value),
+                        onChanged: (value) => setState(() {
+                          _formData = _formData.copyWith(subject: value);
+                        }),
                         validator: requiredValidator,
                       ),
                       SizedBox(height: 20.h),
@@ -204,8 +223,9 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
                         value: _formData.semester,
                         items: _semesters,
                         hint: AppStrings.semesterHint.tr(),
-                        onChanged: (value) =>
-                            _formData = _formData.copyWith(semester: value),
+                        onChanged: (value) => setState(() {
+                          _formData = _formData.copyWith(semester: value);
+                        }),
                         validator: requiredValidator,
                       ),
                       SizedBox(height: 20.h),
@@ -215,28 +235,21 @@ class _AddOrEditClassDialogState extends ConsumerState<AddOrEditClassDialog> {
                         value: _formData.school,
                         items: user.schools,
                         hint: AppStrings.schoolFieldHint.tr(),
-                        onChanged: (value) =>
-                            _formData = _formData.copyWith(school: value),
+                        onChanged: (value) => setState(() {
+                          _formData = _formData.copyWith(school: value);
+                        }),
                         validator: requiredValidator,
                       ),
                       SizedBox(height: 20.h),
 
-                      // Evaluation Group
-                      DropdownField(
-                        value: _formData.evaluationGroup != null
-                            ? _evaluationGroups[_formData.evaluationGroup!]
-                            : null,
-                        items: _evaluationGroups.values.toList(),
-                        hint: AppStrings.educationalStageHint
-                            .tr(), // Or a better hint
-                        onChanged: (value) {
-                          if (value != null) {
-                            final group = _getEvaluationGroupFromLabel(value);
-                            _formData = _formData.copyWith(
-                              evaluationGroup: group,
-                            );
-                          }
-                        },
+                      // Class Name (Manual Text Field)
+                      AppTextFormField(
+                        initialValue: _formData.className,
+                        label: AppStrings.classNameLabel.tr(),
+                        hint: AppStrings.classNameHint.tr(),
+                        onChanged: (value) => setState(() {
+                          _formData = _formData.copyWith(className: value);
+                        }),
                         validator: requiredValidator,
                       ),
                       SizedBox(height: 32.h),

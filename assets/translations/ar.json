@@ -120,7 +120,7 @@
   "educational_stage_label": "المرحلة الدراسية",
   "educational_stage_hint": "اختر المرحلة",
   "class_name_label": "اسم الفصل",
-  "class_name_hint": "1/1 ب .....",
+  "class_name_hint": "1/1 .....",
   "subject_field_label": "المادة",
   "subject_field_hint": "اختر المادة",
   "semester_label": "الفصل الدراسى",
@@ -224,5 +224,6 @@
   "week1_label": "الأسبوع الأول",
   "week2_label": "الأسبوع الثاني",
   "week3_label": "الأسبوع الثالث",
-  "week4_label": "الأسبوع الرابع"
+  "week4_label": "الأسبوع الرابع",
+  "qr_print_title": "طباعة الكيوار كود للطلاب"
 }

@@ -4,6 +4,7 @@ import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 class ClassFormData {
   final String? id;
   final String? educationalStage;
+  final String? gradeLevel;
   final String? className;
   final String? subject;
   final String? semester;
@@ -14,6 +15,7 @@ class ClassFormData {
   const ClassFormData({
     this.id,
     this.educationalStage,
+    this.gradeLevel,
     this.className,
     this.subject,
     this.semester,
@@ -26,6 +28,7 @@ class ClassFormData {
   ClassFormData copyWith({
     String? id,
     String? educationalStage,
+    String? gradeLevel,
     String? className,
     String? subject,
     String? semester,
@@ -35,6 +38,7 @@ class ClassFormData {
     return ClassFormData(
       id: id ?? this.id,
       educationalStage: educationalStage ?? this.educationalStage,
+      gradeLevel: gradeLevel ?? this.gradeLevel,
       className: className ?? this.className,
       subject: subject ?? this.subject,
       semester: semester ?? this.semester,
@@ -46,6 +50,8 @@ class ClassFormData {
   bool get isValid =>
       educationalStage != null &&
       educationalStage!.isNotEmpty &&
+      gradeLevel != null &&
+      gradeLevel!.isNotEmpty &&
       className != null &&
       className!.isNotEmpty &&
       subject != null &&
@@ -60,7 +66,8 @@ class ClassFormData {
   factory ClassFormData.fromEntity(ClassEntity entity) {
     return ClassFormData(
       id: entity.id,
-      educationalStage: entity.grade,
+      gradeLevel: entity.grade,
+      educationalStage: null, // Will be derived in the UI from evaluationGroup
       className: entity.name,
       subject: entity.subject,
       semester: entity.semester,
@@ -73,7 +80,7 @@ class ClassFormData {
   ClassEntity toEntity(ClassEntity existingEntity) {
     return existingEntity.copyWith(
       name: className,
-      grade: educationalStage,
+      grade: gradeLevel,
       subject: subject,
       semester: semester,
       school: school,

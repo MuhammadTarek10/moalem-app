@@ -226,6 +226,12 @@ class PrePrimaryConfig extends ExcelTemplateConfig {
       // Students start at row 8 (0-indexed) which is Row 9 in Excel
       final row = studentStartRow + i;
 
+      // Serial number in column B (serialColumn = 1)
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: serialColumn, rowIndex: row),
+        IntCellValue(i + 1),
+      );
+
       // Student name in column C (nameColumn = 2)
       sheet.updateCell(
         CellIndex.indexByColumnRow(columnIndex: nameColumn, rowIndex: row),
