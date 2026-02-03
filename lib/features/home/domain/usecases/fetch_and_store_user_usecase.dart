@@ -5,6 +5,7 @@ import 'package:moalem/core/constants/app_keys.dart';
 import 'package:moalem/core/entities/user.dart';
 import 'package:moalem/core/services/secure_storage_service.dart';
 import 'package:moalem/core/services/storage_service.dart';
+import 'package:moalem/core/utils/license_checker.dart';
 import 'package:moalem/features/auth/data/models/user_mapper.dart';
 import 'package:moalem/features/auth/data/models/user_model.dart';
 import 'package:moalem/features/auth/domain/repositories/user_repository.dart';
@@ -25,7 +26,20 @@ class FetchAndStoreUserUseCase {
   Future<User> call() async {
     try {
       // Fetch user from API
-      final user = await _userRepository.getUser();
+      var user = await _userRepository.getUser();
+
+      // Check if we have a locally stored valid license that might be newer than the API result
+      // This handles the race condition where the API returns stale data immediately after activation
+      final localLicenseExpiresAt = _storage.getString(
+        AppKeys.licenseExpiresAt,
+      );
+      if (LicenseChecker.isLicenseValid(localLicenseExpiresAt)) {
+        // If the API returns an invalid license, or even if it returns valid,
+        // we trust our local post-activation update if the API one appears invalid/expired
+        if (!LicenseChecker.isLicenseValid(user.licenseExpiresAt)) {
+          user = user.copyWith(licenseExpiresAt: localLicenseExpiresAt);
+        }
+      }
 
       // Store user data in secure storage
       final userModel = user.toModel();

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/features/activation/presentation/screens/activation_screen.dart';
+import 'package:moalem/features/activation/presentation/screens/second_activation_screen.dart';
 import 'package:moalem/features/attendance/presentation/screens/attendance_entry_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/auth_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/signin_screen.dart';
@@ -53,6 +54,10 @@ final router = GoRouter(
     GoRoute(
       path: AppRoutes.activation,
       builder: (context, state) => const ActivationScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.activationStepTwo,
+      builder: (context, state) => const SecondActivationScreen(),
     ),
     GoRoute(
       path: AppRoutes.home,

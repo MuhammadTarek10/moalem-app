@@ -13,14 +13,16 @@ import 'package:moalem/shared/widgets/app_button.dart';
 import 'package:moalem/shared/widgets/text_input.dart';
 import 'package:moalem/shared/widgets/whatsapp_button.dart';
 
-class ActivationScreen extends ConsumerStatefulWidget {
-  const ActivationScreen({super.key});
+class SecondActivationScreen extends ConsumerStatefulWidget {
+  const SecondActivationScreen({super.key});
 
   @override
-  ConsumerState<ActivationScreen> createState() => _ActivationScreenState();
+  ConsumerState<SecondActivationScreen> createState() =>
+      _SecondActivationScreenState();
 }
 
-class _ActivationScreenState extends ConsumerState<ActivationScreen> {
+class _SecondActivationScreenState
+    extends ConsumerState<SecondActivationScreen> {
   final _formKey = GlobalKey<FormState>();
 
   void _copyUserId() {
@@ -30,7 +32,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
 
   void _onSubmit() {
     if (_formKey.currentState!.validate()) {
-      ref.read(activationControllerProvider.notifier).redeemCoupon(step: 1);
+      ref.read(activationControllerProvider.notifier).redeemCoupon(step: 2);
     }
   }
 
@@ -45,14 +47,14 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
       final prevSubmission = previous?.submissionState;
       final nextSubmission = next.submissionState;
 
-      // Only react if submission state changed and it's step 1
-      if (prevSubmission != nextSubmission && next.activationStep == 1) {
+      // Only react if submission state changed and it's step 2
+      if (prevSubmission != nextSubmission && next.activationStep == 2) {
         nextSubmission.when(
           data: (coupon) {
             if (coupon != null) {
-              // Reset state before navigation to prepare for second step
-              ref.read(activationControllerProvider.notifier).reset();
-              context.push(AppRoutes.activationStepTwo);
+              context.showSuccessSnackBar('تم تفعيل الحساب بنجاح');
+              // Delay reset slightly to ensure navigation happens or move reset after
+              context.go(AppRoutes.home);
             }
           },
           error: (error, stack) {
@@ -80,7 +82,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
 
                 // Title
                 Text(
-                  AppStrings.appTitle.tr(),
+                  'تفعيل الكود الثاني',
                   textAlign: TextAlign.center,
                   style: context.headlineMedium.copyWith(
                     color: AppColors.textPrimary,
@@ -100,12 +102,12 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                 ),
                 SizedBox(height: 32.h),
 
-                // Warning Message
+                // Info Message
                 Text(
-                  'برجاء عدم الدفع قبل الحصول على هذا الكود',
+                  'يمكنك الدفع الان للحصول على الكود الثاني واذا حدثت اي مشكلة برجاء التواصل معنا',
                   textAlign: TextAlign.center,
                   style: context.bodyMedium.copyWith(
-                    color: Colors.red,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -158,7 +160,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
 
                 // Enter Code Label
                 Text(
-                  'ادخل الكود الأول',
+                  'ادخل الكود الثاني',
                   style: context.bodyMedium.copyWith(
                     color: Colors.black,
                     fontWeight: FontWeight.w500,

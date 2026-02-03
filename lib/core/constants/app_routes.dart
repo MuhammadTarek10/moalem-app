@@ -4,6 +4,7 @@ class AppRoutes {
   static const String signIn = '/sign-in';
   static const String signUp = '/sign-up';
   static const String activation = '/activation';
+  static const String activationStepTwo = '/activation/step-two';
   static const String home = '/';
 
   // Profile Screen

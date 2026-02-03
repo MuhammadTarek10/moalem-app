@@ -16,11 +16,13 @@ class ActivationState {
   final AsyncValue<CouponModel?> submissionState;
   final String? userId;
   final String couponCode;
+  final int activationStep;
 
   ActivationState({
     this.submissionState = const AsyncValue.data(null),
     this.userId,
     this.couponCode = '',
+    this.activationStep = 0,
   });
 
   ActivationState copyWith({
@@ -28,17 +30,21 @@ class ActivationState {
     String? userId,
     String? couponCode,
     bool? contactForCode,
+    int? activationStep,
   }) {
     return ActivationState(
       submissionState: submissionState ?? this.submissionState,
       userId: userId ?? this.userId,
       couponCode: couponCode ?? this.couponCode,
+      activationStep: activationStep ?? this.activationStep,
     );
   }
 }
 
 final activationControllerProvider =
-    StateNotifierProvider<ActivationController, ActivationState>((ref) {
+    StateNotifierProvider.autoDispose<ActivationController, ActivationState>((
+      ref,
+    ) {
       return ActivationController(
         getIt<RedeemCouponUseCase>(),
         getIt<SecureStorageService>(),
@@ -72,8 +78,11 @@ class ActivationController extends StateNotifier<ActivationState> {
     state = state.copyWith(contactForCode: value);
   }
 
-  Future<void> redeemCoupon() async {
-    state = state.copyWith(submissionState: const AsyncValue.loading());
+  Future<void> redeemCoupon({required int step}) async {
+    state = state.copyWith(
+      submissionState: const AsyncValue.loading(),
+      activationStep: step,
+    );
     try {
       final coupon = await _redeemCouponUseCase(state.couponCode);
       state = state.copyWith(submissionState: AsyncValue.data(coupon));
@@ -102,6 +111,9 @@ class ActivationController extends StateNotifier<ActivationState> {
   }
 
   void reset() {
-    state = state.copyWith(submissionState: const AsyncValue.data(null));
+    state = state.copyWith(
+      submissionState: const AsyncValue.data(null),
+      couponCode: '',
+    );
   }
 }

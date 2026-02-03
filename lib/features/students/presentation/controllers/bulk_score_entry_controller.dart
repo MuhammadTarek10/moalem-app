@@ -311,6 +311,60 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
     }
   }
 
+  Future<List<StudentEntity>> handleMultipleQrScanned(
+    List<String> qrCodes,
+  ) async {
+    final List<StudentEntity> foundStudents = [];
+    for (final code in qrCodes) {
+      try {
+        final student = await _getStudentByQrCodeUseCase(code);
+        if (student != null && student.classId == state.classInfo?.id) {
+          foundStudents.add(student);
+        }
+      } catch (_) {
+        // Skip invalid/not found
+      }
+    }
+    return foundStudents;
+  }
+
+  Future<void> updateMultipleStudentsScores(
+    List<String> studentIds,
+    int score,
+  ) async {
+    if (state.selectedEvaluation == null) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      for (final studentId in studentIds) {
+        final scoreEntity = StudentScoreEntity(
+          id: const Uuid().v4(),
+          studentId: studentId,
+          evaluationId: state.selectedEvaluation!.id,
+          score: score,
+          periodType: state.periodType,
+          periodNumber: state.periodNumber,
+          createdAt: DateTime.now(),
+        );
+
+        await _updateStudentScoreUseCase(scoreEntity);
+      }
+
+      // Update local state to reflect the change
+      final updatedStudents = state.students.map((s) {
+        if (studentIds.contains(s.student.id)) {
+          return s.copyWith(currentScore: score);
+        }
+        return s;
+      }).toList();
+
+      state = state.copyWith(students: updatedStudents, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   Future<void> updateStudentScore(String studentId, int score) async {
     if (state.selectedEvaluation == null) return;
 

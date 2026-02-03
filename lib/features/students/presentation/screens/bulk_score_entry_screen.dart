@@ -151,29 +151,40 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                           height: 24.h,
                         ),
                         onPressed: () async {
-                          final qrCode = await Navigator.push<String>(
+                          final qrResult = await Navigator.push<dynamic>(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const QrScannerScreen(),
+                              builder: (context) => QrScannerScreen(
+                                isMultiScan: true,
+                                onCodeScanned: (code) async {
+                                  final student = await controller
+                                      .handleQrScanned(code);
+                                  return student?.name;
+                                },
+                              ),
                             ),
                           );
 
-                          if (qrCode != null && context.mounted) {
-                            final student = await controller.handleQrScanned(
-                              qrCode,
-                            );
-                            if (student != null && context.mounted) {
+                          if (qrResult is List<String> &&
+                              qrResult.isNotEmpty &&
+                              context.mounted) {
+                            final students = await controller
+                                .handleMultipleQrScanned(qrResult);
+
+                            if (students.isNotEmpty && context.mounted) {
                               final score = await showDialog<int>(
                                 context: context,
                                 builder: (context) => ScoreEntryDialog(
-                                  studentName: student.name,
+                                  studentName: students.length > 1
+                                      ? '${students.length} طلاب'
+                                      : students.first.name,
                                   maxScore: state.currentMaxScore ?? 0,
                                 ),
                               );
 
                               if (score != null) {
-                                await controller.updateStudentScore(
-                                  student.id,
+                                await controller.updateMultipleStudentsScores(
+                                  students.map((e) => e.id).toList(),
                                   score,
                                 );
                                 if (context.mounted) {
@@ -186,7 +197,7 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Student not found in this class',
+                                    'No students found in this class',
                                     textAlign: TextAlign.center,
                                   ).tr(),
                                   backgroundColor: Colors.red,
