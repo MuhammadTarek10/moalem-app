@@ -6,7 +6,7 @@ import 'package:excel/excel.dart';
 import 'package:flutter/services.dart' show rootBundle, ByteData;
 import 'package:injectable/injectable.dart';
 import 'package:intl/intl.dart';
-import 'package:moalem/core/constants/app_enums.dart';
+import 'package:moalem/core/constants/app_enums.dart' hide AttendanceStatus;
 import 'package:moalem/features/print/domain/entities/print_data_entity.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -15,7 +15,14 @@ import 'package:share_plus/share_plus.dart';
 class ExcelExportService {
   Future<String> exportToExcel(PrintDataEntity printData) async {
     // Use existing excel package for all groups
-    final config = _configFor(printData.classEntity.evaluationGroup);
+    // Check for attendance type first
+    final ExcelTemplateConfig config;
+    if (printData.printType == PrintType.attendance) {
+      config = AttendanceConfig();
+    } else {
+      config = _configFor(printData.classEntity.evaluationGroup);
+    }
+
     final excel = await config.loadTemplate();
 
     excel.setDefaultSheet(excel.tables.keys.first);
@@ -796,16 +803,24 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
     final avgBeh = (monthBehSum / 4).round();
     final avgBook = (monthBookSum / 4).round();
 
-    if (avgBeh > 0)
+    if (avgBeh > 0) {
       sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: startCol, rowIndex: row),
+        CellIndex.indexByColumnRow(
+          columnIndex: startCol,
+          rowIndex: row,
+        ), // S/B is Col 0 relative
         IntCellValue(avgBeh),
       );
-    if (avgBook > 0)
+    }
+    if (avgBook > 0) {
       sheet.updateCell(
-        CellIndex.indexByColumnRow(columnIndex: startCol + 1, rowIndex: row),
+        CellIndex.indexByColumnRow(
+          columnIndex: startCol + 1,
+          rowIndex: row,
+        ), // H/W is Col 1 relative
         IntCellValue(avgBook),
       );
+    }
     if (avgWeekly > 0)
       sheet.updateCell(
         CellIndex.indexByColumnRow(columnIndex: startCol + 6, rowIndex: row),
@@ -820,5 +835,132 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
       );
 
     return total;
+  }
+}
+
+// =======================================================
+// 5) Attendance Config (Unified for all stages)
+// =======================================================
+
+class AttendanceConfig extends ExcelTemplateConfig {
+  @override
+  String get templateName => 'attendance-evaluations.xlsx';
+
+  // Metadata positions (Standard Layout)
+  final Map<String, CellIndex> meta = {
+    'governorate': CellIndex.indexByColumnRow(
+      columnIndex: 2,
+      rowIndex: 0,
+    ), // C1
+    'administration': CellIndex.indexByColumnRow(
+      columnIndex: 2,
+      rowIndex: 1,
+    ), // C2
+    'school': CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: 2), // C3
+    'class': CellIndex.indexByColumnRow(columnIndex: 11, rowIndex: 3), // L4
+    'subject': CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: 3), // D4
+  };
+
+  final int studentStartRow = 8;
+  final int serialColumn = 1; // B
+  final int nameColumn = 2; // C
+
+  // Attendance columns
+  final int firstWeekCol = 3;
+  final int daysPerWeek = 6; // Sat, Sun, Mon, Tue, Wed, Thu
+
+  @override
+  void fillMetadata(Sheet sheet, PrintDataEntity d) {
+    // Fill basic metadata
+    final govCell = sheet.cell(meta['governorate']!);
+    final govTemplate = govCell.value?.toString() ?? 'مديرية التربية والتعليم ';
+    sheet.updateCell(
+      meta['governorate']!,
+      TextCellValue(govTemplate.replaceAll(RegExp(r'[\.…]+'), d.governorate)),
+    );
+
+    final adminCell = sheet.cell(meta['administration']!);
+    final adminTemplate = adminCell.value?.toString() ?? 'ادارة  ';
+    sheet.updateCell(
+      meta['administration']!,
+      TextCellValue(
+        adminTemplate.replaceAll(RegExp(r'[\.…]+'), d.administration),
+      ),
+    );
+
+    final schoolCell = sheet.cell(meta['school']!);
+    final schoolTemplate = schoolCell.value?.toString() ?? 'مدرسة / ';
+    sheet.updateCell(
+      meta['school']!,
+      TextCellValue(
+        schoolTemplate.replaceAll(RegExp(r'[\.…]+'), d.classEntity.school),
+      ),
+    );
+
+    // For attendance, we usually just show class name and grade
+    if (meta.containsKey('class')) {
+      sheet.updateCell(
+        meta['class']!,
+        TextCellValue('${d.classEntity.grade} / ${d.classEntity.name}'),
+      );
+    }
+  }
+
+  @override
+  void fillStudents(Sheet sheet, PrintDataEntity data) {
+    final weekNumbers = data.weekNumbers;
+
+    for (int i = 0; i < data.studentsData.length; i++) {
+      final student = data.studentsData[i];
+      final row = studentStartRow + i;
+
+      // Serial
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: serialColumn, rowIndex: row),
+        IntCellValue(i + 1),
+      );
+
+      // Name
+      sheet.updateCell(
+        CellIndex.indexByColumnRow(columnIndex: nameColumn, rowIndex: row),
+        TextCellValue(student.student.name),
+      );
+
+      // Fill Attendance Days
+      for (int w = 0; w < weekNumbers.length && w < 5; w++) {
+        final weekNo = weekNumbers[w];
+        final weekStartCol = firstWeekCol + (w * daysPerWeek);
+        final weekStartDate = data.weekStartDates?[weekNo];
+
+        if (weekStartDate != null) {
+          // Get days: Sat, Sun, Mon, Tue, Wed, Thu
+          for (int d = 0; d < 6; d++) {
+            // Calculate date for this day index (0=Sat, 1=Sun, ..., 5=Thu)
+            final date = weekStartDate.add(Duration(days: d));
+
+            // Check attendance status
+            final status = student.getAttendanceForWeekDate(weekNo, date);
+            if (status != null) {
+              String mark = '';
+              if (status == AttendanceStatus.absent) {
+                mark = 'غ';
+              } else if (status == AttendanceStatus.excused) {
+                mark = 'ع';
+              }
+
+              if (mark.isNotEmpty) {
+                sheet.updateCell(
+                  CellIndex.indexByColumnRow(
+                    columnIndex: weekStartCol + d,
+                    rowIndex: row,
+                  ),
+                  TextCellValue(mark),
+                );
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

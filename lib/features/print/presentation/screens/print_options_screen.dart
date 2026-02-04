@@ -146,7 +146,12 @@ class PrintOptionsScreen extends ConsumerWidget {
     PrintController controller,
     List<ClassEntity> classes,
   ) {
-    final stages = classes.map((c) => c.stage).toSet().toList();
+    final stages = classes
+        .map((c) => c.stage)
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
+
     if (stages.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -171,13 +176,18 @@ class PrintOptionsScreen extends ConsumerWidget {
               child: DropdownButton<String>(
                 isExpanded: true,
                 value: state.selectedStage,
-                items: stages
-                    .map<DropdownMenuItem<String>>(
-                      (s) => DropdownMenuItem(value: s, child: Text(s)),
-                    )
-                    .toList(),
+                hint: Text(AppStrings.allStages.tr()),
+                items: [
+                  DropdownMenuItem<String>(
+                    value: null,
+                    child: Text(AppStrings.allStages.tr()),
+                  ),
+                  ...stages.map<DropdownMenuItem<String>>(
+                    (s) => DropdownMenuItem(value: s, child: Text(s)),
+                  ),
+                ],
                 onChanged: (value) {
-                  if (value != null) controller.selectStage(value);
+                  controller.selectStage(value);
                 },
                 icon: Icon(
                   Icons.keyboard_arrow_down,

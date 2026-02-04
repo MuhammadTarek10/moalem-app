@@ -81,7 +81,7 @@ class ReportsController extends StateNotifier<ReportsState> {
       final firstClass = classes.isNotEmpty ? classes.first : null;
       state = state.copyWith(
         classes: AsyncValue.data(classes),
-        selectedStage: firstClass?.stage,
+        selectedStage: null,
         selectedClassId: firstClass?.id,
       );
 

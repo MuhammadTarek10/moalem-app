@@ -161,6 +161,7 @@ class AppStrings {
   static const String editClassTitle = 'edit_class_title';
   static const String educationalStageLabel = 'educational_stage_label';
   static const String educationalStageHint = 'educational_stage_hint';
+  static const String allStages = 'all_stages';
   static const String classNameLabel = 'class_name_label';
   static const String classNameHint = 'class_name_hint';
   static const String subjectFieldLabel = 'subject_field_label';

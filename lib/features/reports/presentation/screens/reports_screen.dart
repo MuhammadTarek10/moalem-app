@@ -103,7 +103,11 @@ class ReportsScreen extends ConsumerWidget {
     ReportsController controller,
     List<ClassEntity> classes,
   ) {
-    final stages = classes.map((c) => c.stage).toSet().toList();
+    final stages = classes
+        .map((c) => c.stage)
+        .where((s) => s.isNotEmpty)
+        .toSet()
+        .toList();
     final filteredClasses = classes
         .where(
           (c) => state.selectedStage == null || c.stage == state.selectedStage,
@@ -119,14 +123,18 @@ class ReportsScreen extends ConsumerWidget {
           if (stages.isNotEmpty) ...[
             _buildDropdown<String>(
               context,
-              state.selectedStage ?? AppStrings.educationalStageHint.tr(),
-              stages
-                  .map<DropdownMenuItem<String>>(
-                    (s) => DropdownMenuItem(value: s, child: Text(s)),
-                  )
-                  .toList(),
+              AppStrings.allStages.tr(),
+              [
+                DropdownMenuItem<String>(
+                  value: null,
+                  child: Text(AppStrings.allStages.tr()),
+                ),
+                ...stages.map<DropdownMenuItem<String>>(
+                  (s) => DropdownMenuItem(value: s, child: Text(s)),
+                ),
+              ],
               (value) {
-                if (value != null) controller.selectStage(value);
+                controller.selectStage(value);
               },
             ),
             SizedBox(height: 12.h),
