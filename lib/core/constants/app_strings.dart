@@ -252,10 +252,11 @@ class AppStrings {
   static const String studentScores = 'student_scores';
   static const String studentAttendance = 'student_attendance';
   static const String comingSoon = 'coming_soon';
+  static const String contactUsSubtitle = 'contact_us_subtitle';
   static const String qrPrintTitle = 'qr_print_title';
   static const String selectStudents = 'select_students';
   static const String printButton = 'print_button';
-  static const String idLabel = 'id_label';
+  // static const String studentIdLabel = 'student_id_label';
 
   // Attendance Entry Screen
   static const String attendance = 'attendance';

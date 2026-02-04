@@ -59,6 +59,7 @@ dev_dependencies:
   flutter_native_splash: ^2.4.7
   json_serializable: ^6.10.0
   retrofit_generator: ^10.0.1
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
 
@@ -98,3 +99,8 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/new_logo.jpeg"

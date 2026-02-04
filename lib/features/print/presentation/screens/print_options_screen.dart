@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:moalem/core/constants/app_strings.dart';
+import 'package:moalem/core/extensions/evaluation_group_extensions.dart'; // Added
 import 'package:moalem/core/utils/error_handler.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
+import 'package:moalem/features/print/domain/entities/print_data_entity.dart';
 import 'package:moalem/features/print/presentation/controllers/print_controller.dart';
 import 'package:moalem/features/print/presentation/widgets/export_buttons.dart';
 import 'package:moalem/features/print/presentation/widgets/metadata_header.dart';
@@ -75,17 +77,15 @@ class PrintOptionsScreen extends ConsumerWidget {
 
           return Column(
             children: [
-              // Stage selector dropdown
-              _buildStageSelector(context, state, controller, classes),
-
               // Class selector dropdown
               _buildClassSelector(context, state, controller, classes),
 
               // Page selector for PrePrimary (if applicable)
               // Show page selector for PrePrimary (1-2 ابتدائي)
               if (state.printData.hasValue &&
-                  state.printData.value?.classEntity.evaluationGroup.name ==
-                      'prePrimary')
+                  state.printType != PrintType.attendance &&
+                  state.printData.value?.classEntity.evaluationGroup.name !=
+                      'high')
                 _buildPageSelector(context, state, controller),
 
               // Show month selector for High School (ثانوي)
@@ -140,68 +140,6 @@ class PrintOptionsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStageSelector(
-    BuildContext context,
-    PrintState state,
-    PrintController controller,
-    List<ClassEntity> classes,
-  ) {
-    final stages = classes
-        .map((c) => c.stage)
-        .where((s) => s.isNotEmpty)
-        .toSet()
-        .toList();
-
-    if (stages.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 0),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            AppStrings.educationalStageHint.tr(),
-            style: context.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: 8.h),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
-            decoration: BoxDecoration(
-              color: AppColors.primaryLightest,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: AppColors.inactiveBorder),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: state.selectedStage,
-                hint: Text(AppStrings.allStages.tr()),
-                items: [
-                  DropdownMenuItem<String>(
-                    value: null,
-                    child: Text(AppStrings.allStages.tr()),
-                  ),
-                  ...stages.map<DropdownMenuItem<String>>(
-                    (s) => DropdownMenuItem(value: s, child: Text(s)),
-                  ),
-                ],
-                onChanged: (value) {
-                  controller.selectStage(value);
-                },
-                icon: Icon(
-                  Icons.keyboard_arrow_down,
-                  color: AppColors.textLight,
-                  size: 20.sp,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildClassSelector(
     BuildContext context,
     PrintState state,
@@ -210,7 +148,9 @@ class PrintOptionsScreen extends ConsumerWidget {
   ) {
     final filteredClasses = classes
         .where(
-          (c) => state.selectedStage == null || c.stage == state.selectedStage,
+          (c) =>
+              state.selectedStage == null ||
+              c.evaluationGroup.stageName == state.selectedStage,
         )
         .toList();
 
@@ -263,6 +203,7 @@ class PrintOptionsScreen extends ConsumerWidget {
     PrintController controller,
   ) {
     final pages = [
+      {'label': 'جميع الأسابيع (1-18)', 'value': 0},
       {'label': 'الصفحة 1 (أسابيع 1-5)', 'value': 1},
       {'label': 'الصفحة 2 (أسابيع 6-10)', 'value': 2},
       {'label': 'الصفحة 3 (أسابيع 11-15)', 'value': 3},

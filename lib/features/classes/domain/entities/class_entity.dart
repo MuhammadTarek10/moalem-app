@@ -3,7 +3,6 @@ import 'package:moalem/core/constants/app_enums.dart';
 class ClassEntity {
   final String id;
   final String name;
-  final String stage;
   final String grade;
   final String subject;
   final String semester;
@@ -17,7 +16,6 @@ class ClassEntity {
   const ClassEntity({
     required this.id,
     required this.name,
-    required this.stage,
     required this.grade,
     required this.subject,
     required this.semester,
@@ -32,7 +30,6 @@ class ClassEntity {
   ClassEntity copyWith({
     String? id,
     String? name,
-    String? stage,
     String? grade,
     String? subject,
     String? semester,
@@ -46,7 +43,6 @@ class ClassEntity {
     return ClassEntity(
       id: id ?? this.id,
       name: name ?? this.name,
-      stage: stage ?? this.stage,
       grade: grade ?? this.grade,
       subject: subject ?? this.subject,
       semester: semester ?? this.semester,
@@ -64,7 +60,6 @@ class ClassEntity {
     return {
       'id': id,
       'name': name,
-      'stage': stage,
       'grade': grade,
       'subject': subject,
       'semester': semester,
@@ -81,7 +76,6 @@ class ClassEntity {
     return ClassEntity(
       id: map['id'] as String,
       name: map['name'] as String,
-      stage: map['stage'] as String? ?? '',
       grade: map['grade'] as String,
       subject: map['subject'] as String,
       semester: map['semester'] as String,

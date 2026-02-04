@@ -103,54 +103,21 @@ class ReportsScreen extends ConsumerWidget {
     ReportsController controller,
     List<ClassEntity> classes,
   ) {
-    final stages = classes
-        .map((c) => c.stage)
-        .where((s) => s.isNotEmpty)
-        .toSet()
-        .toList();
-    final filteredClasses = classes
-        .where(
-          (c) => state.selectedStage == null || c.stage == state.selectedStage,
-        )
-        .toList();
-
     return Container(
       padding: EdgeInsets.all(16.w),
       color: Colors.white,
       child: Column(
         children: [
-          // Stage selector
-          if (stages.isNotEmpty) ...[
-            _buildDropdown<String>(
-              context,
-              AppStrings.allStages.tr(),
-              [
-                DropdownMenuItem<String>(
-                  value: null,
-                  child: Text(AppStrings.allStages.tr()),
-                ),
-                ...stages.map<DropdownMenuItem<String>>(
-                  (s) => DropdownMenuItem(value: s, child: Text(s)),
-                ),
-              ],
-              (value) {
-                controller.selectStage(value);
-              },
-            ),
-            SizedBox(height: 12.h),
-          ],
           // Class selector
           _buildDropdown<String>(
             context,
             state.selectedClassId != null &&
-                    filteredClasses.any((c) => c.id == state.selectedClassId)
-                ? filteredClasses
-                      .firstWhere((c) => c.id == state.selectedClassId!)
-                      .name
-                : (filteredClasses.isNotEmpty
-                      ? filteredClasses.first.name
+                    classes.any((c) => c.id == state.selectedClassId)
+                ? classes.firstWhere((c) => c.id == state.selectedClassId!).name
+                : (classes.isNotEmpty
+                      ? classes.first.name
                       : AppStrings.selectClass.tr()),
-            filteredClasses
+            classes
                 .map<DropdownMenuItem<String>>(
                   (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
                 )

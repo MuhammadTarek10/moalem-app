@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moalem/core/constants/app_enums.dart';
+import 'package:moalem/core/extensions/evaluation_group_extensions.dart'; // Added
 import 'package:moalem/core/services/injection.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/domain/usecases/get_classes_usecase.dart';
@@ -100,7 +101,7 @@ class ReportsController extends StateNotifier<ReportsState> {
 
     final allClasses = state.classes.value ?? [];
     final filteredClasses = allClasses
-        .where((c) => stage == null || c.stage == stage)
+        .where((c) => stage == null || c.evaluationGroup.stageName == stage)
         .toList();
 
     state = state.copyWith(

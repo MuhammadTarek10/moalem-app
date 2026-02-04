@@ -46,7 +46,6 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
 
   Future<void> addClass({
     required String name,
-    required String stage,
     required String grade,
     required String subject,
     required String semester,
@@ -56,7 +55,6 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
     try {
       final newClass = await _addClassUseCase(
         name: name,
-        stage: stage,
         grade: grade,
         subject: subject,
         semester: semester,

@@ -51,8 +51,11 @@ class GenerateMultiWeekAttendanceReportUseCase {
       startWeek = 1;
       weekNumbers = List.generate(18, (i) => i + 1);
     } else {
-      startWeek = (weekGroup - 1) * 5 + 1;
-      weekNumbers = List.generate(5, (i) => startWeek + i);
+      weekNumbers = PrintDataEntity.getWeekNumbersForGroup(
+        weekGroup,
+        classEntity.evaluationGroup,
+      );
+      startWeek = weekNumbers.first;
     }
 
     // Calculate week start dates

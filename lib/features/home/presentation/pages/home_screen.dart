@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/entities/user.dart';
+import 'package:moalem/core/extensions/evaluation_group_extensions.dart'; // Added
 import 'package:moalem/core/utils/error_handler.dart';
 import 'package:moalem/core/utils/license_checker.dart';
 import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
@@ -13,7 +14,7 @@ import 'package:moalem/features/classes/presentation/screens/add_or_edit_class_d
 import 'package:moalem/features/classes/presentation/screens/class_details_screen.dart';
 import 'package:moalem/features/home/presentation/controllers/home_controller.dart';
 import 'package:moalem/features/home/presentation/widgets/home_class_item.dart';
-import 'package:moalem/features/home/presentation/widgets/home_header.dart'; // Add import
+import 'package:moalem/features/home/presentation/widgets/home_header.dart'; // Added
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/screens/error_screen.dart';
@@ -42,7 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(classesControllerProvider.notifier)
           .addClass(
             name: result.className!,
-            stage: result.educationalStage!,
+            // stage removed
             grade: result.gradeLevel!,
             subject: result.subject!,
             semester: result.semester!,
@@ -150,7 +151,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 final classEntity = classes[index];
                                 return HomeClassItem(
                                   className: classEntity.name,
-                                  stage: classEntity.stage,
+                                  stage: classEntity
+                                      .evaluationGroup
+                                      .stageName, // Fixed
                                   grade: classEntity.grade,
                                   subject: classEntity.subject,
                                   onTap: () {

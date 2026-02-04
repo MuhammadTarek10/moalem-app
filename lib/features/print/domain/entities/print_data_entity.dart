@@ -67,11 +67,34 @@ class PrintDataEntity {
     } else {
       // PrePrimary, Primary, Secondary: 5 weeks per page group
       final startWeek = (weekGroup - 1) * 5 + 1;
-      baseWeeks = List.generate(5, (i) => startWeek + i);
+      // Cap at 18 weeks for the last page (Page 4)
+      if (startWeek == 16) {
+        baseWeeks = List.generate(3, (i) => startWeek + i); // 16, 17, 18
+      } else {
+        baseWeeks = List.generate(5, (i) => startWeek + i);
+      }
     }
 
     if (semesterOffset == 0) return baseWeeks;
     return baseWeeks.map((w) => w + semesterOffset).toList();
+  }
+
+  /// Get week numbers helper for use cases
+  static List<int> getWeekNumbersForGroup(int group, EvaluationGroup stage) {
+    if (group == 0) return List.generate(18, (i) => i + 1);
+
+    if (stage == EvaluationGroup.high) {
+      final startWeek = (group - 1) * 4 + 1;
+      return List.generate(4, (i) => startWeek + i);
+    }
+
+    final startWeek = (group - 1) * 5 + 1;
+    // Cap at 18 weeks for the last page (Page 4)
+    if (startWeek == 16) {
+      return List.generate(3, (i) => startWeek + i); // 16, 17, 18
+    } else {
+      return List.generate(5, (i) => startWeek + i);
+    }
   }
 
   /// Get week days for attendance (Sat-Thu)
@@ -137,7 +160,11 @@ class StudentPrintData {
     this.weeklyScores,
     this.weeklyTotals,
     this.weeklyAttendance,
+    this.monthlyExamScores,
   });
+
+  // Monthly test scores (evalId -> score)
+  final Map<String, int>? monthlyExamScores;
 
   /// Calculate percentage
   double get percentage {
