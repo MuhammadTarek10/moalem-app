@@ -333,7 +333,8 @@ class Primary36Config extends ExcelTemplateConfig {
     'governorate': CellIndex.indexByString('C1'),
     'administration': CellIndex.indexByString('C2'),
     'school': CellIndex.indexByString('C3'),
-    'subject': CellIndex.indexByString('T4'),
+    'class': CellIndex.indexByString('M4'),
+    'subject': CellIndex.indexByString('X4'),
   };
 
   /* =====================================================
@@ -375,20 +376,39 @@ class Primary36Config extends ExcelTemplateConfig {
   void fillMetadata(Sheet sheet, PrintDataEntity data) {
     sheet.updateCell(
       metaCells['governorate']!,
-      TextCellValue(data.governorate),
+      TextCellValue('مديرية التربية والتعليم ${data.governorate}'),
     );
     sheet.updateCell(
       metaCells['administration']!,
-      TextCellValue(data.administration),
+      TextCellValue('إدارة ${data.administration}'),
     );
     sheet.updateCell(
       metaCells['school']!,
-      TextCellValue(data.classEntity.school),
+      TextCellValue('مدرسة ${data.classEntity.school}'),
     );
+
+    // Class/Title
+    // final classInfo = '${data.classEntity.grade}/${data.classEntity.name}';
+    final classText = 'سجل رصد درجات فصل    ${data.classEntity.name}';
+    sheet.updateCell(metaCells['class']!, TextCellValue(classText));
+
     sheet.updateCell(
       metaCells['subject']!,
-      TextCellValue(data.classEntity.subject),
+      TextCellValue('مادة : ${data.classEntity.subject}'),
     );
+
+    // Clear duplicate/placeholder cells from the template
+    // "Subject" placeholder was at T4
+    sheet.updateCell(CellIndex.indexByString('T4'), TextCellValue(''));
+    // "Class Title" placeholder was likely around I4/J4
+    sheet.updateCell(CellIndex.indexByString('I4'), TextCellValue(''));
+
+    // Increase height for row 4 (index 3) to show full vertical subject name
+    sheet.setRowHeight(3, 120.0);
+
+    // Increase height for row 8 (index 7) - Evaluation Headers
+    // To ensure vertical text like "Evaluation Name" is not cut off
+    sheet.setRowHeight(7, 180.0);
   }
 
   /* =====================================================
@@ -398,21 +418,31 @@ class Primary36Config extends ExcelTemplateConfig {
   void fillStudents(Sheet sheet, PrintDataEntity data) {
     final weekNumbers = data.weekNumbers;
 
+    // Define a centered style for all student data cells
+    final centerStyle = CellStyle(
+      horizontalAlign: HorizontalAlign.Center,
+      verticalAlign: VerticalAlign.Center,
+      fontFamily: getFontFamily(FontFamily.Arial),
+    );
+
     for (int i = 0; i < data.studentsData.length; i++) {
       final student = data.studentsData[i];
-      final row = studentStartRow + i;
+      // Stride is 2 because of merged cells
+      final row = studentStartRow + (i * 2);
 
       // Serial number
-      sheet.updateCell(
+      var cell = sheet.cell(
         CellIndex.indexByColumnRow(columnIndex: serialColumn, rowIndex: row),
-        IntCellValue(i + 1),
       );
+      cell.value = IntCellValue(i + 1);
+      cell.cellStyle = centerStyle;
 
       // Student name
-      sheet.updateCell(
+      cell = sheet.cell(
         CellIndex.indexByColumnRow(columnIndex: nameColumn, rowIndex: row),
-        TextCellValue(student.student.name),
       );
+      cell.value = TextCellValue(student.student.name);
+      cell.cellStyle = centerStyle;
 
       // Fill scores for each week
       for (int w = 0; w < weekNumbers.length; w++) {
@@ -423,26 +453,28 @@ class Primary36Config extends ExcelTemplateConfig {
         for (int e = 0; e < evalOrder.length; e++) {
           final score = student.getScoreForWeek(weekNo, evalOrder[e]);
           if (score > 0) {
-            sheet.updateCell(
+            var cell = sheet.cell(
               CellIndex.indexByColumnRow(
                 columnIndex: weekStartCol + e,
                 rowIndex: row,
               ),
-              IntCellValue(score),
             );
+            cell.value = IntCellValue(score);
+            cell.cellStyle = centerStyle;
           }
         }
 
         // Fill total (last column in the week block)
         final total = student.getTotalForWeek(weekNo);
         if (total > 0) {
-          sheet.updateCell(
+          var cell = sheet.cell(
             CellIndex.indexByColumnRow(
               columnIndex: weekStartCol + evalOrder.length,
               rowIndex: row,
             ),
-            IntCellValue(total),
           );
+          cell.value = IntCellValue(total);
+          cell.cellStyle = centerStyle;
         }
       }
     }

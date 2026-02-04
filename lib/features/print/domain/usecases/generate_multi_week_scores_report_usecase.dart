@@ -60,25 +60,16 @@ class GenerateMultiWeekScoresReportUseCase {
     }
 
     // Determine if we are in Semester 2 (Approx Feb - Aug)
-    final now = DateTime.now();
-    // Check if we strictly need semester 2 logic (e.g. current date is well into Sem 2)
-    // Using Feb 1st as a rough cutoff
-    final isSemester2 = now.month >= 2 && now.month <= 8;
-    // Offset for Semester 2 (starts approx week 22, so offset 21)
-    // This maps "Week 1" of Sem 2 to "Week 22" of the absolute year
-    final int semesterOffset = isSemester2 ? 21 : 0;
+    // Removed automatic offset logic to ensure we fetch exactly what is stored
+    final int semesterOffset = 0;
 
     // Calculate week start dates
     final effectiveSemesterStart =
         semesterStartDate ?? _getDefaultSemesterStart();
     final weekStartDates = <int, DateTime>{};
 
-    // Use adjusted weeks for data fetching
-    final fetchWeekNumbers = weekNumbers
-        .map((w) => w + semesterOffset)
-        .toList();
-
-    for (final weekNum in fetchWeekNumbers) {
+    // Use weekNumbers directly
+    for (final weekNum in weekNumbers) {
       weekStartDates[weekNum] = effectiveSemesterStart.add(
         Duration(days: (weekNum - 1) * 7),
       );
@@ -91,7 +82,7 @@ class GenerateMultiWeekScoresReportUseCase {
       final weeklyScores = <int, Map<String, int>>{};
       final weeklyTotals = <int, int>{};
 
-      for (final weekNum in fetchWeekNumbers) {
+      for (final weekNum in weekNumbers) {
         final studentDetails = await _studentRepository
             .getStudentDetailsWithScores(
               student.id,
