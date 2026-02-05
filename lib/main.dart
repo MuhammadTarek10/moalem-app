@@ -11,6 +11,7 @@ import 'core/services/injection.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+  await ScreenUtil.ensureScreenSize();
   await configureDependencies();
 
   runApp(
@@ -35,7 +36,7 @@ class MyApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return MaterialApp.router(
-          title: 'Moalem',
+          title: 'Mr Assistant',
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: LocalizationConfig.startLocale,

@@ -81,12 +81,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(height: 40.h),
                   // Logo
                   Image.asset(
                     AppAssets.images.logo,
-                    height: 160.h,
-                    width: 160.w,
+                    height: 200.h,
+                    width: 200.w,
                   ),
                   SizedBox(height: 20.h),
                   // Title

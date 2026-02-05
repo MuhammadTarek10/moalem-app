@@ -37,8 +37,8 @@ class _SignupStepOneState extends State<SignupStepOne> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Logo
-          Image.asset(AppAssets.images.logo, height: 120.h, width: 120.w),
-          SizedBox(height: 40.h),
+          Image.asset(AppAssets.images.logo, height: 160.h, width: 160.w),
+          SizedBox(height: 20.h),
           // Title
           Text(
             AppStrings.signUpTitle.tr(),

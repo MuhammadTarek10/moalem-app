@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moalem/core/constants/app_constants.dart';
 import 'package:moalem/core/constants/app_keys.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/services/injection.dart';
@@ -98,12 +99,11 @@ class ActivationController extends StateNotifier<ActivationState> {
   }
 
   Future<void> openWhatsApp() async {
-    const whatsappNumber = '+201022866847';
     final message = state.userId != null
         ? AppStrings.whatsappActivationMessageWithId.tr(args: [state.userId!])
         : AppStrings.whatsappActivationMessage.tr();
     final url = Uri.parse(
-      'https://wa.me/$whatsappNumber?text=${Uri.encodeComponent(message)}',
+      'https://wa.me/${AppConstants.contactWhatsAppNumber}?text=${Uri.encodeComponent(message)}',
     );
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);

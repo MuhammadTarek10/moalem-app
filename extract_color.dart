@@ -4,7 +4,7 @@ import 'package:image/image.dart' as img;
 
 void main() async {
   try {
-    final file = File('assets/images/new_logo.jpeg');
+    final file = File('assets/images/app_logo.png');
     if (!file.existsSync()) {
       print('FILE_NOT_FOUND');
       return;

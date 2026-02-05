@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../shared/colors/app_colors.dart';
 
 class AppTheme {
-  static final ThemeData lightTheme = ThemeData(
+  static ThemeData get lightTheme => ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.light(
       primary: AppColors.primary,

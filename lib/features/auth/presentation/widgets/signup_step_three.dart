@@ -35,7 +35,7 @@ class SignupStepThree extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Logo
-          Image.asset(AppAssets.images.logo, height: 120.h, width: 120.w),
+          Image.asset(AppAssets.images.logo, height: 160.h, width: 160.w),
           SizedBox(height: 24.h),
           // Title
           Text(
