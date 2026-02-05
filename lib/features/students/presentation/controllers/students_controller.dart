@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moalem/core/services/injection.dart';
+import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
 import 'package:moalem/features/students/domain/entities/student_entity.dart';
 import 'package:moalem/features/students/domain/usecases/add_student_usecase.dart';
 import 'package:moalem/features/students/domain/usecases/delete_student_usecase.dart';
@@ -18,6 +19,7 @@ final studentsControllerProvider =
         getIt<EditStudentUseCase>(),
         getIt<DeleteStudentUseCase>(),
         classId,
+        ref,
       );
     });
 
@@ -28,6 +30,7 @@ class StudentsController
   final EditStudentUseCase _editStudentUseCase;
   final DeleteStudentUseCase _deleteStudentUseCase;
   final String _classId;
+  final Ref _ref;
 
   StudentsController(
     this._getStudentsUseCase,
@@ -35,6 +38,7 @@ class StudentsController
     this._editStudentUseCase,
     this._deleteStudentUseCase,
     this._classId,
+    this._ref,
   ) : super(const AsyncValue.loading()) {
     loadStudents();
   }
@@ -62,6 +66,9 @@ class StudentsController
         updatedList.sort((a, b) => a.number.compareTo(b.number));
         state = AsyncValue.data(updatedList);
       });
+
+      // Refresh classes list to update student count on cards
+      _ref.read(classesControllerProvider.notifier).reloadClasses();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
@@ -91,6 +98,9 @@ class StudentsController
         final updatedList = students.where((s) => s.id != id).toList();
         state = AsyncValue.data(updatedList);
       });
+
+      // Refresh classes list to update student count on cards
+      _ref.read(classesControllerProvider.notifier).reloadClasses();
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }

@@ -52,3 +52,5 @@ app.*.map.json
 
 # docs
 /docs
+# Excel temporary files
+~$*

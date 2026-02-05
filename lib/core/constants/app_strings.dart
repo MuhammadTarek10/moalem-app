@@ -129,6 +129,13 @@ class AppStrings {
   static const String skillsPerformance = 'skills_performance';
   static const String monthsExamAverage = 'months_exam_average';
 
+  // Primary 3-6
+  static const String primaryHomework = 'primary_homework';
+  static const String primaryActivity = 'primary_activity';
+  static const String primaryWeekly = 'primary_weekly';
+  static const String primaryPerformance = 'primary_performance';
+  static const String primaryAttendance = 'primary_attendance';
+
   // Classes Empty State
   static const String noClassesTitle = 'no_classes_title';
   static const String noClassesSubtitle = 'no_classes_subtitle';
@@ -154,6 +161,7 @@ class AppStrings {
   static const String editClassTitle = 'edit_class_title';
   static const String educationalStageLabel = 'educational_stage_label';
   static const String educationalStageHint = 'educational_stage_hint';
+  static const String allStages = 'all_stages';
   static const String classNameLabel = 'class_name_label';
   static const String classNameHint = 'class_name_hint';
   static const String subjectFieldLabel = 'subject_field_label';
@@ -244,6 +252,11 @@ class AppStrings {
   static const String studentScores = 'student_scores';
   static const String studentAttendance = 'student_attendance';
   static const String comingSoon = 'coming_soon';
+  static const String contactUsSubtitle = 'contact_us_subtitle';
+  static const String qrPrintTitle = 'qr_print_title';
+  static const String selectStudents = 'select_students';
+  static const String printButton = 'print_button';
+  // static const String studentIdLabel = 'student_id_label';
 
   // Attendance Entry Screen
   static const String attendance = 'attendance';
@@ -260,4 +273,15 @@ class AppStrings {
   static const String wednesday = 'wednesday';
   static const String thursday = 'thursday';
   static const String friday = 'friday';
+
+  // High School Months
+  static const String february = 'february';
+  static const String march = 'march';
+  static const String april = 'april';
+
+  // Weeks
+  static const String week1Label = 'week1_label';
+  static const String week2Label = 'week2_label';
+  static const String week3Label = 'week3_label';
+  static const String week4Label = 'week4_label';
 }

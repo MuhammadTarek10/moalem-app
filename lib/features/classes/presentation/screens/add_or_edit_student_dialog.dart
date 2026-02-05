@@ -48,7 +48,8 @@ class _AddOrEditStudentDialogState extends State<AddOrEditStudentDialog> {
   @override
   void initState() {
     super.initState();
-    _formData = widget.initialData ?? const StudentFormData();
+    _formData =
+        widget.initialData ?? StudentFormData(number: widget.studentsCount + 1);
   }
 
   void _onSubmit() {
@@ -112,42 +113,13 @@ class _AddOrEditStudentDialogState extends State<AddOrEditStudentDialog> {
                 ),
                 SizedBox(height: 24.h),
 
-                // Form fields - side by side
-                Row(
-                  children: [
-                    // Student Name field
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        children: [
-                          AppTextFormField(
-                            initialValue: _formData.name,
-                            hint: AppStrings.studentNameLabel.tr(),
-                            onChanged: (value) =>
-                                _formData = _formData.copyWith(name: value),
-                            validator: requiredValidator,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    // Student Number field
-                    Expanded(
-                      flex: 2,
-                      child: Column(
-                        children: [
-                          AppTextFormField(
-                            initialValue: _formData.number?.toString(),
-                            hint: AppStrings.studentIdLabel.tr(),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) => _formData = _formData
-                                .copyWith(number: int.tryParse(value) ?? 0),
-                            validator: requiredValidator,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                // Form fields - Student Name field
+                AppTextFormField(
+                  initialValue: _formData.name,
+                  hint: AppStrings.studentNameLabel.tr(),
+                  onChanged: (value) =>
+                      _formData = _formData.copyWith(name: value),
+                  validator: requiredValidator,
                 ),
                 SizedBox(height: 24.h),
 

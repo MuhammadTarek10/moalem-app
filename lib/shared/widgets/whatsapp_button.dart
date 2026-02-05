@@ -3,20 +3,38 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:moalem/core/constants/app_assets.dart';
+import 'package:moalem/core/constants/app_constants.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/widgets/app_button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WhatsAppButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
-  const WhatsAppButton({super.key, required this.onPressed});
+  const WhatsAppButton({super.key, this.onPressed});
+
+  Future<void> _launchWhatsApp() async {
+    final phoneNumber = AppConstants.contactWhatsAppNumber.replaceAll('+', '');
+    final whatsappUrl = Uri.parse('whatsapp://send?phone=$phoneNumber');
+    final webUrl = Uri.parse('https://wa.me/$phoneNumber');
+
+    try {
+      if (await canLaunchUrl(whatsappUrl)) {
+        await launchUrl(whatsappUrl);
+      } else {
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('Error launching WhatsApp: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return AppButton(
-      onPressed: onPressed,
+      onPressed: onPressed ?? _launchWhatsApp,
       text: AppStrings.contactWhatsapp.tr(),
       backgroundColor: AppColors.whatsapp,
       foregroundColor: Colors.white,

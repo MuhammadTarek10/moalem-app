@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primary = Color(0xFF6A1B9A);
-  static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color secondary = Color(0xFF8C5ABA);
+  static const Color primary = Color(0xFF5585A9);
+  static const Color onPrimary = Colors.white; // White text for darker primary
+  static const Color secondary = Color(
+    0xFF546E7A,
+  ); // Darker Blue Grey for contrast
   static const Color onSecondary = Color(0xFFFFFFFF);
   static const Color background = Color(0xFFF5F5F5);
   static const Color surface = Colors.white;
@@ -11,9 +13,9 @@ class AppColors {
   static const Color success = Color(0xFF16A34A);
   static const Color warning = Color(0xFFF59E0B);
 
-  static const Color textPrimary = Color(0xFF6447CE);
-  static const Color textSecondary = Color(0xFFB18BCA);
-  static const Color textSubtitle = Color(0xFF666567);
+  static const Color textPrimary = Color(0xFF263238); // Dark Blue Grey
+  static const Color textSecondary = Color(0xFF78909C); // Lighter Blue Grey
+  static const Color textSubtitle = Color(0xFF90A4AE);
 
   static const Color disabled = Color(0xFFD9D9D9);
   static const Color inactive = Color(0xFFBDBDBD);

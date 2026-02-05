@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
+import 'package:moalem/core/extensions/evaluation_group_extensions.dart'; // Added
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
 import 'package:moalem/features/classes/presentation/models/add_class_form_data.dart';
@@ -27,10 +28,12 @@ class ClassesScreen extends ConsumerWidget {
           .read(classesControllerProvider.notifier)
           .addClass(
             name: result.className!,
-            grade: result.educationalStage!,
+            // stage removed
+            grade: result.gradeLevel!,
             subject: result.subject!,
             semester: result.semester!,
             school: result.school!,
+            evaluationGroup: result.evaluationGroup!,
           );
     }
   }
@@ -135,7 +138,9 @@ class ClassesScreen extends ConsumerWidget {
             child: ClassCard(
               id: classEntity.id,
               className: classEntity.name,
-              section: classEntity.grade,
+              stage: classEntity.evaluationGroup.stageName, // Use extension
+              grade: classEntity.grade,
+              subject: classEntity.subject,
               studentCount: classEntity.studentsCount,
               onViewStudents: () =>
                   context.pushNewScreen(ClassDetailsScreen(id: classEntity.id)),

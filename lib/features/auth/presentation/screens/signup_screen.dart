@@ -100,13 +100,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       email: _formData.email.trim(),
       password: _formData.password.trim(),
       name: _formData.fullName.trim(),
-      groupName: _formData.groupName.trim(),
+      groupName: '', // Educational stage is no longer required in UI
       whatsappNumber: _formData.whatsappNumber.trim(),
       subjects: _formData.subjects,
       governorate: _formData.governorate ?? '',
       educationalAdministration: _formData.educationalAdministration ?? '',
       schools: _formData.schools,
-      grades: _formData.grades,
+      grades: const [], // Grade level is no longer required in UI
     );
 
     ref.read(authControllerProvider.notifier).signUp(request);

@@ -35,6 +35,14 @@ class StudentDetailsScreen extends ConsumerWidget {
             return Center(child: Text(AppStrings.errorMessage.tr()));
           }
 
+          // Auto-switch to monthly view for High School students
+          if (details.classInfo.evaluationGroup == EvaluationGroup.high &&
+              state.periodType == PeriodType.weekly) {
+            Future.microtask(
+              () => controller.changePeriodType(PeriodType.monthly),
+            );
+          }
+
           return Scaffold(
             appBar: AppBar(title: Text(details.classInfo.name)),
             body: SafeArea(
@@ -161,12 +169,31 @@ class StudentDetailsScreen extends ConsumerWidget {
             child: _buildDropdown(
               context,
               state.periodNumber.toString(),
-              List.generate(12, (index) => index + 1)
-                  .map(
-                    (n) =>
-                        DropdownMenuItem(value: n, child: Text(n.toString())),
-                  )
-                  .toList(),
+              // Period Number Dropdown
+              state.data.value?.classInfo.evaluationGroup ==
+                      EvaluationGroup.high
+                  ? [
+                      DropdownMenuItem(
+                        value: 1,
+                        child: Text(AppStrings.february.tr()),
+                      ),
+                      DropdownMenuItem(
+                        value: 2,
+                        child: Text(AppStrings.march.tr()),
+                      ),
+                      DropdownMenuItem(
+                        value: 3,
+                        child: Text(AppStrings.april.tr()),
+                      ),
+                    ]
+                  : List.generate(12, (index) => index + 1)
+                        .map(
+                          (n) => DropdownMenuItem(
+                            value: n,
+                            child: Text(n.toString()),
+                          ),
+                        )
+                        .toList(),
               (value) {
                 if (value != null) controller.changePeriodNumber(value);
               },
@@ -182,7 +209,10 @@ class StudentDetailsScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
-                _getPeriodTypeLabel(state.periodType),
+                state.data.value?.classInfo.evaluationGroup ==
+                        EvaluationGroup.high
+                    ? AppStrings.monthly.tr()
+                    : _getPeriodTypeLabel(state.periodType),
                 style: context.bodyMedium.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w500,
@@ -575,6 +605,22 @@ class StudentDetailsScreen extends ConsumerWidget {
         return AppStrings.firstMonthExam.tr();
       case 'second_month_exam':
         return AppStrings.secondMonthExam.tr();
+      case 'primary_homework':
+        return AppStrings.primaryHomework.tr();
+      case 'primary_activity':
+        return AppStrings.primaryActivity.tr();
+      case 'primary_weekly':
+        return AppStrings.primaryWeekly.tr();
+      case 'primary_performance':
+        return AppStrings.primaryPerformance.tr();
+      case 'weekly_review_w1':
+        return AppStrings.week1Label.tr();
+      case 'weekly_review_w2':
+        return AppStrings.week2Label.tr();
+      case 'weekly_review_w3':
+        return AppStrings.week3Label.tr();
+      case 'weekly_review_w4':
+        return AppStrings.week4Label.tr();
       default:
         return name;
     }

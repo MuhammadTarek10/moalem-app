@@ -11,7 +11,6 @@ class MetadataHeader extends StatelessWidget {
   final String school;
   final String className;
   final String subject;
-  final String period;
 
   const MetadataHeader({
     super.key,
@@ -20,7 +19,6 @@ class MetadataHeader extends StatelessWidget {
     required this.school,
     required this.className,
     required this.subject,
-    required this.period,
   });
 
   @override
@@ -58,8 +56,6 @@ class MetadataHeader extends StatelessWidget {
           _buildMetadataRow(context, AppStrings.classLabel.tr(), className),
           SizedBox(height: 8.h),
           _buildMetadataRow(context, AppStrings.subjectClass.tr(), subject),
-          SizedBox(height: 8.h),
-          _buildMetadataRow(context, AppStrings.periodLabel.tr(), period),
         ],
       ),
     );

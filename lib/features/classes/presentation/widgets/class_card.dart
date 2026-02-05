@@ -8,7 +8,9 @@ import 'package:moalem/shared/extensions/context.dart';
 class ClassCard extends StatelessWidget {
   final String id;
   final String className;
-  final String section;
+  final String stage;
+  final String grade;
+  final String subject;
   final int studentCount;
   final VoidCallback? onViewStudents;
   final VoidCallback? onAddScores;
@@ -20,7 +22,9 @@ class ClassCard extends StatelessWidget {
     super.key,
     required this.id,
     required this.className,
-    required this.section,
+    required this.stage,
+    required this.grade,
+    required this.subject,
     required this.studentCount,
     this.onViewStudents,
     this.onAddScores,
@@ -109,11 +113,47 @@ class ClassCard extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 8.h),
-                // Section
-                Text(
-                  section,
-                  textAlign: TextAlign.end,
-                  style: TextStyle(fontSize: 18.sp, color: AppColors.textLight),
+                // Stage, Grade and Subject
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      subject,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      ' | ',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                    Text(
+                      grade,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                    Text(
+                      ' - ',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                    Text(
+                      stage,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 8.h),
                 // Student count

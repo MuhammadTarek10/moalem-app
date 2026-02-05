@@ -49,27 +49,56 @@ class GenerateMultiWeekScoresReportUseCase {
     );
 
     // Calculate week numbers for this group
-    final startWeek = (weekGroup - 1) * 5 + 1;
-    final weekNumbers = List.generate(5, (i) => startWeek + i);
+    final List<int> weekNumbers;
+    final int startWeek;
+    if (weekGroup == 0) {
+      startWeek = 1;
+      weekNumbers = List.generate(18, (i) => i + 1);
+    } else {
+      weekNumbers = PrintDataEntity.getWeekNumbersForGroup(
+        weekGroup,
+        classEntity.evaluationGroup,
+      );
+      startWeek = weekNumbers.first;
+    }
+
+    // Determine if we are in Semester 2 (Approx Feb - Aug)
+    // Removed automatic offset logic to ensure we fetch exactly what is stored
+    final int semesterOffset = 0;
 
     // Calculate week start dates
     final effectiveSemesterStart =
         semesterStartDate ?? _getDefaultSemesterStart();
     final weekStartDates = <int, DateTime>{};
+
+    // Use weekNumbers directly
     for (final weekNum in weekNumbers) {
       weekStartDates[weekNum] = effectiveSemesterStart.add(
         Duration(days: (weekNum - 1) * 7),
       );
     }
 
-    // Get scores for each student for all 5 weeks
+    // Get scores for each student for all weeks
     final List<StudentPrintData> studentsData = [];
 
     for (final student in students) {
       final weeklyScores = <int, Map<String, int>>{};
       final weeklyTotals = <int, int>{};
 
-      for (final weekNum in weekNumbers) {
+      final bool isPrimaryPage4 =
+          classEntity.evaluationGroup == EvaluationGroup.primary &&
+          weekGroup == 4;
+
+      final bool isPrePrimaryPage4 =
+          classEntity.evaluationGroup == EvaluationGroup.prePrimary &&
+          weekGroup == 4;
+
+      // Ensure we fetch all weeks for Primary/PrePrimary Page 4 to calculate semester average
+      final fetchWeeks = (isPrimaryPage4 || isPrePrimaryPage4)
+          ? List.generate(18, (i) => i + 1)
+          : weekNumbers;
+
+      for (final weekNum in fetchWeeks) {
         final studentDetails = await _studentRepository
             .getStudentDetailsWithScores(
               student.id,
@@ -97,6 +126,42 @@ class GenerateMultiWeekScoresReportUseCase {
         weeklyTotals[weekNum] = totalScore;
       }
 
+      // Fetch Monthly Exams for Primary Page 4 (March/April)
+      final monthlyExamScores = <String, int>{};
+      if (isPrimaryPage4) {
+        // March Exam (Month 1)
+        final marchDetails = await _studentRepository
+            .getStudentDetailsWithScores(student.id, PeriodType.monthly, 1);
+        if (marchDetails != null) {
+          monthlyExamScores['first_month_exam'] = marchDetails
+              .getScoreForEvaluation('first_month_exam');
+        }
+
+        // April Exam (Month 2)
+        final aprilDetails = await _studentRepository
+            .getStudentDetailsWithScores(student.id, PeriodType.monthly, 2);
+        if (aprilDetails != null) {
+          monthlyExamScores['second_month_exam'] = aprilDetails
+              .getScoreForEvaluation('second_month_exam');
+        }
+
+        // Calculate or fetch average if stored?
+        // Usually calculated from the two exams.
+        // We'll calculate it in the Excel Config or let it be 0 if not stored.
+        // If stored as 'months_exam_average', we might fetch it from PeriodType.semester?
+        // Let's check PeriodType.semester for 'months_exam_average'
+        final semesterDetails = await _studentRepository
+            .getStudentDetailsWithScores(
+              student.id,
+              PeriodType.semester,
+              2, // Semester 2
+            );
+        if (semesterDetails != null) {
+          monthlyExamScores['months_exam_average'] = semesterDetails
+              .getScoreForEvaluation('months_exam_average');
+        }
+      }
+
       studentsData.add(
         StudentPrintData(
           student: student,
@@ -108,6 +173,7 @@ class GenerateMultiWeekScoresReportUseCase {
           ),
           weeklyScores: weeklyScores,
           weeklyTotals: weeklyTotals,
+          monthlyExamScores: monthlyExamScores,
         ),
       );
     }
@@ -124,6 +190,7 @@ class GenerateMultiWeekScoresReportUseCase {
       isMultiWeek: true,
       weekGroup: weekGroup,
       weekStartDates: weekStartDates,
+      semesterOffset: semesterOffset,
     );
   }
 

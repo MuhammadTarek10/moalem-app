@@ -7,8 +7,10 @@ import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/domain/entities/evaluation_entity.dart';
 import 'package:moalem/features/classes/domain/usecases/get_class_by_id_usecase.dart';
 import 'package:moalem/features/classes/domain/usecases/get_evaluations_usecase.dart';
+import 'package:moalem/features/students/domain/entities/student_entity.dart';
 import 'package:moalem/features/students/domain/entities/student_score_entity.dart';
 import 'package:moalem/features/students/domain/entities/student_score_input_entity.dart';
+import 'package:moalem/features/students/domain/usecases/get_student_by_qr_code_usecase.dart';
 import 'package:moalem/features/students/domain/usecases/get_students_by_class_id_usecase.dart';
 import 'package:moalem/features/students/domain/usecases/update_student_score_usecase.dart';
 import 'package:uuid/uuid.dart';
@@ -93,12 +95,14 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   final GetEvaluationsUseCase _getEvaluationsUseCase;
   final GetStudentsByClassIdUseCase _getStudentsByClassIdUseCase;
   final UpdateStudentScoreUseCase _updateStudentScoreUseCase;
+  final GetStudentByQrCodeUseCase _getStudentByQrCodeUseCase;
 
   BulkScoreEntryController(
     this._getClassByIdUseCase,
     this._getEvaluationsUseCase,
     this._getStudentsByClassIdUseCase,
     this._updateStudentScoreUseCase,
+    this._getStudentByQrCodeUseCase,
   ) : super(BulkScoreEntryState());
 
   Future<void> loadClassData(String classId) async {
@@ -292,6 +296,102 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<StudentEntity?> handleQrScanned(String qrCode) async {
+    try {
+      final student = await _getStudentByQrCodeUseCase(qrCode);
+      if (student != null && student.classId == state.classInfo?.id) {
+        return student;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<List<StudentEntity>> handleMultipleQrScanned(
+    List<String> qrCodes,
+  ) async {
+    final List<StudentEntity> foundStudents = [];
+    for (final code in qrCodes) {
+      try {
+        final student = await _getStudentByQrCodeUseCase(code);
+        if (student != null && student.classId == state.classInfo?.id) {
+          foundStudents.add(student);
+        }
+      } catch (_) {
+        // Skip invalid/not found
+      }
+    }
+    return foundStudents;
+  }
+
+  Future<void> updateMultipleStudentsScores(
+    List<String> studentIds,
+    int score,
+  ) async {
+    if (state.selectedEvaluation == null) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      for (final studentId in studentIds) {
+        final scoreEntity = StudentScoreEntity(
+          id: const Uuid().v4(),
+          studentId: studentId,
+          evaluationId: state.selectedEvaluation!.id,
+          score: score,
+          periodType: state.periodType,
+          periodNumber: state.periodNumber,
+          createdAt: DateTime.now(),
+        );
+
+        await _updateStudentScoreUseCase(scoreEntity);
+      }
+
+      // Update local state to reflect the change
+      final updatedStudents = state.students.map((s) {
+        if (studentIds.contains(s.student.id)) {
+          return s.copyWith(currentScore: score);
+        }
+        return s;
+      }).toList();
+
+      state = state.copyWith(students: updatedStudents, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> updateStudentScore(String studentId, int score) async {
+    if (state.selectedEvaluation == null) return;
+
+    try {
+      final scoreEntity = StudentScoreEntity(
+        id: const Uuid().v4(),
+        studentId: studentId,
+        evaluationId: state.selectedEvaluation!.id,
+        score: score,
+        periodType: state.periodType,
+        periodNumber: state.periodNumber,
+        createdAt: DateTime.now(),
+      );
+
+      await _updateStudentScoreUseCase(scoreEntity);
+
+      // Update local state to reflect the change
+      final updatedStudents = state.students.map((s) {
+        if (s.student.id == studentId) {
+          return s.copyWith(currentScore: score);
+        }
+        return s;
+      }).toList();
+
+      state = state.copyWith(students: updatedStudents);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
     }
   }
 }

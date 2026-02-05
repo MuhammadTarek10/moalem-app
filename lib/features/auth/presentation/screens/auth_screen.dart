@@ -24,8 +24,8 @@ class AuthScreen extends StatelessWidget {
             children: [
               // Logo
               Container(
-                width: 100.w,
-                height: 100.w,
+                width: 200.w,
+                height: 200.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   boxShadow: [

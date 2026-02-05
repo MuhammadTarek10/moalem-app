@@ -11,9 +11,11 @@ import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/features/classes/domain/entities/evaluation_entity.dart';
 import 'package:moalem/features/students/domain/entities/student_score_input_entity.dart';
 import 'package:moalem/features/students/presentation/controllers/bulk_score_entry_controller.dart';
+import 'package:moalem/features/students/presentation/widgets/score_entry_dialog.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
 import 'package:moalem/shared/screens/loading_screen.dart';
+import 'package:moalem/shared/widgets/qr_scanner_screen.dart';
 
 class BulkScoreEntryScreen extends ConsumerStatefulWidget {
   final String classId;
@@ -148,8 +150,61 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                           width: 24.w,
                           height: 24.h,
                         ),
-                        onPressed: () {
-                          // QR scan functionality can be added here
+                        onPressed: () async {
+                          final qrResult = await Navigator.push<dynamic>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => QrScannerScreen(
+                                isMultiScan: true,
+                                onCodeScanned: (code) async {
+                                  final student = await controller
+                                      .handleQrScanned(code);
+                                  return student?.name;
+                                },
+                              ),
+                            ),
+                          );
+
+                          if (qrResult is List<String> &&
+                              qrResult.isNotEmpty &&
+                              context.mounted) {
+                            final students = await controller
+                                .handleMultipleQrScanned(qrResult);
+
+                            if (students.isNotEmpty && context.mounted) {
+                              final score = await showDialog<int>(
+                                context: context,
+                                builder: (context) => ScoreEntryDialog(
+                                  studentName: students.length > 1
+                                      ? '${students.length} طلاب'
+                                      : students.first.name,
+                                  maxScore: state.currentMaxScore ?? 0,
+                                ),
+                              );
+
+                              if (score != null) {
+                                await controller.updateMultipleStudentsScores(
+                                  students.map((e) => e.id).toList(),
+                                  score,
+                                );
+                                if (context.mounted) {
+                                  context.showSuccessSnackBar(
+                                    AppStrings.scoresUpdated.tr(),
+                                  );
+                                }
+                              }
+                            } else if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'No students found in this class',
+                                    textAlign: TextAlign.center,
+                                  ).tr(),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
                         },
                       ),
                     ),
@@ -647,6 +702,16 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
         return AppStrings.firstMonthExam.tr();
       case 'second_month_exam':
         return AppStrings.secondMonthExam.tr();
+      case 'primary_homework':
+        return AppStrings.primaryHomework.tr();
+      case 'primary_activity':
+        return AppStrings.primaryActivity.tr();
+      case 'primary_weekly':
+        return AppStrings.primaryWeekly.tr();
+      case 'primary_performance':
+        return AppStrings.primaryPerformance.tr();
+      case 'primary_attendance':
+        return AppStrings.primaryAttendance.tr();
       default:
         return name;
     }

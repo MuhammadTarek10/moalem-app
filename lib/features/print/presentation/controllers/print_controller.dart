@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moalem/core/constants/app_enums.dart';
+import 'package:moalem/core/extensions/evaluation_group_extensions.dart'; // Added
 import 'package:moalem/core/services/injection.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/domain/usecases/get_classes_usecase.dart';
@@ -12,6 +13,7 @@ import 'package:moalem/features/print/domain/usecases/generate_multi_week_scores
 /// State for the print screen
 class PrintState {
   final AsyncValue<List<ClassEntity>> classes;
+  final String? selectedStage;
   final String? selectedClassId;
   final PrintType printType;
   final AsyncValue<PrintDataEntity?> printData;
@@ -25,12 +27,13 @@ class PrintState {
 
   const PrintState({
     this.classes = const AsyncValue.loading(),
+    this.selectedStage,
     this.selectedClassId,
     this.printType = PrintType.scores,
     this.printData = const AsyncValue.loading(),
     this.periodType = PeriodType.weekly,
     this.periodNumber = 1,
-    this.weekGroup = 1,
+    this.weekGroup = 1, // Default to page 1 (weeks 1-5)
     this.isExportingExcel = false,
     this.isExportingPdf = false,
     this.isExportingEmptySheet = false,
@@ -39,6 +42,7 @@ class PrintState {
 
   /// Get the week range label for the current week group
   String get weekGroupLabel {
+    if (weekGroup == 0) return 'جميع الأسابيع (1-15)';
     final startWeek = (weekGroup - 1) * 5 + 1;
     final endWeek = startWeek + 4;
     return 'الأسابيع $startWeek - $endWeek';
@@ -46,6 +50,7 @@ class PrintState {
 
   PrintState copyWith({
     AsyncValue<List<ClassEntity>>? classes,
+    String? selectedStage,
     String? selectedClassId,
     PrintType? printType,
     AsyncValue<PrintDataEntity?>? printData,
@@ -59,6 +64,7 @@ class PrintState {
   }) {
     return PrintState(
       classes: classes ?? this.classes,
+      selectedStage: selectedStage ?? this.selectedStage,
       selectedClassId: selectedClassId ?? this.selectedClassId,
       printType: printType ?? this.printType,
       printData: printData ?? this.printData,
@@ -74,11 +80,8 @@ class PrintState {
   }
 }
 
-final printControllerProvider =
-    StateNotifierProvider.family<PrintController, PrintState, String>((
-      ref,
-      printType,
-    ) {
+final printControllerProvider = StateNotifierProvider.family
+    .autoDispose<PrintController, PrintState, String>((ref, printType) {
       return PrintController(
         printType,
         getIt<GetClassesUseCase>(),
@@ -110,6 +113,7 @@ class PrintController extends StateNotifier<PrintState> {
           printType: printTypeString == 'attendance'
               ? PrintType.attendance
               : PrintType.scores,
+          weekGroup: printTypeString == 'attendance' ? 0 : 1,
         ),
       ) {
     loadClasses();
@@ -120,9 +124,11 @@ class PrintController extends StateNotifier<PrintState> {
     state = state.copyWith(classes: const AsyncValue.loading());
     try {
       final classes = await _getClassesUseCase();
+      final firstClass = classes.isNotEmpty ? classes.first : null;
       state = state.copyWith(
         classes: AsyncValue.data(classes),
-        selectedClassId: classes.isNotEmpty ? classes.first.id : null,
+        selectedStage: null,
+        selectedClassId: firstClass?.id,
       );
 
       // Auto-load print data for first class
@@ -132,6 +138,25 @@ class PrintController extends StateNotifier<PrintState> {
     } catch (e, stack) {
       state = state.copyWith(classes: AsyncValue.error(e, stack));
     }
+  }
+
+  /// Select a stage and filter classes
+  Future<void> selectStage(String? stage) async {
+    if (state.selectedStage == stage) return;
+
+    final allClasses = state.classes.value ?? [];
+    final filteredClasses = allClasses
+        .where((c) => stage == null || c.evaluationGroup.stageName == stage)
+        .toList();
+
+    state = state.copyWith(
+      selectedStage: stage,
+      selectedClassId: filteredClasses.isNotEmpty
+          ? filteredClasses.first.id
+          : null,
+    );
+
+    await loadPrintData();
   }
 
   /// Select a class
@@ -233,7 +258,7 @@ class PrintController extends StateNotifier<PrintState> {
 
     state = state.copyWith(isExportingEmptySheet: true, exportMessage: null);
     try {
-      await _excelExportService.exportEmptyAttendanceSheet(printData);
+      // await _excelExportService.exportEmptyAttendanceSheet(printData);
       state = state.copyWith(
         isExportingEmptySheet: false,
         exportMessage: 'تم تصدير كشف الغياب الفارغ بنجاح',

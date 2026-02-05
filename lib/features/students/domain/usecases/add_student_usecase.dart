@@ -14,12 +14,13 @@ class AddStudentUseCase {
     required String name,
     required int number,
   }) {
+    final id = const Uuid().v4();
     final student = StudentEntity(
-      id: const Uuid().v4(),
+      id: id,
       classId: classId,
       name: name,
       number: number,
-      qrCode: const Uuid().v4(), // Generate unique QR code
+      qrCode: id, // Use same UUID for QR code
       createdAt: DateTime.now(),
     );
     return _repository.addStudent(student);

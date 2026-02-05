@@ -7,7 +7,6 @@ class SignupFormData {
 
   // Step 2 - Profile Info
   String fullName;
-  String groupName;
   List<String> subjects;
   String whatsappNumber;
 
@@ -15,7 +14,6 @@ class SignupFormData {
   String? governorate;
   String? educationalAdministration;
   List<String> schools;
-  List<String> grades;
 
   SignupFormData({
     this.email = '',
@@ -23,13 +21,11 @@ class SignupFormData {
     this.confirmPassword = '',
     this.agreeToTerms = false,
     this.fullName = '',
-    this.groupName = '',
     this.subjects = const [],
     this.whatsappNumber = '',
     this.governorate,
     this.educationalAdministration,
     this.schools = const [],
-    this.grades = const [],
   });
 
   SignupFormData copyWith({
@@ -38,13 +34,11 @@ class SignupFormData {
     String? confirmPassword,
     bool? agreeToTerms,
     String? fullName,
-    String? groupName,
     List<String>? subjects,
     String? whatsappNumber,
     String? governorate,
     String? educationalAdministration,
     List<String>? schools,
-    List<String>? grades,
   }) {
     return SignupFormData(
       email: email ?? this.email,
@@ -52,14 +46,12 @@ class SignupFormData {
       confirmPassword: confirmPassword ?? this.confirmPassword,
       agreeToTerms: agreeToTerms ?? this.agreeToTerms,
       fullName: fullName ?? this.fullName,
-      groupName: groupName ?? this.groupName,
       subjects: subjects ?? this.subjects,
       whatsappNumber: whatsappNumber ?? this.whatsappNumber,
       governorate: governorate ?? this.governorate,
       educationalAdministration:
           educationalAdministration ?? this.educationalAdministration,
       schools: schools ?? this.schools,
-      grades: grades ?? this.grades,
     );
   }
 }

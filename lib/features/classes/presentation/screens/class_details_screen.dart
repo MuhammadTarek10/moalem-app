@@ -223,6 +223,7 @@ class _ClassDetailsScreenState extends ConsumerState<ClassDetailsScreen> {
                               final student = filteredStudents[index];
                               return StudentCard(
                                 student: student,
+                                index: index,
                                 onEdit: () => _showEditStudentDialog(
                                   context,
                                   student,

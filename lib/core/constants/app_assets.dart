@@ -8,7 +8,7 @@ class AppImages {
 
   const AppImages._();
 
-  String get logo => '$_imagesPath/logo.png';
+  String get logo => '$_imagesPath/app_logo.png';
 }
 
 class AppIcons {

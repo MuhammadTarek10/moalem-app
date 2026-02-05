@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/features/activation/presentation/screens/activation_screen.dart';
+import 'package:moalem/features/activation/presentation/screens/second_activation_screen.dart';
 import 'package:moalem/features/attendance/presentation/screens/attendance_entry_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/auth_screen.dart';
 import 'package:moalem/features/auth/presentation/screens/signin_screen.dart';
@@ -10,6 +11,7 @@ import 'package:moalem/features/classes/presentation/screens/class_details_scree
 import 'package:moalem/features/classes/presentation/screens/classes_screen.dart';
 import 'package:moalem/features/home/presentation/pages/main_navigation_screen.dart';
 import 'package:moalem/features/print/presentation/screens/print_options_screen.dart';
+import 'package:moalem/features/print/presentation/screens/qr_print_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/advanced_settings_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/contact_us_screen.dart';
 import 'package:moalem/features/profile/presentation/screens/profile_details_screen.dart';
@@ -52,6 +54,10 @@ final router = GoRouter(
     GoRoute(
       path: AppRoutes.activation,
       builder: (context, state) => const ActivationScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.activationStepTwo,
+      builder: (context, state) => const SecondActivationScreen(),
     ),
     GoRoute(
       path: AppRoutes.home,
@@ -117,6 +123,10 @@ final router = GoRouter(
           printType: printType ?? 'scores',
         );
       },
+    ),
+    GoRoute(
+      path: AppRoutes.qrPrint,
+      builder: (context, state) => const QrPrintScreen(),
     ),
     GoRoute(
       path: AppRoutes.attendanceEntry,

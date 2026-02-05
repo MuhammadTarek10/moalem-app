@@ -31,6 +31,7 @@ class AppTextFormField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.isPassword = false,
+    this.controller,
   });
 
   final String? initialValue;
@@ -43,6 +44,7 @@ class AppTextFormField extends StatefulWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final bool isPassword;
+  final TextEditingController? controller;
 
   @override
   State<AppTextFormField> createState() => _AppTextFormFieldState();
@@ -54,8 +56,18 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
+    _controller =
+        widget.controller ?? TextEditingController(text: widget.initialValue);
     _controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant AppTextFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != null) {
+      _controller.text = widget.initialValue!;
+    }
   }
 
   void _onTextChanged() {
@@ -77,7 +89,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
       obscureText: widget.obscureText,
       validator: widget.validator,
       decoration: InputDecoration(
-        labelText: widget.hint,
+        labelText: widget.label,
         labelStyle: context.bodySmall.copyWith(color: Colors.black),
         hintText: widget.hint,
         hintStyle: context.bodySmall.copyWith(color: Colors.grey),

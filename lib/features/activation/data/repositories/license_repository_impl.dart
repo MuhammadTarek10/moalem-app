@@ -55,6 +55,31 @@ class LicenseRepositoryImpl implements LicenseRepository {
       );
     }
 
+    // Update User model in secure storage
+    final userJson = await _secureStorageService.read(AppKeys.user);
+    if (userJson != null) {
+      try {
+        final Map<String, dynamic> userMap = jsonDecode(userJson);
+        // Determine the expiration date to set
+        String? newExpiresAt;
+        if (couponModel.license != null) {
+          newExpiresAt = _extractExpiresAtFromJWT(couponModel.license!);
+        }
+        // Fallback to model's expiresAt if JWT extraction failed or no license
+        newExpiresAt ??= couponModel.expiresAt;
+
+        if (newExpiresAt != null) {
+          userMap['license_expires_at'] = newExpiresAt;
+          await _secureStorageService.write(
+            key: AppKeys.user,
+            value: jsonEncode(userMap),
+          );
+        }
+      } catch (e) {
+        // Ignore errors during user update to not block the redemption flow
+      }
+    }
+
     return couponModel;
   }
 

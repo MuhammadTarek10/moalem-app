@@ -75,7 +75,14 @@ class DatabaseSchema {
       ('months_exam_average', 'months_exam_average', 0, 10, datetime('now')),
       ('attendance_and_diligence', 'attendance_and_diligence', 1, 10, datetime('now')),
       ('first_month_exam', 'first_month_exam', 0, 15, datetime('now')),
-      ('second_month_exam', 'second_month_exam', 0, 15, datetime('now'))
+      ('second_month_exam', 'second_month_exam', 0, 15, datetime('now')),
+      
+      -- Primary 3-6 Evaluations
+      ('primary_homework', 'primary_homework', 0, 5, datetime('now')),
+      ('primary_activity', 'primary_activity', 0, 5, datetime('now')),
+      ('primary_weekly', 'primary_weekly', 0, 5, datetime('now')),
+      ('primary_performance', 'primary_performance', 0, 10, datetime('now')),
+      ('primary_attendance', 'primary_attendance', 0, 5, datetime('now'))
   ''';
 
   static const String _createStudentsScoresTable = '''
@@ -140,4 +147,14 @@ class DatabaseSchema {
 
   /// Migration from v3 to v4: Add daily_attendance table
   static const List<String> migrateV3ToV4 = [_createDailyAttendanceTable];
+
+  /// Migration from v4 to v5: Add Primary 3-6 evaluations
+  static const List<String> migrateV4ToV5 = [
+    '''INSERT OR IGNORE INTO evaluations (id, name, is_binary, max_score, created_at) VALUES
+      ('primary_homework', 'primary_homework', 0, 5, datetime('now')),
+      ('primary_activity', 'primary_activity', 0, 5, datetime('now')),
+      ('primary_weekly', 'primary_weekly', 0, 5, datetime('now')),
+      ('primary_performance', 'primary_performance', 0, 10, datetime('now')),
+      ('primary_attendance', 'primary_attendance', 0, 5, datetime('now'))''',
+  ];
 }

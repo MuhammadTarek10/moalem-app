@@ -6,6 +6,7 @@ import 'package:moalem/features/students/domain/entities/student_score_entity.da
 abstract class StudentRepository {
   Future<List<StudentEntity>> getStudentsByClassId(String classId);
   Future<StudentEntity?> getStudentById(String id);
+  Future<StudentEntity?> getStudentByQrCode(String qrCode);
   Future<StudentEntity> addStudent(StudentEntity student);
   Future<StudentEntity> editStudent(StudentEntity student);
   Future<void> deleteStudent(String id);

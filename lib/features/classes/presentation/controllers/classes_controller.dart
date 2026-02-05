@@ -97,4 +97,13 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
       state = AsyncValue.error(e, stack);
     }
   }
+
+  Future<void> reloadClasses() async {
+    try {
+      final classes = await _getClassesUseCase();
+      state = AsyncValue.data(classes);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
+  }
 }

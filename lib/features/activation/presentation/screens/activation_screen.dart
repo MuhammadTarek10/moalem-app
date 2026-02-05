@@ -30,7 +30,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
 
   void _onSubmit() {
     if (_formKey.currentState!.validate()) {
-      ref.read(activationControllerProvider.notifier).redeemCoupon();
+      ref.read(activationControllerProvider.notifier).redeemCoupon(step: 1);
     }
   }
 
@@ -45,13 +45,14 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
       final prevSubmission = previous?.submissionState;
       final nextSubmission = next.submissionState;
 
-      // Only react if submission state changed
-      if (prevSubmission != nextSubmission) {
+      // Only react if submission state changed and it's step 1
+      if (prevSubmission != nextSubmission && next.activationStep == 1) {
         nextSubmission.when(
           data: (coupon) {
             if (coupon != null) {
-              context.showSuccessSnackBar(AppStrings.activationSuccess.tr());
-              context.go(AppRoutes.home);
+              // Reset state before navigation to prepare for second step
+              ref.read(activationControllerProvider.notifier).reset();
+              context.push(AppRoutes.activationStepTwo);
             }
           },
           error: (error, stack) {
@@ -98,6 +99,17 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                   ),
                 ),
                 SizedBox(height: 32.h),
+
+                // Warning Message
+                Text(
+                  'برجاء عدم الدفع قبل الحصول على هذا الكود',
+                  textAlign: TextAlign.center,
+                  style: context.bodyMedium.copyWith(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 16.h),
 
                 // User ID Card
                 Container(
@@ -146,7 +158,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
 
                 // Enter Code Label
                 Text(
-                  AppStrings.enterCodeLabel.tr(),
+                  'ادخل الكود الأول',
                   style: context.bodyMedium.copyWith(
                     color: Colors.black,
                     fontWeight: FontWeight.w500,

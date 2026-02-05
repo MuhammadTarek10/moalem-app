@@ -3,43 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:moalem/core/constants/app_assets.dart';
 import 'package:moalem/core/constants/app_strings.dart';
-import 'package:moalem/core/constants/app_values.dart';
 import 'package:moalem/shared/utils/validators.dart';
 import 'package:moalem/shared/widgets/chip_input.dart';
-import 'package:moalem/shared/widgets/dropdown_field.dart';
 import 'package:moalem/shared/widgets/text_input.dart';
 
 import '../models/signup_form_data.dart';
-
-/// Maps evaluation group values to their translation keys
-String _getGroupDisplayName(String groupValue) {
-  switch (groupValue) {
-    case EvaluationValues.prePrimaryEvaluationGroupName:
-      return AppStrings.prePrimaryGroup.tr();
-    case EvaluationValues.primaryEvaluationGroupName:
-      return AppStrings.primaryGroup.tr();
-    case EvaluationValues.secondaryEvaluationGroupName:
-      return AppStrings.secondaryGroup.tr();
-    case EvaluationValues.highSchoolEvaluationGroupName:
-      return AppStrings.highSchoolGroup.tr();
-    default:
-      return groupValue;
-  }
-}
-
-/// Maps display names back to evaluation group values
-String? _getGroupValue(String displayName) {
-  if (displayName == AppStrings.prePrimaryGroup.tr()) {
-    return EvaluationValues.prePrimaryEvaluationGroupName;
-  } else if (displayName == AppStrings.primaryGroup.tr()) {
-    return EvaluationValues.primaryEvaluationGroupName;
-  } else if (displayName == AppStrings.secondaryGroup.tr()) {
-    return EvaluationValues.secondaryEvaluationGroupName;
-  } else if (displayName == AppStrings.highSchoolGroup.tr()) {
-    return EvaluationValues.highSchoolEvaluationGroupName;
-  }
-  return null;
-}
 
 class SignupStepTwo extends StatelessWidget {
   const SignupStepTwo({
@@ -61,7 +29,7 @@ class SignupStepTwo extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Logo
-          Image.asset(AppAssets.images.logo, height: 120.h, width: 120.w),
+          Image.asset(AppAssets.images.logo, height: 160.h, width: 160.w),
           SizedBox(height: 24.h),
           // Title
           Text(
@@ -90,26 +58,6 @@ class SignupStepTwo extends StatelessWidget {
               onDataChanged(formData.copyWith(fullName: value));
             },
             hint: AppStrings.fullNameHint.tr(),
-            validator: requiredValidator,
-          ),
-          SizedBox(height: 16.h),
-          // Group Name Field
-          InputLabel(label: AppStrings.groupNameLabel.tr()),
-          SizedBox(height: 8.h),
-          DropdownField(
-            value: formData.groupName.isEmpty
-                ? null
-                : _getGroupDisplayName(formData.groupName),
-            items: EvaluationValues.evaluationGroups
-                .map((group) => _getGroupDisplayName(group))
-                .toList(),
-            onChanged: (displayName) {
-              if (displayName != null) {
-                final groupValue = _getGroupValue(displayName);
-                onDataChanged(formData.copyWith(groupName: groupValue ?? ''));
-              }
-            },
-            hint: AppStrings.groupNameHint.tr(),
             validator: requiredValidator,
           ),
           SizedBox(height: 16.h),

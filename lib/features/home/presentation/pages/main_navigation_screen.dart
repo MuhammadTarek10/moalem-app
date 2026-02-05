@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
+import 'package:moalem/core/entities/user.dart';
 import 'package:moalem/core/utils/error_handler.dart';
+import 'package:moalem/core/utils/license_checker.dart';
 import 'package:moalem/features/classes/presentation/screens/classes_screen.dart';
 import 'package:moalem/features/home/presentation/controllers/home_controller.dart';
 import 'package:moalem/features/home/presentation/pages/home_screen.dart';
@@ -42,10 +44,13 @@ class _MainNavigationScreenState extends ConsumerState<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<bool>>(homeControllerProvider, (previous, next) {
-      if (next is AsyncData<bool> && !next.value) {
-        context.go(AppRoutes.activation);
-      }
+    ref.listen<AsyncValue<User?>>(homeControllerProvider, (previous, next) {
+      next.whenData((user) {
+        if (user != null &&
+            !LicenseChecker.isLicenseValid(user.licenseExpiresAt)) {
+          context.go(AppRoutes.activation);
+        }
+      });
     });
 
     final state = ref.watch(homeControllerProvider);

@@ -35,7 +35,7 @@ class SignupStepThree extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Logo
-          Image.asset(AppAssets.images.logo, height: 120.h, width: 120.w),
+          Image.asset(AppAssets.images.logo, height: 160.h, width: 160.w),
           SizedBox(height: 24.h),
           // Title
           Text(
@@ -71,12 +71,9 @@ class SignupStepThree extends StatelessWidget {
                       items: EgyptRegions.governorates,
                       onChanged: (value) {
                         // Reset administration when governorate changes
-                        onDataChanged(
-                          formData.copyWith(
-                            governorate: value,
-                            educationalAdministration: null,
-                          ),
-                        );
+                        final newData = formData.copyWith(governorate: value);
+                        newData.educationalAdministration = null;
+                        onDataChanged(newData);
                       },
                       hint: AppStrings.governorateLabel.tr(),
                       validator: requiredValidator,
@@ -117,18 +114,6 @@ class SignupStepThree extends StatelessWidget {
               onDataChanged(formData.copyWith(schools: items));
             },
             hint: AppStrings.schoolHint.tr(),
-            validator: listValidator,
-          ),
-          SizedBox(height: 16.h),
-          // Grade Field (Chip Input)
-          InputLabel(label: AppStrings.gradeLabel.tr()),
-          SizedBox(height: 8.h),
-          ChipInputField(
-            selectedItems: formData.grades,
-            onItemsChanged: (items) {
-              onDataChanged(formData.copyWith(grades: items));
-            },
-            hint: AppStrings.gradeHint.tr(),
             validator: listValidator,
           ),
         ],

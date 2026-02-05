@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/utils/error_handler.dart';
+import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/reports/presentation/controllers/reports_controller.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
@@ -100,7 +101,7 @@ class ReportsScreen extends ConsumerWidget {
     BuildContext context,
     ReportsState state,
     ReportsController controller,
-    List classes,
+    List<ClassEntity> classes,
   ) {
     return Container(
       padding: EdgeInsets.all(16.w),
@@ -110,9 +111,12 @@ class ReportsScreen extends ConsumerWidget {
           // Class selector
           _buildDropdown<String>(
             context,
-            state.selectedClassId != null
+            state.selectedClassId != null &&
+                    classes.any((c) => c.id == state.selectedClassId)
                 ? classes.firstWhere((c) => c.id == state.selectedClassId!).name
-                : classes.first.name,
+                : (classes.isNotEmpty
+                      ? classes.first.name
+                      : AppStrings.selectClass.tr()),
             classes
                 .map<DropdownMenuItem<String>>(
                   (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
@@ -257,7 +261,9 @@ class ReportsScreen extends ConsumerWidget {
               ),
             ),
           ],
-          rows: reportData.studentReports.map<DataRow>((studentReport) {
+          rows: reportData.studentReports.asMap().entries.map<DataRow>((entry) {
+            final index = entry.key;
+            final studentReport = entry.value;
             final isSelected = state.isStudentSelected(
               studentReport.student.id,
             );
@@ -276,10 +282,7 @@ class ReportsScreen extends ConsumerWidget {
                 ),
                 // Student number
                 DataCell(
-                  Text(
-                    studentReport.student.number.toString(),
-                    style: context.bodyMedium,
-                  ),
+                  Text((index + 1).toString(), style: context.bodyMedium),
                 ),
                 // Student name
                 DataCell(
