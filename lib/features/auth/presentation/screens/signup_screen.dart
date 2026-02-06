@@ -33,6 +33,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   int _currentStep = 0;
   SignupFormData _formData = SignupFormData();
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   static const int _totalSteps = 3;
 
@@ -60,7 +61,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   void _nextStep() {
-    if (!_validateCurrentStep()) return;
+    if (!_validateCurrentStep()) {
+      setState(() {
+        _autovalidateMode = AutovalidateMode.onUserInteraction;
+      });
+      return;
+    }
 
     // Additional validation for step 1 - terms agreement
     if (_currentStep == 0 && !_formData.agreeToTerms) {
@@ -75,6 +81,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       );
       setState(() {
         _currentStep++;
+        // Reset validation mode for the new step if desired,
+        // or keep it if we want strict validation forward.
+        // Usually reset to disabled for new step until they try to submit it.
+        _autovalidateMode = AutovalidateMode.disabled;
       });
     } else {
       _onSignUp();
@@ -94,7 +104,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   void _onSignUp() {
-    if (!_validateCurrentStep()) return;
+    if (!_validateCurrentStep()) {
+      setState(() {
+        _autovalidateMode = AutovalidateMode.onUserInteraction;
+      });
+      return;
+    }
 
     final request = SignupRequest(
       email: _formData.email.trim(),
@@ -171,6 +186,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       formData: _formData,
                       onDataChanged: _onDataChanged,
                       formKey: _stepOneFormKey,
+                      autovalidateMode: _autovalidateMode,
                     ),
                   ),
                   // Step 2 - Profile Info
@@ -180,6 +196,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       formData: _formData,
                       onDataChanged: _onDataChanged,
                       formKey: _stepTwoFormKey,
+                      autovalidateMode: _autovalidateMode,
                     ),
                   ),
                   // Step 3 - Location Info
@@ -189,6 +206,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       formData: _formData,
                       onDataChanged: _onDataChanged,
                       formKey: _stepThreeFormKey,
+                      autovalidateMode: _autovalidateMode,
                     ),
                   ),
                 ],

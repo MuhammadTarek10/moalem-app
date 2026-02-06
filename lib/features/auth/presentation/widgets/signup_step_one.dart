@@ -16,11 +16,13 @@ class SignupStepOne extends StatefulWidget {
     required this.formData,
     required this.onDataChanged,
     required this.formKey,
+    this.autovalidateMode = AutovalidateMode.disabled,
   });
 
   final SignupFormData formData;
   final ValueChanged<SignupFormData> onDataChanged;
   final GlobalKey<FormState> formKey;
+  final AutovalidateMode autovalidateMode;
 
   @override
   State<SignupStepOne> createState() => _SignupStepOneState();
@@ -33,6 +35,7 @@ class _SignupStepOneState extends State<SignupStepOne> {
   Widget build(BuildContext context) {
     return Form(
       key: widget.formKey,
+      autovalidateMode: widget.autovalidateMode,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
