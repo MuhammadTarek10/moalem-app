@@ -33,7 +33,7 @@ class DropdownField extends StatelessWidget {
               GestureDetector(
                 onTap: () {
                   FocusScope.of(context).unfocus();
-                  _showCupertinoPicker(context);
+                  _showCupertinoPicker(context, state);
                 },
                 child: InputDecorator(
                   decoration: InputDecoration(
@@ -95,7 +95,10 @@ class DropdownField extends StatelessWidget {
     );
   }
 
-  void _showCupertinoPicker(BuildContext context) {
+  void _showCupertinoPicker(
+    BuildContext context,
+    FormFieldState<String> state,
+  ) {
     if (items.isEmpty) return;
 
     final int initialIndex = value != null ? items.indexOf(value!) : 0;
@@ -124,7 +127,9 @@ class DropdownField extends StatelessWidget {
                     CupertinoButton(
                       child: const Text('Done'),
                       onPressed: () {
-                        onChanged(items[selectedIndex]);
+                        final selectedItem = items[selectedIndex];
+                        onChanged(selectedItem);
+                        state.didChange(selectedItem);
                         Navigator.pop(context);
                       },
                     ),

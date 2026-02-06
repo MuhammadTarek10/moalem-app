@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/entities/user.dart';
+import 'package:moalem/shared/colors/app_colors.dart';
 
 class HomeHeader extends StatelessWidget {
   final User? user;
@@ -15,10 +16,7 @@ class HomeHeader extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFF8E24AA), // Lighter purple
-            Color(0xFF4A148C), // Darker purple
-          ],
+          colors: [AppColors.primary, AppColors.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -43,16 +41,16 @@ class HomeHeader extends StatelessWidget {
                     Text(
                       '${AppStrings.welcome.tr()} ${user?.name ?? ''}',
                       style: TextStyle(
-                        fontSize: 20.sp,
+                        fontSize: 25.sp,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 4.h),
+                    // SizedBox(height: 4.h),
                     Text(
                       '${AppStrings.yourIdLabel.tr()}: ${user?.id ?? ''}',
                       style: TextStyle(
-                        fontSize: 14.sp,
+                        fontSize: 20.sp,
                         color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),

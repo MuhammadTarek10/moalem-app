@@ -66,7 +66,9 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
     super.didUpdateWidget(oldWidget);
     if (widget.initialValue != oldWidget.initialValue &&
         widget.initialValue != null) {
-      _controller.text = widget.initialValue!;
+      if (_controller.text != widget.initialValue) {
+        _controller.text = widget.initialValue!;
+      }
     }
   }
 

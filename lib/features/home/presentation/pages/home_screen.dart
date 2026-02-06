@@ -103,9 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ElevatedButton.icon(
                             onPressed: () => _showAddClassDialog(context),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(
-                                0xFF6A1B9A,
-                              ), // Purple color
+                              backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(
                                 horizontal: 16.w,

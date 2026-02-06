@@ -10,14 +10,12 @@ import 'package:moalem/shared/extensions/context.dart';
 
 class StudentCard extends StatelessWidget {
   final StudentEntity student;
-  final int index;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const StudentCard({
     super.key,
     required this.student,
-    required this.index,
     required this.onEdit,
     required this.onDelete,
   });
@@ -51,7 +49,7 @@ class StudentCard extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Text(
-                (index + 1).toString(),
+                student.number.toString(),
                 style: context.bodyMedium.copyWith(fontWeight: FontWeight.bold),
               ),
             ),
