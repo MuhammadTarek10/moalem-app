@@ -54,3 +54,6 @@ app.*.map.json
 /docs
 # Excel temporary files
 ~$*
+
+# keys
+private/
