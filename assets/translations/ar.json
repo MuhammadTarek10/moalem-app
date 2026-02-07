@@ -226,5 +226,7 @@
   "week2_label": "الأسبوع الثاني",
   "week3_label": "الأسبوع الثالث",
   "week4_label": "الأسبوع الرابع",
-  "qr_print_title": "طباعة الكيوار كود للطلاب"
+  "qr_print_title": "طباعة الكيوار كود للطلاب",
+  "year_label": "سنة",
+  "student_count_label": "عدد الطلاب"
 }

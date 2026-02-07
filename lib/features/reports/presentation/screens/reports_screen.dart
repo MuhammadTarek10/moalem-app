@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/utils/error_handler.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
+import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
 import 'package:moalem/features/reports/presentation/controllers/reports_controller.dart';
 import 'package:moalem/shared/colors/app_colors.dart';
 import 'package:moalem/shared/extensions/context.dart';
@@ -18,6 +19,13 @@ class ReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Listen to classes changes to update the list
+    ref.listen(classesControllerProvider, (previous, next) {
+      next.whenData((_) {
+        ref.read(reportsControllerProvider.notifier).loadClasses();
+      });
+    });
+
     final state = ref.watch(reportsControllerProvider);
     final controller = ref.read(reportsControllerProvider.notifier);
 
@@ -135,7 +143,7 @@ class ReportsScreen extends ConsumerWidget {
                 child: _buildDropdown<int>(
                   context,
                   state.periodNumber.toString(),
-                  List.generate(12, (index) => index + 1)
+                  List.generate(18, (index) => index + 1)
                       .map(
                         (n) => DropdownMenuItem(
                           value: n,
@@ -215,6 +223,7 @@ class ReportsScreen extends ConsumerWidget {
       child: SingleChildScrollView(
         child: DataTable(
           headingRowColor: WidgetStateProperty.all(AppColors.textSecondary),
+          headingRowHeight: 60.h,
           headingTextStyle: context.bodyMedium.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,

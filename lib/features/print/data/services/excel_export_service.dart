@@ -1664,18 +1664,20 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
         IntCellValue(avgBook),
       );
     }
-    if (avgWeekly > 0)
+    if (avgWeekly > 0) {
       sheet.updateCell(
         CellIndex.indexByColumnRow(columnIndex: startCol + 6, rowIndex: row),
         IntCellValue(avgWeekly),
       );
+    }
 
     final total = avgBeh + avgBook + avgWeekly;
-    if (total > 0)
+    if (total > 0) {
       sheet.updateCell(
         CellIndex.indexByColumnRow(columnIndex: startCol + 7, rowIndex: row),
         IntCellValue(total),
       );
+    }
 
     return total;
   }

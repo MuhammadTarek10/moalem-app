@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/entities/user.dart';
-import 'package:moalem/core/extensions/evaluation_group_extensions.dart'; // Added
 import 'package:moalem/core/utils/error_handler.dart';
 import 'package:moalem/core/utils/license_checker.dart';
 import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
@@ -149,11 +148,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 final classEntity = classes[index];
                                 return HomeClassItem(
                                   className: classEntity.name,
-                                  stage: classEntity
-                                      .evaluationGroup
-                                      .stageName, // Fixed
                                   grade: classEntity.grade,
-                                  subject: classEntity.subject,
+                                  studentsCount: classEntity.studentsCount,
+                                  semester: classEntity.semester,
                                   onTap: () {
                                     context.pushNewScreen(
                                       ClassDetailsScreen(id: classEntity.id),

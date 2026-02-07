@@ -258,6 +258,29 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
     state = state.copyWith(students: updatedStudents);
   }
 
+  void incrementSelectedScores() {
+    final maxScore = state.currentMaxScore ?? 0;
+    final updatedStudents = state.students.map((s) {
+      if (s.isSelected && s.currentScore < maxScore) {
+        return s.copyWith(currentScore: s.currentScore + 1);
+      }
+      return s;
+    }).toList();
+
+    state = state.copyWith(students: updatedStudents);
+  }
+
+  void decrementSelectedScores() {
+    final updatedStudents = state.students.map((s) {
+      if (s.isSelected && s.currentScore > 0) {
+        return s.copyWith(currentScore: s.currentScore - 1);
+      }
+      return s;
+    }).toList();
+
+    state = state.copyWith(students: updatedStudents);
+  }
+
   void setMaxScoreForSelected() {
     final maxScore = state.currentMaxScore ?? 0;
     final updatedStudents = state.students.map((s) {

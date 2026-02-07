@@ -104,37 +104,37 @@ class ExportButtons extends StatelessWidget {
             ],
           ),
           // Empty sheet button (only for attendance)
-          if (showEmptySheetButton && onExportEmptySheet != null) ...[
-            SizedBox(height: 12.h),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: isLoading ? null : onExportEmptySheet,
-                icon: isEmptySheetLoading
-                    ? SizedBox(
-                        width: 20.w,
-                        height: 20.h,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.file_download_outlined, size: 20),
-                label: const Text('تصدير كشف فارغ'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 14.h,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          // if (showEmptySheetButton && onExportEmptySheet != null) ...[
+          //   SizedBox(height: 12.h),
+          //   SizedBox(
+          //     width: double.infinity,
+          //     child: ElevatedButton.icon(
+          //       onPressed: isLoading ? null : onExportEmptySheet,
+          //       icon: isEmptySheetLoading
+          //           ? SizedBox(
+          //               width: 20.w,
+          //               height: 20.h,
+          //               child: const CircularProgressIndicator(
+          //                 strokeWidth: 2,
+          //                 color: Colors.white,
+          //               ),
+          //             )
+          //           : const Icon(Icons.file_download_outlined, size: 20),
+          //       label: const Text('تصدير كشف فارغ'),
+          //       style: ElevatedButton.styleFrom(
+          //         backgroundColor: Colors.blue,
+          //         foregroundColor: Colors.white,
+          //         padding: EdgeInsets.symmetric(
+          //           horizontal: 16.w,
+          //           vertical: 14.h,
+          //         ),
+          //         shape: RoundedRectangleBorder(
+          //           borderRadius: BorderRadius.circular(8.r),
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ],
         ],
       ),
     );

@@ -252,7 +252,7 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                     Expanded(
                       child: _buildDropdown<int>(
                         value: state.periodNumber,
-                        items: List.generate(12, (i) => i + 1),
+                        items: List.generate(18, (i) => i + 1),
                         onChanged: (value) {
                           if (value != null) {
                             controller.changePeriodNumber(value);
@@ -429,10 +429,10 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
   ) {
     return Row(
       children: [
-        // Increment button
+        // Decrement button
         _buildScoreButton(
-          icon: Icons.add,
-          onPressed: () => controller.setMaxScoreForSelected(),
+          icon: Icons.remove,
+          onPressed: () => controller.decrementSelectedScores(),
           color: AppColors.primary.withValues(alpha: 0.1),
           iconColor: AppColors.primary,
         ),
@@ -454,10 +454,10 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
           ),
         ),
         SizedBox(width: 8.w),
-        // Decrement button
+        // Increment button
         _buildScoreButton(
           icon: Icons.add,
-          onPressed: () => controller.setMaxScoreForSelected(),
+          onPressed: () => controller.incrementSelectedScores(),
           color: AppColors.primary.withValues(alpha: 0.1),
           iconColor: AppColors.primary,
         ),

@@ -284,4 +284,8 @@ class AppStrings {
   static const String week2Label = 'week2_label';
   static const String week3Label = 'week3_label';
   static const String week4Label = 'week4_label';
+
+  // Home Screen Class Item
+  static const String yearLabel = 'year_label';
+  static const String studentCountLabel = 'student_count_label';
 }

@@ -186,7 +186,7 @@ class StudentDetailsScreen extends ConsumerWidget {
                         child: Text(AppStrings.april.tr()),
                       ),
                     ]
-                  : List.generate(12, (index) => index + 1)
+                  : List.generate(18, (index) => index + 1)
                         .map(
                           (n) => DropdownMenuItem(
                             value: n,
