@@ -65,10 +65,8 @@ class AttendanceEntryState {
     this.isSaving = false,
     this.error,
     this.successMessage,
-  }) : weekStartDate =
-           weekStartDate ?? WeekHelper.getWeekStart(DateTime(2026, 2, 7)),
-       selectedDay =
-           selectedDay ?? WeekHelper.getWeekStart(DateTime(2026, 2, 7));
+  }) : weekStartDate = weekStartDate ?? WeekHelper.getWeekStart(DateTime.now()),
+       selectedDay = selectedDay ?? WeekHelper.getWeekStart(DateTime.now());
 
   AttendanceEntryState copyWith({
     List<ClassEntity>? classes,
@@ -191,6 +189,7 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
   /// Select a day in the week
   void selectDay(DateTime day) {
     state = state.copyWith(selectedDay: day);
+    _applyDefaultsForSelectedDay();
   }
 
   /// Load attendance data for the selected class and week
@@ -215,8 +214,35 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
       }).toList();
 
       state = state.copyWith(students: studentInputs, isLoading: false);
+      _applyDefaultsForSelectedDay();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  /// Apply default "present" status for students without status for current selected day
+  void _applyDefaultsForSelectedDay() {
+    final normalizedDay = DateTime(
+      state.selectedDay.year,
+      state.selectedDay.month,
+      state.selectedDay.day,
+    );
+
+    bool stateChanged = false;
+    final updatedStudents = state.students.map((s) {
+      if (s.getStatusForDate(state.selectedDay) == null) {
+        final newDailyStatus = Map<DateTime, AttendanceStatus>.from(
+          s.dailyStatus,
+        );
+        newDailyStatus[normalizedDay] = AttendanceStatus.present;
+        stateChanged = true;
+        return s.copyWith(dailyStatus: newDailyStatus, hasChanges: true);
+      }
+      return s;
+    }).toList();
+
+    if (stateChanged) {
+      state = state.copyWith(students: updatedStudents);
     }
   }
 
@@ -316,13 +342,33 @@ class AttendanceEntryController extends StateNotifier<AttendanceEntryState> {
 
   /// Go to previous week
   Future<void> previousWeek() async {
+    final now = DateTime.now();
+    final firstAllowedWeekStart = WeekHelper.getWeekStart(
+      now.subtract(const Duration(days: 7)),
+    );
     final newWeekStart = state.weekStartDate.subtract(const Duration(days: 7));
+
+    if (newWeekStart.isBefore(firstAllowedWeekStart)) {
+      state = state.copyWith(error: 'لا يمكن الرجوع أكثر من أسبوع');
+      return;
+    }
+
     await changeWeek(newWeekStart);
   }
 
   /// Go to next week
   Future<void> nextWeek() async {
+    final now = DateTime.now();
+    final lastAllowedWeekStart = WeekHelper.getWeekStart(
+      now.add(const Duration(days: 7)),
+    );
     final newWeekStart = state.weekStartDate.add(const Duration(days: 7));
+
+    if (newWeekStart.isAfter(lastAllowedWeekStart)) {
+      state = state.copyWith(error: 'لا يمكن التقدم أكثر من أسبوع');
+      return;
+    }
+
     await changeWeek(newWeekStart);
   }
 }

@@ -126,9 +126,14 @@ class GenerateMultiWeekScoresReportUseCase {
         weeklyTotals[weekNum] = totalScore;
       }
 
-      // Fetch Monthly Exams for Primary Page 4 (March/April)
+      // Fetch Monthly Exams for Primary Page 4 or High School Monthly Config
       final monthlyExamScores = <String, int>{};
-      if (isPrimaryPage4) {
+      final bool isHighSchool =
+          classEntity.evaluationGroup == EvaluationGroup.high;
+
+      if (isPrimaryPage4 || isHighSchool) {
+        // For High School, we fetch exams for all months regardless of page
+        // For Primary, only on page 4
         // March Exam (Month 1)
         final marchDetails = await _studentRepository
             .getStudentDetailsWithScores(student.id, PeriodType.monthly, 1);

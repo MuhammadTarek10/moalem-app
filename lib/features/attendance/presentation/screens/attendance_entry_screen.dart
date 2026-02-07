@@ -618,11 +618,23 @@ class _AttendanceEntryScreenState extends ConsumerState<AttendanceEntryScreen> {
     AttendanceEntryState state,
     AttendanceEntryController controller,
   ) async {
+    final now = DateTime.now();
+    final firstAllowedDate = now.subtract(const Duration(days: 7));
+    final lastAllowedDate = now.add(const Duration(days: 7));
+
+    // Ensure initial date is within bounds
+    DateTime initialDate = state.weekStartDate;
+    if (initialDate.isBefore(firstAllowedDate)) {
+      initialDate = firstAllowedDate;
+    } else if (initialDate.isAfter(lastAllowedDate)) {
+      initialDate = lastAllowedDate;
+    }
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: state.weekStartDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      initialDate: initialDate,
+      firstDate: firstAllowedDate,
+      lastDate: lastAllowedDate,
       locale: const Locale('ar'),
     );
 

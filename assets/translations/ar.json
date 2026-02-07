@@ -228,5 +228,7 @@
   "week4_label": "الأسبوع الرابع",
   "qr_print_title": "طباعة الكيوار كود للطلاب",
   "year_label": "سنة",
-  "student_count_label": "عدد الطلاب"
+  "student_count_label": "عدد الطلاب",
+  "class_limit_reached": "عذراً، لقد وصلت للحد الأقصى لعدد الفصول (15 فصل)",
+  "student_limit_reached": "عذراً، لقد وصلت للحد الأقصى لعدد الطلاب في الفصل الواحد (50 طالب)"
 }

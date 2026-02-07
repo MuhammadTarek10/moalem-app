@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:moalem/core/constants/app_routes.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/extensions/evaluation_group_extensions.dart'; // Added
+import 'package:moalem/core/utils/error_handler.dart';
 import 'package:moalem/features/classes/domain/entities/class_entity.dart';
 import 'package:moalem/features/classes/presentation/controllers/classes_controller.dart';
 import 'package:moalem/features/classes/presentation/models/add_class_form_data.dart';
@@ -70,7 +71,7 @@ class ClassesScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(error.toString()),
+              Text(ErrorHandler.getErrorMessage(error)),
               SizedBox(height: 16.h),
               ElevatedButton(
                 onPressed: () =>

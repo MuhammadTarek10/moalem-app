@@ -26,6 +26,7 @@ class BulkScoreEntryState {
   final String searchQuery;
   final bool isLoading;
   final String? error;
+  final int bulkScore;
 
   BulkScoreEntryState({
     this.classInfo,
@@ -38,6 +39,7 @@ class BulkScoreEntryState {
     this.searchQuery = '',
     this.isLoading = false,
     this.error,
+    this.bulkScore = 0,
   });
 
   BulkScoreEntryState copyWith({
@@ -51,6 +53,7 @@ class BulkScoreEntryState {
     String? searchQuery,
     bool? isLoading,
     String? error,
+    int? bulkScore,
   }) {
     return BulkScoreEntryState(
       classInfo: classInfo ?? this.classInfo,
@@ -63,6 +66,7 @@ class BulkScoreEntryState {
       searchQuery: searchQuery ?? this.searchQuery,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      bulkScore: bulkScore ?? this.bulkScore,
     );
   }
 
@@ -97,6 +101,8 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   final UpdateStudentScoreUseCase _updateStudentScoreUseCase;
   final GetStudentByQrCodeUseCase _getStudentByQrCodeUseCase;
 
+  List<EvaluationEntity> _allEvaluations = [];
+
   BulkScoreEntryController(
     this._getClassByIdUseCase,
     this._getEvaluationsUseCase,
@@ -116,20 +122,8 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
         return;
       }
 
-      // Get all evaluations
-      final allEvaluations = await _getEvaluationsUseCase();
-
-      // Filter evaluations by class group and override max scores
-      final evaluationScoresMap = _getEvaluationScoresMap(
-        classInfo.evaluationGroup,
-      );
-      final availableEvaluations = allEvaluations
-          .where((e) => evaluationScoresMap.containsKey(e.name))
-          .map(
-            (e) =>
-                e.copyWith(maxScore: evaluationScoresMap[e.name] ?? e.maxScore),
-          )
-          .toList();
+      // Get all evaluations and store them
+      _allEvaluations = await _getEvaluationsUseCase();
 
       // Get students
       final students = await _getStudentsByClassIdUseCase(classId);
@@ -137,15 +131,11 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
           .map((s) => StudentScoreInput(student: s, currentScore: 0))
           .toList();
 
-      state = state.copyWith(
-        classInfo: classInfo,
-        availableEvaluations: availableEvaluations,
-        selectedEvaluation: availableEvaluations.isNotEmpty
-            ? availableEvaluations.first
-            : null,
-        students: studentInputs,
-        isLoading: false,
-      );
+      state = state.copyWith(classInfo: classInfo, students: studentInputs);
+
+      _updateAvailableEvaluations();
+
+      state = state.copyWith(isLoading: false);
 
       // Load existing scores for the first evaluation
       if (state.selectedEvaluation != null) {
@@ -154,6 +144,49 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
+  }
+
+  void _updateAvailableEvaluations() {
+    if (state.classInfo == null) return;
+
+    final evaluationScoresMap = _getEvaluationScoresMap(
+      state.classInfo!.evaluationGroup,
+    );
+
+    final List<EvaluationEntity> filtered = _allEvaluations
+        .where((e) => evaluationScoresMap.containsKey(e.name))
+        .map(
+          (e) =>
+              e.copyWith(maxScore: evaluationScoresMap[e.name] ?? e.maxScore),
+        )
+        .where((e) {
+          // Logic for filtering exams based on period for High School
+          if (state.classInfo!.evaluationGroup == EvaluationGroup.high) {
+            if (state.periodType == PeriodType.monthly) {
+              if (e.name == 'first_month_exam') {
+                return state.periodNumber == 2; // Month 2 (March)
+              }
+              if (e.name == 'second_month_exam') {
+                return state.periodNumber == 3; // Month 3 (April)
+              }
+            } else {
+              // If weekly, hide monthly exams
+              if (e.name == 'first_month_exam' ||
+                  e.name == 'second_month_exam') {
+                return false;
+              }
+            }
+          }
+          return true;
+        })
+        .toList();
+
+    state = state.copyWith(
+      availableEvaluations: filtered,
+      selectedEvaluation: filtered.contains(state.selectedEvaluation)
+          ? state.selectedEvaluation
+          : (filtered.isNotEmpty ? filtered.first : null),
+    );
   }
 
   Map<String, int> _getEvaluationScoresMap(EvaluationGroup evaluationGroup) {
@@ -179,21 +212,23 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
       return s.copyWith(currentScore: 0, isSelected: false);
     }).toList();
 
-    state = state.copyWith(students: updatedStudents);
+    state = state.copyWith(students: updatedStudents, bulkScore: 0);
   }
 
   void selectEvaluation(EvaluationEntity evaluation) {
-    state = state.copyWith(selectedEvaluation: evaluation);
+    state = state.copyWith(selectedEvaluation: evaluation, bulkScore: 0);
     _loadExistingScores();
   }
 
   void changePeriodType(PeriodType type) {
     state = state.copyWith(periodType: type, periodNumber: 1);
+    _updateAvailableEvaluations();
     _loadExistingScores();
   }
 
   void changePeriodNumber(int number) {
     state = state.copyWith(periodNumber: number);
+    _updateAvailableEvaluations();
     _loadExistingScores();
   }
 
@@ -260,17 +295,26 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
 
   void incrementSelectedScores() {
     final maxScore = state.currentMaxScore ?? 0;
+    final newBulkScore = (state.bulkScore + 1).clamp(0, maxScore);
+
     final updatedStudents = state.students.map((s) {
       if (s.isSelected && s.currentScore < maxScore) {
-        return s.copyWith(currentScore: s.currentScore + 1);
+        return s.copyWith(
+          currentScore: (s.currentScore + 1).clamp(0, maxScore),
+        );
       }
       return s;
     }).toList();
 
-    state = state.copyWith(students: updatedStudents);
+    state = state.copyWith(students: updatedStudents, bulkScore: newBulkScore);
   }
 
   void decrementSelectedScores() {
+    final newBulkScore = (state.bulkScore - 1).clamp(
+      0,
+      state.currentMaxScore ?? 0,
+    );
+
     final updatedStudents = state.students.map((s) {
       if (s.isSelected && s.currentScore > 0) {
         return s.copyWith(currentScore: s.currentScore - 1);
@@ -278,7 +322,7 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
       return s;
     }).toList();
 
-    state = state.copyWith(students: updatedStudents);
+    state = state.copyWith(students: updatedStudents, bulkScore: newBulkScore);
   }
 
   void setMaxScoreForSelected() {
@@ -290,7 +334,7 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
       return s;
     }).toList();
 
-    state = state.copyWith(students: updatedStudents);
+    state = state.copyWith(students: updatedStudents, bulkScore: maxScore);
   }
 
   Future<void> saveSelectedScores() async {
@@ -299,10 +343,12 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final selectedStudents = state.selectedStudents;
+      final studentsToSave = state.selectedCount > 0
+          ? state.selectedStudents
+          : state.students;
       const uuid = Uuid();
 
-      for (final studentInput in selectedStudents) {
+      for (final studentInput in studentsToSave) {
         final scoreEntity = StudentScoreEntity(
           id: uuid.v4(),
           studentId: studentInput.student.id,

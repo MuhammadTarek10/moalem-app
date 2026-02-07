@@ -252,7 +252,10 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                     Expanded(
                       child: _buildDropdown<int>(
                         value: state.periodNumber,
-                        items: List.generate(18, (i) => i + 1),
+                        items: List.generate(
+                          state.periodType == PeriodType.monthly ? 3 : 18,
+                          (i) => i + 1,
+                        ),
                         onChanged: (value) {
                           if (value != null) {
                             controller.changePeriodNumber(value);
@@ -267,7 +270,7 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                     Expanded(
                       child: _buildDropdown<PeriodType>(
                         value: state.periodType,
-                        items: const [PeriodType.weekly],
+                        items: const [PeriodType.weekly, PeriodType.monthly],
                         onChanged: (value) {
                           if (value != null) controller.changePeriodType(value);
                         },
@@ -346,39 +349,38 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                   ),
           ),
           // Save button
-          if (state.selectedCount > 0)
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: () =>
-                    _showSaveConfirmationDialog(context, controller, state),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  minimumSize: Size(double.infinity, 48.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
                 ),
-                child: Text(
-                  AppStrings.saveButton.tr(),
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () =>
+                  _showSaveConfirmationDialog(context, controller, state),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                minimumSize: Size(double.infinity, 48.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                AppStrings.saveButton.tr(),
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ),
+          ),
         ],
       ),
     );
@@ -445,7 +447,7 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Text(
-            '${state.currentMaxScore ?? 0}',
+            '${state.bulkScore}',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -649,9 +651,11 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
           textAlign: TextAlign.right,
         ),
         content: Text(
-          AppStrings.saveScoresMessage.tr(
-            args: [state.selectedCount.toString()],
-          ),
+          state.selectedCount > 0
+              ? AppStrings.saveScoresMessage.tr(
+                  args: [state.selectedCount.toString()],
+                )
+              : 'هل تريد حفظ الدرجات لكل الطلاب؟'.tr(),
           textAlign: TextAlign.right,
         ),
         actions: [

@@ -613,6 +613,8 @@ class StudentDetailsScreen extends ConsumerWidget {
         return AppStrings.primaryWeekly.tr();
       case 'primary_performance':
         return AppStrings.primaryPerformance.tr();
+      case 'primary_attendance':
+        return AppStrings.primaryAttendance.tr();
       case 'weekly_review_w1':
         return AppStrings.week1Label.tr();
       case 'weekly_review_w2':

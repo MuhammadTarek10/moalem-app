@@ -1488,10 +1488,15 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
       TextCellValue('الصف / ${d.classEntity.grade}'),
     );
 
-    // Class
+    // Exam Headers (Row 8 / Index 7)
+    // AC (28) = March, AD (29) = April
     sheet.updateCell(
-      CellIndex.indexByColumnRow(columnIndex: 22, rowIndex: 2),
-      TextCellValue('الفصل / ${d.classEntity.name}'),
+      CellIndex.indexByColumnRow(columnIndex: 28, rowIndex: 7),
+      TextCellValue('امتحان شهر مارس'),
+    );
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: 29, rowIndex: 7),
+      TextCellValue('امتحان شهر ابريل'),
     );
   }
 
@@ -1533,10 +1538,32 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
         TextCellValue(student.student.name),
       );
 
+      // Exam Scores - Prioritize monthlyExamScores (keyed by name)
+      int exam1 = student.monthlyExamScores?['first_month_exam'] ?? 0;
+      int exam2 = student.monthlyExamScores?['second_month_exam'] ?? 0;
+
+      // Fallback: Check weeklyScores in case they were entered as weekly evaluations
+      if (exam1 == 0 || exam2 == 0) {
+        if (student.weeklyScores != null) {
+          for (var weekScores in student.weeklyScores!.values) {
+            if (exam1 == 0 && weekScores.containsKey(ex1Id)) {
+              exam1 = weekScores[ex1Id]!;
+            }
+            if (exam2 == 0 && weekScores.containsKey(ex2Id)) {
+              exam2 = weekScores[ex2Id]!;
+            }
+          }
+        }
+      }
+
       int sumMonthlyTotals = 0;
 
       // Fill Month Data (1=Feb, 2=Mar, 3=Apr)
       for (int m = 1; m <= 3; m++) {
+        int examScore = 0;
+        if (m == 1) examScore = exam1;
+        if (m == 2) examScore = exam2;
+
         final monthTotal = _fillMonthData(
           sheet,
           student,
@@ -1545,19 +1572,9 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
           weeklyId: weeklyId,
           behId: behId,
           bookId: bookId,
+          examScore: examScore,
         );
         sumMonthlyTotals += monthTotal;
-      }
-
-      // Exam Scores
-      int exam1 = 0;
-      int exam2 = 0;
-
-      if (student.weeklyScores != null) {
-        for (var weekScores in student.weeklyScores!.values) {
-          if (weekScores.containsKey(ex1Id)) exam1 = weekScores[ex1Id]!;
-          if (weekScores.containsKey(ex2Id)) exam2 = weekScores[ex2Id]!;
-        }
       }
 
       // Aggregates
@@ -1607,6 +1624,7 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
     required String weeklyId,
     required String behId,
     required String bookId,
+    int examScore = 0,
   }) {
     if (!monthStartColumns.containsKey(month)) return 0;
     final startCol = monthStartColumns[month]!;
@@ -1640,11 +1658,11 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
       monthBookSum += bookScore;
     }
 
-    final avgWeekly = weeksCountRow > 0
+    final int avgWeekly = weeksCountRow > 0
         ? (monthWeeklySum / weeksCountRow).round()
         : 0;
-    final avgBeh = (monthBehSum / 4).round();
-    final avgBook = (monthBookSum / 4).round();
+    final int avgBeh = (monthBehSum / 4).round();
+    final int avgBook = (monthBookSum / 4).round();
 
     if (avgBeh > 0) {
       sheet.updateCell(
@@ -1671,15 +1689,17 @@ class SecondaryMonthlyConfig extends ExcelTemplateConfig {
       );
     }
 
-    final total = avgBeh + avgBook + avgWeekly;
-    if (total > 0) {
+    final int baseTotal = avgBeh + avgBook + avgWeekly;
+    final int fullTotal = baseTotal + examScore;
+
+    if (fullTotal > 0) {
       sheet.updateCell(
         CellIndex.indexByColumnRow(columnIndex: startCol + 7, rowIndex: row),
-        IntCellValue(total),
+        IntCellValue(fullTotal),
       );
     }
 
-    return total;
+    return baseTotal;
   }
 }
 

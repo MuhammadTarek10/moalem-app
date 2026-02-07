@@ -94,10 +94,6 @@ class ReportsScreen extends ConsumerWidget {
                   },
                 ),
               ),
-
-              // Export buttons (only show when students are selected)
-              if (state.selectedCount > 0)
-                _buildExportButtons(context, state, controller),
             ],
           );
         },
@@ -232,8 +228,6 @@ class ReportsScreen extends ConsumerWidget {
           dataRowMaxHeight: 60.h,
           columnSpacing: 16.w,
           columns: [
-            // Checkbox column
-            DataColumn(label: Text(AppStrings.select.tr())),
             // Student number
             DataColumn(
               label: Text(
@@ -273,22 +267,9 @@ class ReportsScreen extends ConsumerWidget {
           rows: reportData.studentReports.asMap().entries.map<DataRow>((entry) {
             final index = entry.key;
             final studentReport = entry.value;
-            final isSelected = state.isStudentSelected(
-              studentReport.student.id,
-            );
 
             return DataRow(
               cells: [
-                // Checkbox cell
-                DataCell(
-                  Checkbox(
-                    value: isSelected,
-                    onChanged: (_) => controller.toggleStudentSelection(
-                      studentReport.student.id,
-                    ),
-                    activeColor: AppColors.primary,
-                  ),
-                ),
                 // Student number
                 DataCell(
                   Text((index + 1).toString(), style: context.bodyMedium),
@@ -353,58 +334,6 @@ class ReportsScreen extends ConsumerWidget {
             );
           }).toList(),
         ),
-      ),
-    );
-  }
-
-  Widget _buildExportButtons(
-    BuildContext context,
-    ReportsState state,
-    ReportsController controller,
-  ) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Text(
-            '${AppStrings.selectedCount.tr()} ${state.selectedCount}',
-            style: context.bodyMedium.copyWith(fontWeight: FontWeight.w500),
-          ),
-          const Spacer(),
-          // Excel button
-          ElevatedButton.icon(
-            onPressed: () => controller.exportToExcel(),
-            icon: const Icon(Icons.table_chart, size: 20),
-            label: Text(AppStrings.exportExcel.tr()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-            ),
-          ),
-          SizedBox(width: 12.w),
-          // PDF button
-          ElevatedButton.icon(
-            onPressed: () => controller.exportToPdf(),
-            icon: const Icon(Icons.picture_as_pdf, size: 20),
-            label: Text(AppStrings.exportPdf.tr()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -210,7 +210,31 @@ class StudentRepositoryImpl implements StudentRepository {
       return;
     }
 
-    await _performStandardUpsert(score, db);
+    // Map exams to their logically associated months for consistency in reports
+    final evalResult = await db.query(
+      _evaluationsTable,
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [score.evaluationId],
+    );
+
+    StudentScoreEntity finalScore = score;
+    if (evalResult.isNotEmpty) {
+      final String name = evalResult.first['name'] as String;
+      if (name == 'first_month_exam') {
+        finalScore = score.copyWith(
+          periodType: PeriodType.monthly,
+          periodNumber: 1,
+        );
+      } else if (name == 'second_month_exam') {
+        finalScore = score.copyWith(
+          periodType: PeriodType.monthly,
+          periodNumber: 2,
+        );
+      }
+    }
+
+    await _performStandardUpsert(finalScore, db);
   }
 
   Future<void> _performStandardUpsert(
@@ -307,7 +331,7 @@ class StudentRepositoryImpl implements StudentRepository {
     }
 
     // Exam (Depending on Month)
-    if (month == 1 && evEx1 != null) {
+    if (month == 2 && evEx1 != null) {
       virtualEvals.add(
         EvaluationEntity.fromMap({
           ...evEx1,
@@ -315,7 +339,7 @@ class StudentRepositoryImpl implements StudentRepository {
           'max_score': 15,
         }),
       );
-    } else if (month == 2 && evEx2 != null) {
+    } else if (month == 3 && evEx2 != null) {
       virtualEvals.add(
         EvaluationEntity.fromMap({
           ...evEx2,
@@ -343,10 +367,17 @@ class StudentRepositoryImpl implements StudentRepository {
     final startWeek = (month - 1) * 4 + 1;
     final endWeek = startWeek + 3;
 
-    final scoresResult = await db.query(
-      _studentsScoresTable,
-      where: 'student_id = ? AND period_number BETWEEN ? AND ?',
-      whereArgs: [student.id, startWeek, endWeek],
+    final scoresResult = await db.rawQuery(
+      '''
+      SELECT * FROM $_studentsScoresTable 
+      WHERE student_id = ? 
+      AND (
+        (period_number BETWEEN ? AND ?) OR
+        (period_number = 1 AND period_type = 'monthly') OR
+        (period_number = 2 AND period_type = 'monthly')
+      )
+      ''',
+      [student.id, startWeek, endWeek],
     );
 
     final Map<String, StudentScoreEntity> scoresMap = {};
@@ -417,16 +448,34 @@ class StudentRepositoryImpl implements StudentRepository {
         targetWeeks.add(startWeek + i);
       }
     } else if (type.startsWith('wk')) {
-      // wk1 -> offset 0... wait.
+      // wk1 -> offset 0
       // wk1 -> weekOffset 1.
       final offset = int.parse(type.substring(2)) - 1;
       targetWeeks.add(startWeek + offset);
-    } else if (type == 'ex1' || type == 'ex2') {
-      // Save to Week 1
-      targetWeeks.add(startWeek);
+    }
+    if (type == 'ex1') {
+      // Exam 1 physically belongs to Month 1 (Monthly)
+      final scoreToSave = score.copyWith(
+        evaluationId: realEvalId,
+        periodType: PeriodType.monthly,
+        periodNumber: 1,
+        id: '',
+      );
+      await _performStandardUpsert(scoreToSave, db);
+      return;
+    } else if (type == 'ex2') {
+      // Exam 2 physically belongs to Month 2 (Monthly)
+      final scoreToSave = score.copyWith(
+        evaluationId: realEvalId,
+        periodType: PeriodType.monthly,
+        periodNumber: 2,
+        id: '',
+      );
+      await _performStandardUpsert(scoreToSave, db);
+      return;
     }
 
-    // Perform Upserts
+    // Perform Upserts for weekly items
     for (final week in targetWeeks) {
       final realScore = score.copyWith(
         evaluationId: realEvalId,
