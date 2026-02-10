@@ -128,42 +128,93 @@ class GenerateMultiWeekScoresReportUseCase {
 
       // Fetch Monthly Exams for Primary Page 4 or High School Monthly Config
       final monthlyExamScores = <String, int>{};
+      final bool isPrimaryExport =
+          classEntity.evaluationGroup == EvaluationGroup.primary &&
+          (weekGroup == 4 || weekGroup == 0);
+
       final bool isHighSchool =
           classEntity.evaluationGroup == EvaluationGroup.high;
 
-      if (isPrimaryPage4 || isHighSchool) {
-        // For High School, we fetch exams for all months regardless of page
-        // For Primary, only on page 4
-        // March Exam (Month 1)
-        final marchDetails = await _studentRepository
-            .getStudentDetailsWithScores(student.id, PeriodType.monthly, 1);
-        if (marchDetails != null) {
-          monthlyExamScores['first_month_exam'] = marchDetails
-              .getScoreForEvaluation('first_month_exam');
+      if (isPrimaryExport || isHighSchool) {
+        // Collect scores from all potential monthly periods (1, 2, 3)
+        // This handles cases where user enters March Exam in Period 2 or 3
+        final allMonthlyScores = <String, int>{};
+
+        // Helper to find ID by Name
+        String? getEvalIdByName(List<EvaluationEntity> evals, String name) {
+          try {
+            return evals.firstWhere((e) => e.name == name).id;
+          } catch (_) {
+            return null;
+          }
         }
 
-        // April Exam (Month 2)
-        final aprilDetails = await _studentRepository
-            .getStudentDetailsWithScores(student.id, PeriodType.monthly, 2);
-        if (aprilDetails != null) {
-          monthlyExamScores['second_month_exam'] = aprilDetails
-              .getScoreForEvaluation('second_month_exam');
+        for (int p = 1; p <= 3; p++) {
+          final details = await _studentRepository.getStudentDetailsWithScores(
+            student.id,
+            PeriodType.monthly,
+            p,
+          );
+
+          if (details != null) {
+            // Extract First Month Exam
+            final id1 = getEvalIdByName(
+              details.evaluations,
+              'first_month_exam',
+            );
+            if (id1 != null) {
+              final s = details.getScoreForEvaluation(id1);
+              if (s > 0) allMonthlyScores['first_month_exam'] = s;
+            }
+
+            // Extract Second Month Exam
+            final id2 = getEvalIdByName(
+              details.evaluations,
+              'second_month_exam',
+            );
+            if (id2 != null) {
+              final s = details.getScoreForEvaluation(id2);
+              if (s > 0) allMonthlyScores['second_month_exam'] = s;
+            }
+          }
         }
 
-        // Calculate or fetch average if stored?
-        // Usually calculated from the two exams.
-        // We'll calculate it in the Excel Config or let it be 0 if not stored.
-        // If stored as 'months_exam_average', we might fetch it from PeriodType.semester?
-        // Let's check PeriodType.semester for 'months_exam_average'
+        // Assign to result map and extract for average calculation
+        int score1 = 0;
+        int score2 = 0;
+
+        if (allMonthlyScores.containsKey('first_month_exam')) {
+          score1 = allMonthlyScores['first_month_exam']!;
+          monthlyExamScores['first_month_exam'] = score1;
+        }
+        if (allMonthlyScores.containsKey('second_month_exam')) {
+          score2 = allMonthlyScores['second_month_exam']!;
+          monthlyExamScores['second_month_exam'] = score2;
+        }
+
+        // Calculate Average if one of the scores is present
         final semesterDetails = await _studentRepository
             .getStudentDetailsWithScores(
               student.id,
               PeriodType.semester,
               2, // Semester 2
             );
-        if (semesterDetails != null) {
-          monthlyExamScores['months_exam_average'] = semesterDetails
-              .getScoreForEvaluation('months_exam_average');
+
+        int average = 0;
+        if (semesterDetails != null &&
+            semesterDetails.scores.containsKey('months_exam_average')) {
+          average = semesterDetails.getScoreForEvaluation(
+            'months_exam_average',
+          );
+        } else {
+          // Fallback calculation
+          if (score1 > 0 || score2 > 0) {
+            average = ((score1 + score2) / 2).round();
+          }
+        }
+
+        if (average > 0) {
+          monthlyExamScores['months_exam_average'] = average;
         }
       }
 

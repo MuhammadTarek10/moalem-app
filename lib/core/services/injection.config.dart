@@ -77,8 +77,20 @@ import '../../features/print/domain/usecases/generate_multi_week_scores_report_u
     as _i968;
 import '../../features/print/domain/usecases/generate_scores_report_usecase.dart'
     as _i51;
+import '../../features/reports/data/repositories/excel_export_repository_impl.dart'
+    as _i327;
+import '../../features/reports/data/services/syncfusion_excel_service.dart'
+    as _i872;
+import '../../features/reports/data/strategies/template_strategy_manager.dart'
+    as _i570;
+import '../../features/reports/domain/repositories/excel_export_repository.dart'
+    as _i788;
+import '../../features/reports/domain/usecases/export_yearly_work_usecase.dart'
+    as _i33;
 import '../../features/reports/domain/usecases/get_class_report_usecase.dart'
     as _i564;
+import '../../features/reports/presentation/controllers/excel_export_controller.dart'
+    as _i650;
 import '../../features/students/data/repositories/student_repository_impl.dart'
     as _i865;
 import '../../features/students/domain/repositories/student_repository.dart'
@@ -121,6 +133,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i552.ExcelExportService>(() => _i552.ExcelExportService());
     gh.factory<_i191.PdfExportService>(() => _i191.PdfExportService());
     gh.factory<_i951.QrPdfService>(() => _i951.QrPdfService());
+    gh.factory<_i872.SyncfusionExcelService>(
+      () => _i872.SyncfusionExcelService(),
+    );
+    gh.factory<_i570.TemplateStrategyManager>(
+      () => _i570.TemplateStrategyManager(),
+    );
     gh.singleton<_i748.DatabaseService>(() => _i748.DatabaseService());
     gh.singleton<_i1018.SecureStorageService>(
       () => _i1018.SecureStorageService(),
@@ -168,6 +186,10 @@ extension GetItInjectableX on _i174.GetIt {
     gh.singleton<_i1009.AuthInterceptor>(
       () => _i1009.AuthInterceptor(gh<_i1018.SecureStorageService>()),
     );
+    gh.factory<_i788.ExcelExportRepository>(
+      () =>
+          _i327.ExcelExportRepositoryImpl(gh<_i570.TemplateStrategyManager>()),
+    );
     gh.factory<_i891.AddStudentUseCase>(
       () => _i891.AddStudentUseCase(gh<_i679.StudentRepository>()),
     );
@@ -193,6 +215,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i203.UpdateStudentScoreUseCase>(
       () => _i203.UpdateStudentScoreUseCase(gh<_i679.StudentRepository>()),
+    );
+    gh.factory<_i33.ExportYearlyWorkUseCase>(
+      () => _i33.ExportYearlyWorkUseCase(gh<_i788.ExcelExportRepository>()),
     );
     gh.factory<_i477.AttendanceRepository>(
       () =>
@@ -225,6 +250,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i346.GetStudentsByClassIdUseCase>(),
         gh<_i203.UpdateStudentScoreUseCase>(),
         gh<_i171.GetStudentByQrCodeUseCase>(),
+      ),
+    );
+    gh.factory<_i650.ExcelExportController>(
+      () => _i650.ExcelExportController(
+        gh<_i33.ExportYearlyWorkUseCase>(),
+        gh<_i1015.GetClassesUseCase>(),
       ),
     );
     gh.lazySingleton<_i738.ApiService>(

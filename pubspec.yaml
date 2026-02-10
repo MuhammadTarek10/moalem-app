@@ -40,7 +40,7 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^6.0.0
   intl: ^0.20.2
-  excel: any
+
   syncfusion_flutter_xlsio: ^29.2.11
   archive: ^3.6.1
 

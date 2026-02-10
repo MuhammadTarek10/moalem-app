@@ -124,9 +124,9 @@ class StudentRepositoryImpl implements StudentRepository {
         classInfo.evaluationGroup == EvaluationGroup.secondary) {
       if (periodType == PeriodType.monthly) {
         // In Monthly mode, only show the relevant exam
-        if (periodNumber == 2) {
+        if (periodNumber == 1) {
           evaluationIds = ['first_month_exam'];
-        } else if (periodNumber == 3) {
+        } else if (periodNumber == 2) {
           evaluationIds = ['second_month_exam'];
         } else {
           evaluationIds = []; // No monthly exam for other months
@@ -172,12 +172,18 @@ class StudentRepositoryImpl implements StudentRepository {
 
     // Map displayed Month (2, 3) to logical Monthly Period (1, 2)
     int scorePeriodNumber = periodNumber;
-    if (periodType == PeriodType.monthly &&
-        (classInfo.evaluationGroup == EvaluationGroup.primary ||
-            classInfo.evaluationGroup == EvaluationGroup.secondary)) {
-      if (periodNumber == 2) scorePeriodNumber = 1;
-      if (periodNumber == 3) scorePeriodNumber = 2;
-    }
+    // FIXED: Allow direct access to period 1 and 2.
+    // Legacy mapping (2->1, 3->2) removed or adjusted if needed.
+    // Assuming UI will be updated to send 1 and 2 if it's not already doing so.
+    // If we keep the old check, it blocks access to 2.
+    // So we remove the conditional re-mapping for Primary/Secondary.
+
+    // if (periodType == PeriodType.monthly &&
+    //     (classInfo.evaluationGroup == EvaluationGroup.primary ||
+    //         classInfo.evaluationGroup == EvaluationGroup.secondary)) {
+    //   if (periodNumber == 2) scorePeriodNumber = 1;
+    //   if (periodNumber == 3) scorePeriodNumber = 2;
+    // }
 
     // Get scores for this student, period type, and period number
     final scoresResult = await db.query(
