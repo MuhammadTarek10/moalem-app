@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:injectable/injectable.dart';
 import 'package:moalem/core/constants/app_keys.dart';
 import 'package:moalem/core/entities/user.dart';
+import 'package:moalem/core/services/injection.dart';
+import 'package:moalem/core/services/license_service.dart';
 import 'package:moalem/core/services/secure_storage_service.dart';
 import 'package:moalem/core/services/storage_service.dart';
 import 'package:moalem/core/utils/license_checker.dart';
@@ -51,10 +53,15 @@ class FetchAndStoreUserUseCase {
       // Update license expiration in regular storage for quick access
       // Only update if the API returns a non-null value
       if (user.licenseExpiresAt != null && user.licenseExpiresAt!.isNotEmpty) {
-        await _storage.setString(
-          AppKeys.licenseExpiresAt,
-          user.licenseExpiresAt!,
-        );
+        if (getIt.isRegistered<LicenseService>()) {
+          await getIt<LicenseService>().updateLicense(user.licenseExpiresAt!);
+        } else {
+          // Fallback if service not found (shouldn't happen)
+          await _storage.setString(
+            AppKeys.licenseExpiresAt,
+            user.licenseExpiresAt!,
+          );
+        }
       }
 
       return user;

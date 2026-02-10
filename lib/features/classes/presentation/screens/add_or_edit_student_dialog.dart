@@ -73,80 +73,82 @@ class _AddOrEditStudentDialogState extends State<AddOrEditStudentDialog> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
       child: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Handle bar
-                Container(
-                  margin: EdgeInsets.only(bottom: 16.h),
-                  width: 40.w,
-                  height: 4.h,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2.r),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.all(20.w),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: EdgeInsets.only(bottom: 16.h),
+                    width: 40.w,
+                    height: 4.h,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2.r),
+                    ),
                   ),
-                ),
 
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _isEditing
-                          ? AppStrings.editStudentTitle.tr()
-                          : AppStrings.addStudentTitle.tr(),
-                      style: context.headlineMedium.copyWith(
-                        fontWeight: FontWeight.bold,
+                  // Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _isEditing
+                            ? AppStrings.editStudentTitle.tr()
+                            : AppStrings.addStudentTitle.tr(),
+                        style: context.headlineMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: _onCancel,
-                      icon: const Icon(Icons.close),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 24.h),
-
-                // Form fields - Student Name field
-                AppTextFormField(
-                  initialValue: _formData.name,
-                  hint: AppStrings.studentNameLabel.tr(),
-                  onChanged: (value) =>
-                      _formData = _formData.copyWith(name: value),
-                  validator: requiredValidator,
-                ),
-                SizedBox(height: 24.h),
-
-                // Action Buttons - side by side
-                Row(
-                  children: [
-                    // Add/Save Button
-                    Expanded(
-                      child: AppButton(
-                        onPressed: _onSubmit,
-                        text: _isEditing
-                            ? AppStrings.saveButton.tr()
-                            : AppStrings.addButton.tr(),
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    // Cancel Button
-                    Expanded(
-                      child: AppButton(
+                      IconButton(
                         onPressed: _onCancel,
-                        text: AppStrings.cancelButton.tr(),
-                        outlined: true,
+                        icon: const Icon(Icons.close),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // Form fields - Student Name field
+                  AppTextFormField(
+                    initialValue: _formData.name,
+                    hint: AppStrings.studentNameLabel.tr(),
+                    onChanged: (value) =>
+                        _formData = _formData.copyWith(name: value),
+                    validator: requiredValidator,
+                  ),
+                  SizedBox(height: 24.h),
+
+                  // Action Buttons - side by side
+                  Row(
+                    children: [
+                      // Add/Save Button
+                      Expanded(
+                        child: AppButton(
+                          onPressed: _onSubmit,
+                          text: _isEditing
+                              ? AppStrings.saveButton.tr()
+                              : AppStrings.addButton.tr(),
+                        ),
+                      ),
+                      SizedBox(width: 16.w),
+                      // Cancel Button
+                      Expanded(
+                        child: AppButton(
+                          onPressed: _onCancel,
+                          text: AppStrings.cancelButton.tr(),
+                          outlined: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
