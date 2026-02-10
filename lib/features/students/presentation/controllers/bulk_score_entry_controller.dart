@@ -122,6 +122,17 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
         return;
       }
 
+      // Set initial state including class info
+      // For High school, default to Monthly
+      // For others, default to Weekly (from initial state)
+      var periodType = state.periodType;
+      var periodNumber = state.periodNumber;
+
+      if (classInfo.evaluationGroup == EvaluationGroup.high) {
+        periodType = PeriodType.monthly;
+        periodNumber = 1; // Start at Feb (index 1) which is default for High
+      }
+
       // Get all evaluations and store them
       _allEvaluations = await _getEvaluationsUseCase();
 
@@ -131,7 +142,12 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
           .map((s) => StudentScoreInput(student: s, currentScore: 0))
           .toList();
 
-      state = state.copyWith(classInfo: classInfo, students: studentInputs);
+      state = state.copyWith(
+        classInfo: classInfo,
+        students: studentInputs,
+        periodType: periodType,
+        periodNumber: periodNumber,
+      );
 
       _updateAvailableEvaluations();
 
@@ -160,8 +176,38 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
               e.copyWith(maxScore: evaluationScoresMap[e.name] ?? e.maxScore),
         )
         .where((e) {
-          // Logic for filtering exams based on period for High School
-          if (state.classInfo!.evaluationGroup == EvaluationGroup.high) {
+          final isPrimaryOrPrep =
+              state.classInfo!.evaluationGroup == EvaluationGroup.primary ||
+              state.classInfo!.evaluationGroup == EvaluationGroup.secondary;
+          final isHighSchool =
+              state.classInfo!.evaluationGroup == EvaluationGroup.high;
+
+          // Logic for Primary/Secondary
+          if (isPrimaryOrPrep) {
+            if (state.periodType == PeriodType.monthly) {
+              // In Monthly view, STRICTLY show only the relevant exam
+              if (state.periodNumber == 2) {
+                // March
+                return e.name == 'first_month_exam';
+              } else if (state.periodNumber == 3) {
+                // April
+                return e.name == 'second_month_exam';
+              } else {
+                return false; // No monthly value to show for other months
+              }
+            } else {
+              // In Weekly view, STRICTLY hide monthly exams
+              if (e.name == 'first_month_exam' ||
+                  e.name == 'second_month_exam' ||
+                  e.name == 'months_exam_average') {
+                return false;
+              }
+              return true;
+            }
+          }
+
+          // Logic for High School (Default Monthly)
+          if (isHighSchool) {
             if (state.periodType == PeriodType.monthly) {
               if (e.name == 'first_month_exam') {
                 return state.periodNumber == 2; // Month 2 (March)
@@ -170,7 +216,7 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
                 return state.periodNumber == 3; // Month 3 (April)
               }
             } else {
-              // If weekly, hide monthly exams
+              // If weekly (shouldn't happen for High School usually but safe guard)
               if (e.name == 'first_month_exam' ||
                   e.name == 'second_month_exam') {
                 return false;
@@ -221,7 +267,19 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   }
 
   void changePeriodType(PeriodType type) {
-    state = state.copyWith(periodType: type, periodNumber: 1);
+    int newPeriodNumber = 1;
+    if (type == PeriodType.monthly) {
+      // Default to March (2) if switching to monthly as it's common
+      if (state.periodNumber < 2 || state.periodNumber > 3) {
+        newPeriodNumber = 2;
+      } else {
+        newPeriodNumber = state.periodNumber;
+      }
+    } else {
+      newPeriodNumber = state.periodNumber > 18 ? 1 : state.periodNumber;
+    }
+
+    state = state.copyWith(periodType: type, periodNumber: newPeriodNumber);
     _updateAvailableEvaluations();
     _loadExistingScores();
   }

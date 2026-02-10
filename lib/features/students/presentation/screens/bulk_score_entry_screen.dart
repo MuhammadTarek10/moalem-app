@@ -252,31 +252,54 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                     Expanded(
                       child: _buildDropdown<int>(
                         value: state.periodNumber,
-                        items: List.generate(
-                          state.periodType == PeriodType.monthly ? 3 : 18,
-                          (i) => i + 1,
-                        ),
+                        items: _getPeriodNumberItems(state),
                         onChanged: (value) {
                           if (value != null) {
                             controller.changePeriodNumber(value);
                           }
                         },
-                        displayText: (n) => n.toString(),
+                        displayText: (n) => _getPeriodNumberText(n, state),
                         hint: AppStrings.selectPeriod.tr(),
                       ),
                     ),
                     SizedBox(width: 12.w),
-                    // Period type dropdown (fixed to weekly for now)
+                    // Period type dropdown
                     Expanded(
-                      child: _buildDropdown<PeriodType>(
-                        value: state.periodType,
-                        items: const [PeriodType.weekly, PeriodType.monthly],
-                        onChanged: (value) {
-                          if (value != null) controller.changePeriodType(value);
-                        },
-                        displayText: (type) => _getPeriodTypeText(type),
-                        hint: '',
-                      ),
+                      child: _isPrimaryOrPrep(state.classInfo?.evaluationGroup)
+                          ? _buildDropdown<PeriodType>(
+                              value: state.periodType,
+                              items: const [
+                                PeriodType.weekly,
+                                PeriodType.monthly,
+                              ],
+                              onChanged: (value) {
+                                if (value != null)
+                                  controller.changePeriodType(value);
+                              },
+                              displayText: (type) => _getPeriodTypeText(type),
+                              hint: '',
+                            )
+                          : Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12.w,
+                                vertical: 12.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryLighter,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                state.classInfo?.evaluationGroup ==
+                                        EvaluationGroup.high
+                                    ? AppStrings.monthly.tr()
+                                    : _getPeriodTypeText(state.periodType),
+                                style: context.bodyMedium.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -730,5 +753,49 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
       case PeriodType.semester:
         return AppStrings.semester.tr();
     }
+  }
+
+  bool _isPrimaryOrPrep(EvaluationGroup? group) {
+    return group == EvaluationGroup.primary ||
+        group == EvaluationGroup.secondary;
+  }
+
+  List<int> _getPeriodNumberItems(BulkScoreEntryState state) {
+    final group = state.classInfo?.evaluationGroup;
+    if (group == EvaluationGroup.high) {
+      return [1, 2, 3]; // Feb, Mar, Apr
+    } else if (state.periodType == PeriodType.monthly &&
+        _isPrimaryOrPrep(group)) {
+      return [2, 3]; // Mar, Apr
+    } else {
+      return List.generate(18, (index) => index + 1);
+    }
+  }
+
+  String _getPeriodNumberText(int number, BulkScoreEntryState state) {
+    final group = state.classInfo?.evaluationGroup;
+    if (group == EvaluationGroup.high) {
+      switch (number) {
+        case 1:
+          return AppStrings.february.tr();
+        case 2:
+          return AppStrings.march.tr();
+        case 3:
+          return AppStrings.april.tr();
+        default:
+          return number.toString();
+      }
+    } else if (state.periodType == PeriodType.monthly &&
+        _isPrimaryOrPrep(group)) {
+      switch (number) {
+        case 2:
+          return AppStrings.march.tr();
+        case 3:
+          return AppStrings.april.tr();
+        default:
+          return number.toString();
+      }
+    }
+    return number.toString();
   }
 }

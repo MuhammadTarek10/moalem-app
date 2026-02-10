@@ -18,8 +18,8 @@ class QrPdfService {
     final arabicFont = await PdfGoogleFonts.cairoRegular();
     final arabicFontBold = await PdfGoogleFonts.cairoBold();
 
-    // Max students per page
-    const int maxPerPage = 50;
+    // Max students per page (4 rows * 3 columns = 12)
+    const int maxPerPage = 12;
 
     for (var i = 0; i < students.length; i += maxPerPage) {
       final subList = students.sublist(
@@ -30,56 +30,81 @@ class QrPdfService {
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(
+            20,
+          ), // Reduced margins (approx 0.7 cm)
           textDirection: pw.TextDirection.rtl,
           theme: pw.ThemeData.withFont(base: arabicFont, bold: arabicFontBold),
           build: (context) {
             return pw.Column(
               children: [
-                pw.Header(
-                  level: 0,
-                  child: pw.Text(
-                    'طباعة الكيو آر كود للطلاب',
-                    style: pw.TextStyle(
-                      fontSize: 20,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
+                pw.Text(
+                  'طباعة الكيو آر كود للطلاب',
+                  style: pw.TextStyle(
+                    fontSize: 16, // Smaller header to save space
+                    fontWeight: pw.FontWeight.bold,
                   ),
                 ),
-                pw.SizedBox(height: 10),
+                pw.SizedBox(height: 5),
                 pw.Expanded(
                   child: pw.GridView(
-                    crossAxisCount: 5,
-                    childAspectRatio: 0.8,
+                    crossAxisCount: 3,
+                    childAspectRatio:
+                        0.9, // Optimised for 3x4 on A4 with small margins
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
                     children: subList.map((student) {
                       return pw.Container(
-                        padding: const pw.EdgeInsets.all(5),
+                        padding: const pw.EdgeInsets.all(4),
                         decoration: pw.BoxDecoration(
-                          border: pw.Border.all(color: PdfColors.grey300),
+                          border: pw.Border.all(
+                            color: PdfColors.black,
+                            width: 2,
+                          ),
+                          borderRadius: pw.BorderRadius.circular(10),
                         ),
                         child: pw.Column(
                           mainAxisAlignment: pw.MainAxisAlignment.center,
                           children: [
-                            pw.BarcodeWidget(
-                              barcode: pw.Barcode.qrCode(),
-                              data: student.qrCode,
-                              width: 60,
-                              height: 60,
+                            pw.Expanded(
+                              child: pw.Center(
+                                child: pw.BarcodeWidget(
+                                  barcode: pw.Barcode.qrCode(),
+                                  data: student.qrCode,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                ),
+                              ),
                             ),
                             pw.SizedBox(height: 5),
                             pw.Text(
                               student.name,
-                              style: const pw.TextStyle(fontSize: 8),
-                              textAlign: pw.TextAlign.center,
-                              maxLines: 1,
-                              overflow: pw.TextOverflow.clip,
-                            ),
-                            pw.Text(
-                              'ID: ${student.number}',
-                              style: const pw.TextStyle(
-                                fontSize: 7,
-                                color: PdfColors.grey700,
+                              style: pw.TextStyle(
+                                fontSize: 13,
+                                fontWeight: pw.FontWeight.bold,
                               ),
                               textAlign: pw.TextAlign.center,
+                              maxLines: 2,
+                              overflow: pw.TextOverflow.clip,
+                              textDirection: pw.TextDirection.rtl,
+                            ),
+                            pw.SizedBox(height: 5),
+                            pw.Container(
+                              padding: const pw.EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: pw.BoxDecoration(
+                                color: PdfColors.grey200,
+                                borderRadius: pw.BorderRadius.circular(6),
+                              ),
+                              child: pw.Text(
+                                '${student.number}',
+                                style: pw.TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: pw.FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ],
                         ),
