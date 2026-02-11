@@ -54,24 +54,20 @@ class HomeHeader extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.8),
                       ),
                     ),
-                  ],
-                ),
-                const Spacer(),
 
-                Container(
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.chat_bubble_outline,
-                    color: Colors.white,
-                  ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      user?.id ?? '',
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            SizedBox(height: 24.h),
+            SizedBox(height: 5.h),
 
             // Search Bar
           ],

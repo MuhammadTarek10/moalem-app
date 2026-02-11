@@ -10,6 +10,7 @@ import 'package:moalem/features/classes/domain/usecases/get_evaluations_usecase.
 import 'package:moalem/features/students/domain/entities/student_entity.dart';
 import 'package:moalem/features/students/domain/entities/student_score_entity.dart';
 import 'package:moalem/features/students/domain/entities/student_score_input_entity.dart';
+import 'package:moalem/features/students/domain/usecases/get_scores_by_class_and_evaluation_usecase.dart';
 import 'package:moalem/features/students/domain/usecases/get_student_by_qr_code_usecase.dart';
 import 'package:moalem/features/students/domain/usecases/get_students_by_class_id_usecase.dart';
 import 'package:moalem/features/students/domain/usecases/update_student_score_usecase.dart';
@@ -100,6 +101,8 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   final GetStudentsByClassIdUseCase _getStudentsByClassIdUseCase;
   final UpdateStudentScoreUseCase _updateStudentScoreUseCase;
   final GetStudentByQrCodeUseCase _getStudentByQrCodeUseCase;
+  final GetScoresByClassAndEvaluationUseCase
+  _getScoresByClassAndEvaluationUseCase;
 
   List<EvaluationEntity> _allEvaluations = [];
 
@@ -109,6 +112,7 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
     this._getStudentsByClassIdUseCase,
     this._updateStudentScoreUseCase,
     this._getStudentByQrCodeUseCase,
+    this._getScoresByClassAndEvaluationUseCase,
   ) : super(BulkScoreEntryState());
 
   Future<void> loadClassData(String classId) async {
@@ -193,7 +197,7 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
                 // April
                 return e.name == 'second_month_exam';
               } else {
-                return false; // No monthly value to show for other months
+                return false; // No monthly value to show for other months (Feb=1)
               }
             } else {
               // In Weekly view, STRICTLY hide monthly exams
@@ -249,16 +253,35 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   }
 
   Future<void> _loadExistingScores() async {
-    if (state.selectedEvaluation == null) return;
+    if (state.selectedEvaluation == null || state.classInfo == null) return;
 
-    // For now, we'll start with empty scores
-    // In a production app, you'd want to query the database for existing scores
-    // based on the selected evaluation, period type, and period number
-    final updatedStudents = state.students.map((s) {
-      return s.copyWith(currentScore: 0, isSelected: false);
-    }).toList();
+    // Don't set global isLoading to avoid full screen spinner flicker
+    // maybe just local or silent update
 
-    state = state.copyWith(students: updatedStudents, bulkScore: 0);
+    try {
+      final scores = await _getScoresByClassAndEvaluationUseCase(
+        state.classInfo!.id,
+        state.selectedEvaluation!.id,
+        state.periodType,
+        state.periodNumber,
+      );
+
+      final scoresMap = {for (var s in scores) s.studentId: s};
+
+      final updatedStudents = state.students.map((s) {
+        final existingScore = scoresMap[s.student.id];
+        return s.copyWith(
+          currentScore: existingScore?.score ?? 0,
+          isSelected: false,
+        );
+      }).toList();
+
+      state = state.copyWith(students: updatedStudents, bulkScore: 0);
+    } catch (e) {
+      // Slient fail or show snackbar?
+      // For now just log or set error state if critical
+      state = state.copyWith(error: 'Failed to load scores: $e');
+    }
   }
 
   void selectEvaluation(EvaluationEntity evaluation) {

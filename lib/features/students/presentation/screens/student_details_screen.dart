@@ -187,7 +187,8 @@ class StudentDetailsScreen extends ConsumerWidget {
                       ),
                     ]
                   : (state.periodType == PeriodType.monthly &&
-                        _isPrimaryOrPrep(group))
+                        (group == EvaluationGroup.primary ||
+                            group == EvaluationGroup.secondary))
                   ? [
                       DropdownMenuItem(
                         value: 2,
@@ -212,9 +213,11 @@ class StudentDetailsScreen extends ConsumerWidget {
             ),
           ),
           SizedBox(width: 12.w),
-          // Period Type Dropdown (Editable for Primary/Prep)
+          // Period Type Dropdown (Editable for Primary and Secondary)
           Expanded(
-            child: _isPrimaryOrPrep(group)
+            child:
+                (group == EvaluationGroup.primary ||
+                    group == EvaluationGroup.secondary)
                 ? _buildDropdown<PeriodType>(
                     context,
                     _getPeriodTypeLabel(state.periodType),
@@ -231,7 +234,7 @@ class StudentDetailsScreen extends ConsumerWidget {
                     (value) {
                       if (value != null) {
                         controller.changePeriodType(value);
-                        // If switching to monthly, set to March if current week is outside month exam range
+                        // If switching to monthly, set to Feb if currently outside range
                         if (value == PeriodType.monthly &&
                             (state.periodNumber < 2 ||
                                 state.periodNumber > 3)) {
@@ -666,10 +669,5 @@ class StudentDetailsScreen extends ConsumerWidget {
       default:
         return name;
     }
-  }
-
-  bool _isPrimaryOrPrep(EvaluationGroup? group) {
-    return group == EvaluationGroup.primary ||
-        group == EvaluationGroup.secondary;
   }
 }

@@ -32,7 +32,13 @@ class ExcelExportRepositoryImpl implements ExcelExportRepository {
   Future<String> exportAttendance({
     required ExcelExportEntity exportData,
   }) async {
-    throw UnimplementedError('Attendance export not yet implemented');
+    try {
+      final bytes = await _strategyManager.exportExcel(exportData);
+      final fileName = _generateFileName(exportData);
+      return await _saveAndShare(Uint8List.fromList(bytes), fileName);
+    } catch (e) {
+      throw ExcelExportException('Failed to export attendance: $e');
+    }
   }
 
   @override

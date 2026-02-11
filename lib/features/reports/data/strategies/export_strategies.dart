@@ -216,6 +216,25 @@ class PrePrimaryExportStrategy extends TemplateStrategy {
 
     final dataStyle = createDataStyle(workbook);
 
+    // Calculate active weeks for each evaluation
+    final Map<String, int> activeWeeksCount = {};
+    for (final evalId in evalIds) {
+      int activeWeeks = 0;
+      for (int w = 1; w <= 18; w++) {
+        bool isWeekActive = false;
+        for (final student in data.students) {
+          if (student.getScoreForWeek(w, evalId) > 0) {
+            isWeekActive = true;
+            break;
+          }
+        }
+        if (isWeekActive) {
+          activeWeeks++;
+        }
+      }
+      activeWeeksCount[evalId] = activeWeeks;
+    }
+
     for (int i = 0; i < data.students.length; i++) {
       final student = data.students[i];
       final row = startRow + i + 1;
@@ -246,16 +265,17 @@ class PrePrimaryExportStrategy extends TemplateStrategy {
       int studentTotalAverage = 0;
       for (int e = 0; e < evalIds.length; e++) {
         int sum = 0;
-        int count = 0;
         for (int wIdx = 1; wIdx <= 18; wIdx++) {
           final s = student.getScoreForWeek(wIdx, evalIds[e]);
           if (s > 0) {
             sum += s;
-            count++;
           }
         }
-        if (count > 0) {
-          final avg = (sum / count).round();
+
+        final divisor = activeWeeksCount[evalIds[e]] ?? 0;
+
+        if (divisor > 0) {
+          final avg = (sum / divisor).round();
           final range = sheet.getRangeByIndex(row, avgStartColIndex + 1 + e);
           range.setNumber(avg.toDouble());
           range.cellStyle = dataStyle;
@@ -366,6 +386,25 @@ class PrimaryExportStrategy extends TemplateStrategy {
       c.cellStyle = headerStyle;
     }
 
+    // Calculate active weeks for each evaluation
+    final Map<String, int> activeWeeksCount = {};
+    for (final evalId in evalIds) {
+      int activeWeeks = 0;
+      for (int w = 1; w <= 18; w++) {
+        bool isWeekActive = false;
+        for (final student in data.students) {
+          if (student.getScoreForWeek(w, evalId) > 0) {
+            isWeekActive = true;
+            break;
+          }
+        }
+        if (isWeekActive) {
+          activeWeeks++;
+        }
+      }
+      activeWeeksCount[evalId] = activeWeeks;
+    }
+
     for (int i = 0; i < data.students.length; i++) {
       final student = data.students[i];
       final row = startRow + i + 1;
@@ -394,16 +433,18 @@ class PrimaryExportStrategy extends TemplateStrategy {
 
       int studentTotalAverage = 0;
       for (int e = 0; e < evalIds.length; e++) {
-        int sum = 0, count = 0;
+        int sum = 0;
         for (int w = 1; w <= 18; w++) {
           final s = student.getScoreForWeek(w, evalIds[e]);
           if (s > 0) {
             sum += s;
-            count++;
           }
         }
-        if (count > 0) {
-          final avg = (sum / count).round();
+
+        final divisor = activeWeeksCount[evalIds[e]] ?? 0;
+
+        if (divisor > 0) {
+          final avg = (sum / divisor).round();
           final r = sheet.getRangeByIndex(row, avgStartCol + e + 1);
           r.setNumber(avg.toDouble());
           r.cellStyle = dataStyle;
@@ -462,15 +503,14 @@ class PreparatoryExportStrategy extends TemplateStrategy {
 
     final startRow = 8;
     final startCol = 3;
-    final colsPerWeek = 4;
+    final colsPerWeek = 3;
 
     final evalIds = [
-      'prep_hw',
-      'prep_activity',
-      'prep_weekly',
-      'prep_attendance',
+      'homework_book',
+      'weekly_review',
+      'attendance_and_diligence',
     ];
-    final labels = ['الواجب', 'النشاط', 'التقييم الأسبوعي', 'سلوك و مواظبة'];
+    final labels = ['الواجب', 'التقييم الأسبوعي', 'سلوك و مواظبة'];
 
     final headerStyle = createHeaderStyle(workbook);
     final dataStyle = createDataStyle(workbook);
@@ -482,13 +522,21 @@ class PreparatoryExportStrategy extends TemplateStrategy {
       final date = data.weekStartDates?[weekNum];
       final dateStr = date != null ? DateFormat('d/M').format(date) : '';
 
-      sheet.getRangeByIndex(6, col + 1).setText('الأسبوع $weekNum $dateStr');
-      sheet.getRangeByIndex(6, col + 1).cellStyle = headerStyle;
+      final weekTitleRange = sheet.getRangeByIndex(
+        6,
+        col + 1,
+        6,
+        col + colsPerWeek,
+      );
+      weekTitleRange.merge();
+      weekTitleRange.setText('الأسبوع $weekNum $dateStr');
+      weekTitleRange.cellStyle = headerStyle;
 
       for (int i = 0; i < labels.length; i++) {
         final c = sheet.getRangeByIndex(7, col + 1 + i);
         c.setText(labels[i]);
         c.cellStyle = headerStyle;
+        c.columnWidth = 15;
       }
     }
 
@@ -523,6 +571,25 @@ class PreparatoryExportStrategy extends TemplateStrategy {
       c.cellStyle = headerStyle;
     }
 
+    // Calculate active weeks for each evaluation
+    final Map<String, int> activeWeeksCount = {};
+    for (final evalId in evalIds) {
+      int activeWeeks = 0;
+      for (int w = 1; w <= 18; w++) {
+        bool isWeekActive = false;
+        for (final student in data.students) {
+          if (student.getScoreForWeek(w, evalId) > 0) {
+            isWeekActive = true;
+            break;
+          }
+        }
+        if (isWeekActive) {
+          activeWeeks++;
+        }
+      }
+      activeWeeksCount[evalId] = activeWeeks;
+    }
+
     for (int i = 0; i < data.students.length; i++) {
       final student = data.students[i];
       final row = startRow + i + 1;
@@ -544,17 +611,19 @@ class PreparatoryExportStrategy extends TemplateStrategy {
       }
 
       for (int e = 0; e < evalIds.length; e++) {
-        int sum = 0, count = 0;
+        int sum = 0;
         for (int w = 1; w <= 18; w++) {
           final s = student.getScoreForWeek(w, evalIds[e]);
           if (s > 0) {
             sum += s;
-            count++;
           }
         }
-        if (count > 0) {
+
+        final divisor = activeWeeksCount[evalIds[e]] ?? 0;
+
+        if (divisor > 0) {
           final r = sheet.getRangeByIndex(row, avgStartCol + e + 1);
-          r.setNumber((sum / count).roundToDouble());
+          r.setNumber((sum / divisor).roundToDouble());
           r.cellStyle = dataStyle;
         }
       }
@@ -905,15 +974,31 @@ class AttendanceExportStrategy extends TemplateStrategy {
       (i) => i + 1,
     );
 
+    // Serial and Name headers
+    final serialHeader = sheet.getRangeByIndex(5, 2, 6, 2);
+    serialHeader.merge();
+    serialHeader.setText('م');
+    serialHeader.cellStyle = headerStyle;
+    serialHeader.cellStyle.borders.all.lineStyle = LineStyle.thin;
+
+    final nameHeader = sheet.getRangeByIndex(5, 3, 6, 3);
+    nameHeader.merge();
+    nameHeader.setText('الاسم');
+    nameHeader.cellStyle = headerStyle;
+    nameHeader.cellStyle.borders.all.lineStyle = LineStyle.thin;
+    sheet.getRangeByIndex(5, 3).columnWidth = 25;
+
     for (int w = 0; w < weeks.length; w++) {
       final weekNum = weeks[w];
       final colIndex = startCol + (w * colsPerWeek);
 
-      final cell = sheet.getRangeByIndex(5, colIndex + 1);
+      final weekRange = sheet.getRangeByIndex(5, colIndex + 1, 5, colIndex + 6);
+      weekRange.merge();
       final date = data.weekStartDates?[weekNum];
       final dateStr = date != null ? DateFormat('d/M').format(date) : '';
-      cell.setText('الأسبوع $weekNum $dateStr');
-      cell.cellStyle = headerStyle;
+      weekRange.setText('الأسبوع $weekNum $dateStr');
+      weekRange.cellStyle = headerStyle;
+      weekRange.cellStyle.borders.all.lineStyle = LineStyle.thin;
 
       final days = [
         'السبت',
@@ -927,6 +1012,7 @@ class AttendanceExportStrategy extends TemplateStrategy {
         final c = sheet.getRangeByIndex(6, colIndex + 1 + d);
         c.setText(days[d]);
         c.cellStyle = headerStyle;
+        c.cellStyle.borders.all.lineStyle = LineStyle.thin;
         c.columnWidth = 5;
       }
     }

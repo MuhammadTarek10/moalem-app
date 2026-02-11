@@ -238,7 +238,7 @@ class PrintController extends StateNotifier<PrintState> {
 
     state = state.copyWith(isExportingEmptySheet: true, exportMessage: null);
     try {
-      // await _excelExportService.exportEmptyAttendanceSheet(printData);
+      await _excelExportService.exportEmptyAttendanceSheet(printData);
       state = state.copyWith(
         isExportingEmptySheet: false,
         exportMessage: 'تم تصدير كشف الغياب الفارغ بنجاح',

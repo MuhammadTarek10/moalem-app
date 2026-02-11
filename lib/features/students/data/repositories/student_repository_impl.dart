@@ -124,12 +124,12 @@ class StudentRepositoryImpl implements StudentRepository {
         classInfo.evaluationGroup == EvaluationGroup.secondary) {
       if (periodType == PeriodType.monthly) {
         // In Monthly mode, only show the relevant exam
-        if (periodNumber == 1) {
+        if (periodNumber == 2) {
           evaluationIds = ['first_month_exam'];
-        } else if (periodNumber == 2) {
+        } else if (periodNumber == 3) {
           evaluationIds = ['second_month_exam'];
         } else {
-          evaluationIds = []; // No monthly exam for other months
+          evaluationIds = []; // No monthly exam for other months (Feb=1)
         }
       } else if (periodType == PeriodType.weekly) {
         // In Weekly mode, hide monthly exams
@@ -238,6 +238,124 @@ class StudentRepositoryImpl implements StudentRepository {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  @override
+  Future<List<StudentScoreEntity>> getScoresByClassAndEvaluation(
+    String classId,
+    String evaluationId,
+    PeriodType periodType,
+    int periodNumber,
+  ) async {
+    final db = await _databaseService.database;
+
+    // High School Logic (Virtual IDs like hv_wk1_xyz)
+    if (evaluationId.startsWith('hv_')) {
+      return _getHighSchoolScoresForEvaluation(
+        db,
+        classId,
+        evaluationId,
+        periodNumber, // This is the Month (1, 2, 3)
+      );
+    }
+
+    var queryPeriodType = periodType;
+    var queryPeriodNumber = periodNumber;
+
+    // Standard Logic Mapping
+    final evalResult = await db.query(
+      _evaluationsTable,
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [evaluationId],
+    );
+
+    if (evalResult.isNotEmpty) {
+      final name = evalResult.first['name'] as String;
+      if (name == 'first_month_exam') {
+        queryPeriodType = PeriodType.monthly;
+        queryPeriodNumber = 1;
+      } else if (name == 'second_month_exam') {
+        queryPeriodType = PeriodType.monthly;
+        queryPeriodNumber = 2;
+      }
+    }
+
+    final scoresResult = await db.rawQuery(
+      '''
+      SELECT s.* 
+      FROM $_studentsScoresTable s
+      INNER JOIN $_tableName st ON s.student_id = st.id
+      WHERE st.class_id = ? 
+      AND s.evaluation_id = ? 
+      AND s.period_type = ? 
+      AND s.period_number = ?
+      AND st.deleted_at IS NULL
+    ''',
+      [classId, evaluationId, queryPeriodType.name, queryPeriodNumber],
+    );
+
+    return scoresResult.map((map) => StudentScoreEntity.fromMap(map)).toList();
+  }
+
+  Future<List<StudentScoreEntity>> _getHighSchoolScoresForEvaluation(
+    Database db,
+    String classId,
+    String virtualEvalId,
+    int month,
+  ) async {
+    // Parse Virtual ID: hv_type_realId
+    final parts = virtualEvalId.split('_');
+    final type = parts[1]; // beh, book, wk1...wk4, ex1, ex2
+    final realEvalId = parts.sublist(2).join('_');
+
+    // Calculate Target Period
+    PeriodType targetPeriodType = PeriodType.weekly;
+    int targetPeriodNumber = -1;
+
+    if (type == 'ex1') {
+      targetPeriodType = PeriodType.monthly;
+      targetPeriodNumber = 1;
+    } else if (type == 'ex2') {
+      targetPeriodType = PeriodType.monthly;
+      targetPeriodNumber = 2;
+    } else {
+      // Weekly items (beh, book, wkX)
+      // We need to determine WHICH week based on Month + Type
+      final startWeek = (month - 1) * 4 + 1; // Month 1 -> 1, Month 2 -> 5...
+
+      if (type.startsWith('wk')) {
+        // hv_wk1_... -> offset 0
+        final offset = int.parse(type.substring(2)) - 1;
+        targetPeriodNumber = startWeek + offset;
+      } else if (type == 'beh' || type == 'book') {
+        // Monthly items stored in all 4 weeks. querying first week is enough.
+        targetPeriodNumber = startWeek;
+      }
+    }
+
+    if (targetPeriodNumber == -1) return [];
+
+    final scoresResult = await db.rawQuery(
+      '''
+      SELECT s.* 
+      FROM $_studentsScoresTable s
+      INNER JOIN $_tableName st ON s.student_id = st.id
+      WHERE st.class_id = ? 
+      AND s.evaluation_id = ? 
+      AND s.period_type = ? 
+      AND s.period_number = ?
+      AND st.deleted_at IS NULL
+    ''',
+      [classId, realEvalId, targetPeriodType.name, targetPeriodNumber],
+    );
+
+    return scoresResult.map((map) {
+      // Return with the VIRTUAL ID so the controller can match it
+      return StudentScoreEntity.fromMap(
+        map,
+      ).copyWith(evaluationId: virtualEvalId);
+    }).toList();
   }
 
   @override

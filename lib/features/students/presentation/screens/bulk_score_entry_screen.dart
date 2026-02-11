@@ -788,6 +788,8 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
     } else if (state.periodType == PeriodType.monthly &&
         _isPrimaryOrPrep(group)) {
       switch (number) {
+        case 1:
+          return AppStrings.february.tr();
         case 2:
           return AppStrings.march.tr();
         case 3:

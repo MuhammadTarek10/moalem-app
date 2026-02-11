@@ -101,6 +101,8 @@ import '../../features/students/domain/usecases/delete_student_usecase.dart'
     as _i965;
 import '../../features/students/domain/usecases/edit_student_usecase.dart'
     as _i958;
+import '../../features/students/domain/usecases/get_scores_by_class_and_evaluation_usecase.dart'
+    as _i673;
 import '../../features/students/domain/usecases/get_student_by_id_usecase.dart'
     as _i925;
 import '../../features/students/domain/usecases/get_student_by_qr_code_usecase.dart'
@@ -118,6 +120,7 @@ import '../../features/students/presentation/controllers/bulk_score_entry_contro
 import 'api_service.dart' as _i738;
 import 'auth_interceptor.dart' as _i1009;
 import 'database_service.dart' as _i748;
+import 'license_service.dart' as _i261;
 import 'network_module.dart' as _i567;
 import 'secure_storage_service.dart' as _i1018;
 import 'storage_service.dart' as _i285;
@@ -147,6 +150,10 @@ extension GetItInjectableX on _i174.GetIt {
       final i = _i285.StorageService();
       return i.init().then((_) => i);
     }, preResolve: true);
+    gh.singleton<_i261.LicenseService>(
+      () => _i261.LicenseService(gh<_i285.StorageService>()),
+      dispose: (i) => i.dispose(),
+    );
     gh.factory<_i769.AttendanceLocalDataSource>(
       () => _i769.AttendanceLocalDataSource(gh<_i748.DatabaseService>()),
     );
@@ -199,6 +206,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i958.EditStudentUseCase>(
       () => _i958.EditStudentUseCase(gh<_i679.StudentRepository>()),
     );
+    gh.factory<_i673.GetScoresByClassAndEvaluationUseCase>(
+      () => _i673.GetScoresByClassAndEvaluationUseCase(
+        gh<_i679.StudentRepository>(),
+      ),
+    );
     gh.factory<_i925.GetStudentByIdUseCase>(
       () => _i925.GetStudentByIdUseCase(gh<_i679.StudentRepository>()),
     );
@@ -250,6 +262,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i346.GetStudentsByClassIdUseCase>(),
         gh<_i203.UpdateStudentScoreUseCase>(),
         gh<_i171.GetStudentByQrCodeUseCase>(),
+        gh<_i673.GetScoresByClassAndEvaluationUseCase>(),
       ),
     );
     gh.factory<_i650.ExcelExportController>(

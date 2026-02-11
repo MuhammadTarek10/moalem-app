@@ -14,7 +14,15 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 @injectable
 class ExcelExportService {
   Future<String> exportToExcel(PrintDataEntity data) async {
-    final excelEntity = _mapToExcelEntity(data);
+    return _export(data, false);
+  }
+
+  Future<String> exportEmptyAttendanceSheet(PrintDataEntity data) async {
+    return _export(data, true);
+  }
+
+  Future<String> _export(PrintDataEntity data, bool isEmpty) async {
+    final excelEntity = _mapToExcelEntity(data, isEmpty);
     final strategy = _getStrategy(excelEntity);
     final workbook = await strategy.prepareWorkbook();
 
@@ -48,7 +56,10 @@ class ExcelExportService {
     }
   }
 
-  excel_ent.ExcelExportEntity _mapToExcelEntity(PrintDataEntity data) {
+  excel_ent.ExcelExportEntity _mapToExcelEntity(
+    PrintDataEntity data, [
+    bool isEmpty = false,
+  ]) {
     // Map PrintDataEntity to ExcelExportEntity
 
     excel_ent.EducationalStage stage;
@@ -81,28 +92,30 @@ class ExcelExportService {
             weeklyScores: s.weeklyScores ?? {},
             weeklyTotals: s.weeklyTotals ?? {},
             monthlyExamScores: s.monthlyExamScores,
-            weeklyAttendance: s.weeklyAttendance?.map(
-              (k, v) => MapEntry(
-                k,
-                v.map((d, status) {
-                  excel_ent.AttendanceStatus mappedStatus;
-                  switch (status.name) {
-                    case 'present':
-                      mappedStatus = excel_ent.AttendanceStatus.present;
-                      break;
-                    case 'absent':
-                      mappedStatus = excel_ent.AttendanceStatus.absent;
-                      break;
-                    case 'excused':
-                      mappedStatus = excel_ent.AttendanceStatus.excused;
-                      break;
-                    default:
-                      mappedStatus = excel_ent.AttendanceStatus.present;
-                  }
-                  return MapEntry(d, mappedStatus);
-                }),
-              ),
-            ),
+            weeklyAttendance: isEmpty
+                ? null
+                : s.weeklyAttendance?.map(
+                    (k, v) => MapEntry(
+                      k,
+                      v.map((d, status) {
+                        excel_ent.AttendanceStatus mappedStatus;
+                        switch (status.name) {
+                          case 'present':
+                            mappedStatus = excel_ent.AttendanceStatus.present;
+                            break;
+                          case 'absent':
+                            mappedStatus = excel_ent.AttendanceStatus.absent;
+                            break;
+                          case 'excused':
+                            mappedStatus = excel_ent.AttendanceStatus.excused;
+                            break;
+                          default:
+                            mappedStatus = excel_ent.AttendanceStatus.present;
+                        }
+                        return MapEntry(d, mappedStatus);
+                      }),
+                    ),
+                  ),
           ),
         )
         .toList();

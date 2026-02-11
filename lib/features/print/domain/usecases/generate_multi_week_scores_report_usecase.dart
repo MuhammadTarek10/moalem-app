@@ -135,7 +135,10 @@ class GenerateMultiWeekScoresReportUseCase {
       final bool isHighSchool =
           classEntity.evaluationGroup == EvaluationGroup.high;
 
-      if (isPrimaryExport || isHighSchool) {
+      final bool isMiddleSchool =
+          classEntity.evaluationGroup == EvaluationGroup.secondary;
+
+      if (isPrimaryExport || isHighSchool || isMiddleSchool) {
         // Collect scores from all potential monthly periods (1, 2, 3)
         // This handles cases where user enters March Exam in Period 2 or 3
         final allMonthlyScores = <String, int>{};
