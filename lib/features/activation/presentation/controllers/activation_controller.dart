@@ -1,16 +1,12 @@
-import 'dart:convert';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moalem/core/constants/app_constants.dart';
-import 'package:moalem/core/constants/app_keys.dart';
 import 'package:moalem/core/constants/app_strings.dart';
 import 'package:moalem/core/services/injection.dart';
-import 'package:moalem/core/services/secure_storage_service.dart';
 import 'package:moalem/features/activation/domain/usecases/redeem_coupon_usecase.dart';
 import 'package:moalem/features/auth/data/models/coupon_model.dart';
-import 'package:moalem/features/auth/data/models/user_model.dart';
+import 'package:moalem/features/auth/domain/repositories/user_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ActivationState {
@@ -48,26 +44,35 @@ final activationControllerProvider =
     ) {
       return ActivationController(
         getIt<RedeemCouponUseCase>(),
-        getIt<SecureStorageService>(),
+        getIt<UserRepository>(),
       );
     });
 
 class ActivationController extends StateNotifier<ActivationState> {
   final RedeemCouponUseCase _redeemCouponUseCase;
-  final SecureStorageService _secureStorageService;
+  final UserRepository _userRepository;
 
-  ActivationController(this._redeemCouponUseCase, this._secureStorageService)
+  ActivationController(this._redeemCouponUseCase, this._userRepository)
     : super(ActivationState()) {
     _loadUserId();
   }
 
   Future<void> _loadUserId() async {
-    final userJson = await _secureStorageService.read(AppKeys.user);
-    if (userJson != null) {
-      try {
-        final userModel = UserModel.fromJson(jsonDecode(userJson));
-        state = state.copyWith(userId: userModel.id);
-      } catch (_) {}
+    print('🔍 [ActivationController] Starting to load user ID...');
+    try {
+      // Use refreshUser() to force fetching the latest profile from the API
+      // even if something is in storage, to ensure we get the correct ID.
+      // The AuthInterceptor has been updated to allow this specific path.
+      final user = await _userRepository.refreshUser();
+      print('✅ [ActivationController] User fetched successfully: ${user.id}');
+      state = state.copyWith(userId: user.id);
+      print(
+        '✅ [ActivationController] State updated with userId: ${state.userId}',
+      );
+    } catch (e, stackTrace) {
+      print('❌ [ActivationController] Error loading user: $e');
+      print('Stack trace: $stackTrace');
+      // If fetching user fails, userId will remain null
     }
   }
 

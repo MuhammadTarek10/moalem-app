@@ -25,10 +25,12 @@ class AuthInterceptor extends Interceptor {
     if (token != null && token.isNotEmpty) {
       // Check license validity before proceeding with authenticated requests
       // Skip license check for coupon redemption endpoint (user needs to redeem to get license)
-      final isCouponRedemption = options.path == '/license/redeem-coupon';
-      
+      final isExcludedPath =
+          options.path == '/license/redeem-coupon' ||
+          options.path == '/users/profile';
+
       // Use Service Locator directly to avoid regenerating injection code
-      if (!isCouponRedemption &&
+      if (!isExcludedPath &&
           getIt.isRegistered<LicenseService>() &&
           !getIt<LicenseService>().isLicenseValid) {
         // License expired, block request
