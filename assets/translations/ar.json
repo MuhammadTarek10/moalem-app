@@ -230,5 +230,11 @@
   "year_label": "سنة",
   "student_count_label": "عدد الطلاب",
   "class_limit_reached": "عذراً، لقد وصلت للحد الأقصى لعدد الفصول (15 فصل)",
-  "student_limit_reached": "عذراً، لقد وصلت للحد الأقصى لعدد الطلاب في الفصل الواحد (50 طالب)"
+  "student_limit_reached": "عذراً، لقد وصلت للحد الأقصى لعدد الطلاب في الفصل الواحد (50 طالب)",
+  "high_school_attendance_monthly": "حضور ومواظبة",
+  "high_school_homework_monthly": "كراسة الواجب",
+  "high_school_weekly_1": "الأسبوع الأول",
+  "high_school_weekly_2": "الأسبوع الثاني",
+  "high_school_weekly_3": "الأسبوع الثالث",
+  "high_school_weekly_4": "الأسبوع الرابع"
 }

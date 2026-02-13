@@ -169,6 +169,16 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   void _updateAvailableEvaluations() {
     if (state.classInfo == null) return;
 
+    final isHighSchool =
+        state.classInfo!.evaluationGroup == EvaluationGroup.high;
+
+    // Special handling for High School Monthly View
+    if (isHighSchool && state.periodType == PeriodType.monthly) {
+      _createHighSchoolVirtualEvaluations();
+      return;
+    }
+
+    // Standard filtering for other stages
     final evaluationScoresMap = _getEvaluationScoresMap(
       state.classInfo!.evaluationGroup,
     );
@@ -183,8 +193,6 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
           final isPrimaryOrPrep =
               state.classInfo!.evaluationGroup == EvaluationGroup.primary ||
               state.classInfo!.evaluationGroup == EvaluationGroup.secondary;
-          final isHighSchool =
-              state.classInfo!.evaluationGroup == EvaluationGroup.high;
 
           // Logic for Primary/Secondary
           if (isPrimaryOrPrep) {
@@ -210,23 +218,6 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
             }
           }
 
-          // Logic for High School (Default Monthly)
-          if (isHighSchool) {
-            if (state.periodType == PeriodType.monthly) {
-              if (e.name == 'first_month_exam') {
-                return state.periodNumber == 2; // Month 2 (March)
-              }
-              if (e.name == 'second_month_exam') {
-                return state.periodNumber == 3; // Month 3 (April)
-              }
-            } else {
-              // If weekly (shouldn't happen for High School usually but safe guard)
-              if (e.name == 'first_month_exam' ||
-                  e.name == 'second_month_exam') {
-                return false;
-              }
-            }
-          }
           return true;
         })
         .toList();
@@ -236,6 +227,69 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
       selectedEvaluation: filtered.contains(state.selectedEvaluation)
           ? state.selectedEvaluation
           : (filtered.isNotEmpty ? filtered.first : null),
+    );
+  }
+
+  void _createHighSchoolVirtualEvaluations() {
+    // Find the real evaluation IDs
+    final weeklyEval = _allEvaluations.firstWhere(
+      (e) => e.name == 'weekly_review',
+      orElse: () => _allEvaluations.first,
+    );
+    final behEval = _allEvaluations.firstWhere(
+      (e) => e.name == 'attendance_and_diligence',
+      orElse: () => _allEvaluations.first,
+    );
+    final bookEval = _allEvaluations.firstWhere(
+      (e) => e.name == 'homework_book',
+      orElse: () => _allEvaluations.first,
+    );
+
+    // Create virtual evaluations list
+    final List<EvaluationEntity> virtualEvals = [];
+
+    // Add attendance (monthly)
+    virtualEvals.add(
+      behEval.copyWith(id: 'hv_beh_${behEval.id}', maxScore: 10),
+    );
+
+    // Add homework book (monthly)
+    virtualEvals.add(
+      bookEval.copyWith(id: 'hv_book_${bookEval.id}', maxScore: 10),
+    );
+
+    // Add 4 weekly evaluations
+    for (int i = 1; i <= 4; i++) {
+      virtualEvals.add(
+        weeklyEval.copyWith(
+          id: 'hv_wk${i}_${weeklyEval.id}',
+          name: 'weekly_review_w$i',
+          maxScore: 20,
+        ),
+      );
+    }
+
+    // Add monthly exam if applicable
+    if (state.periodNumber == 2) {
+      // March - add first month exam
+      final ex1 = _allEvaluations.firstWhere(
+        (e) => e.name == 'first_month_exam',
+        orElse: () => _allEvaluations.first,
+      );
+      virtualEvals.add(ex1.copyWith(id: 'hv_ex1_${ex1.id}', maxScore: 15));
+    } else if (state.periodNumber == 3) {
+      // April - add second month exam
+      final ex2 = _allEvaluations.firstWhere(
+        (e) => e.name == 'second_month_exam',
+        orElse: () => _allEvaluations.first,
+      );
+      virtualEvals.add(ex2.copyWith(id: 'hv_ex2_${ex2.id}', maxScore: 15));
+    }
+
+    // Use virtual evaluations
+    state = state.copyWith(
+      availableEvaluations: virtualEvals,
+      selectedEvaluation: virtualEvals.isNotEmpty ? virtualEvals.first : null,
     );
   }
 
@@ -320,7 +374,14 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   void toggleStudentSelection(String studentId) {
     final updatedStudents = state.students.map((s) {
       if (s.student.id == studentId) {
-        return s.copyWith(isSelected: !s.isSelected);
+        final newSelectionState = !s.isSelected;
+        // If selecting the student, apply the current bulk score
+        if (newSelectionState) {
+          final maxScore = state.currentMaxScore ?? 0;
+          final scoreToApply = state.bulkScore.clamp(0, maxScore);
+          return s.copyWith(isSelected: true, currentScore: scoreToApply);
+        }
+        return s.copyWith(isSelected: false);
       }
       return s;
     }).toList();
@@ -330,8 +391,15 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
 
   void toggleSelectAll() {
     final newSelectionState = !state.allSelected;
+    final maxScore = state.currentMaxScore ?? 0;
+    final scoreToApply = state.bulkScore.clamp(0, maxScore);
+
     final updatedStudents = state.students.map((s) {
-      return s.copyWith(isSelected: newSelectionState);
+      // If selecting all, apply the current bulk score to all students
+      if (newSelectionState) {
+        return s.copyWith(isSelected: true, currentScore: scoreToApply);
+      }
+      return s.copyWith(isSelected: false);
     }).toList();
 
     state = state.copyWith(students: updatedStudents);
@@ -378,11 +446,10 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
     final maxScore = state.currentMaxScore ?? 0;
     final newBulkScore = (state.bulkScore + 1).clamp(0, maxScore);
 
+    // Apply the new bulk score to all selected students
     final updatedStudents = state.students.map((s) {
-      if (s.isSelected && s.currentScore < maxScore) {
-        return s.copyWith(
-          currentScore: (s.currentScore + 1).clamp(0, maxScore),
-        );
+      if (s.isSelected) {
+        return s.copyWith(currentScore: newBulkScore);
       }
       return s;
     }).toList();
@@ -391,14 +458,13 @@ class BulkScoreEntryController extends StateNotifier<BulkScoreEntryState> {
   }
 
   void decrementSelectedScores() {
-    final newBulkScore = (state.bulkScore - 1).clamp(
-      0,
-      state.currentMaxScore ?? 0,
-    );
+    final maxScore = state.currentMaxScore ?? 0;
+    final newBulkScore = (state.bulkScore - 1).clamp(0, maxScore);
 
+    // Apply the new bulk score to all selected students
     final updatedStudents = state.students.map((s) {
-      if (s.isSelected && s.currentScore > 0) {
-        return s.copyWith(currentScore: s.currentScore - 1);
+      if (s.isSelected) {
+        return s.copyWith(currentScore: newBulkScore);
       }
       return s;
     }).toList();

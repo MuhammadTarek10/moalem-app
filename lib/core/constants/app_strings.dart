@@ -285,6 +285,16 @@ class AppStrings {
   static const String week3Label = 'week3_label';
   static const String week4Label = 'week4_label';
 
+  // High School Monthly Evaluations
+  static const String highSchoolAttendanceMonthly =
+      'high_school_attendance_monthly';
+  static const String highSchoolHomeworkMonthly =
+      'high_school_homework_monthly';
+  static const String highSchoolWeekly1 = 'high_school_weekly_1';
+  static const String highSchoolWeekly2 = 'high_school_weekly_2';
+  static const String highSchoolWeekly3 = 'high_school_weekly_3';
+  static const String highSchoolWeekly4 = 'high_school_weekly_4';
+
   // Home Screen Class Item
   static const String yearLabel = 'year_label';
   static const String studentCountLabel = 'student_count_label';

@@ -372,6 +372,16 @@ class ReportsScreen extends ConsumerWidget {
         return AppStrings.firstMonthExamShort.tr();
       case 'second_month_exam':
         return AppStrings.secondMonthExamShort.tr();
+      case 'primary_homework':
+        return AppStrings.primaryHomework.tr();
+      case 'primary_activity':
+        return AppStrings.primaryActivity.tr();
+      case 'primary_weekly':
+        return AppStrings.primaryWeekly.tr();
+      case 'primary_performance':
+        return AppStrings.primaryPerformance.tr();
+      case 'primary_attendance':
+        return AppStrings.primaryAttendance.tr();
       default:
         return name;
     }

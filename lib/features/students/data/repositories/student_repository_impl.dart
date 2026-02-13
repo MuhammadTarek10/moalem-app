@@ -170,20 +170,14 @@ class StudentRepositoryImpl implements StudentRepository {
       return indexA.compareTo(indexB);
     });
 
-    // Map displayed Month (2, 3) to logical Monthly Period (1, 2)
+    // Map UI period numbers to database period numbers for monthly exams
     int scorePeriodNumber = periodNumber;
-    // FIXED: Allow direct access to period 1 and 2.
-    // Legacy mapping (2->1, 3->2) removed or adjusted if needed.
-    // Assuming UI will be updated to send 1 and 2 if it's not already doing so.
-    // If we keep the old check, it blocks access to 2.
-    // So we remove the conditional re-mapping for Primary/Secondary.
-
-    // if (periodType == PeriodType.monthly &&
-    //     (classInfo.evaluationGroup == EvaluationGroup.primary ||
-    //         classInfo.evaluationGroup == EvaluationGroup.secondary)) {
-    //   if (periodNumber == 2) scorePeriodNumber = 1;
-    //   if (periodNumber == 3) scorePeriodNumber = 2;
-    // }
+    if (periodType == PeriodType.monthly &&
+        (classInfo.evaluationGroup == EvaluationGroup.primary ||
+            classInfo.evaluationGroup == EvaluationGroup.secondary)) {
+      if (periodNumber == 2) scorePeriodNumber = 1; // March -> First exam
+      if (periodNumber == 3) scorePeriodNumber = 2; // April -> Second exam
+    }
 
     // Get scores for this student, period type, and period number
     final scoresResult = await db.query(

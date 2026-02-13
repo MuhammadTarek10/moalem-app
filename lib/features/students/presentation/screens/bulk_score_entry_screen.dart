@@ -739,6 +739,14 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
         return AppStrings.primaryPerformance.tr();
       case 'primary_attendance':
         return AppStrings.primaryAttendance.tr();
+      case 'weekly_review_w1':
+        return AppStrings.week1Label.tr();
+      case 'weekly_review_w2':
+        return AppStrings.week2Label.tr();
+      case 'weekly_review_w3':
+        return AppStrings.week3Label.tr();
+      case 'weekly_review_w4':
+        return AppStrings.week4Label.tr();
       default:
         return name;
     }
