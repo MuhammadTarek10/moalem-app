@@ -1,19 +1,21 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:moalem/core/constants/app_strings.dart';
 
 class HomeClassItem extends StatelessWidget {
   final String className;
-  final String stage;
   final String grade;
-  final String subject;
+  final int studentsCount;
+  final String semester;
   final VoidCallback onTap;
 
   const HomeClassItem({
     super.key,
     required this.className,
-    required this.stage,
     required this.grade,
-    required this.subject,
+    required this.studentsCount,
+    required this.semester,
     required this.onTap,
   });
 
@@ -36,14 +38,14 @@ class HomeClassItem extends StatelessWidget {
         ),
         child: IntrinsicHeight(
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            // Ensure RTL direction for the card content
             children: [
-              // Purple accent strip
+              // Purple accent strip (Right side for RTL)
               Container(
                 width: 4.w,
                 decoration: BoxDecoration(
-                  color: const Color(
-                    0xFF7A1C9A,
-                  ), // Deep purple color from image
+                  color: const Color(0xFF7A1C9A),
                   borderRadius: BorderRadius.only(
                     topRight: Radius.circular(8.r),
                     bottomRight: Radius.circular(8.r),
@@ -56,57 +58,26 @@ class HomeClassItem extends StatelessWidget {
                     horizontal: 16.w,
                     vertical: 16.h,
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      // Arrow icon (Left for RTL context usually, but standard trailing for list tile is typically chevron_right)
-                      // The image shows an arrow pointing LEFT '<'. In RTL this means "Go back" or "Details"?
-                      // Usually in RTL, the "Next" arrow points to the Left.
-                      Icon(
-                        Icons.arrow_back_ios_new,
-                        size: 16.sp,
-                        color: const Color(0xFF7A1C9A),
+                      _buildInfoRow(
+                        AppStrings.classNameLabel.tr(),
+                        className,
+                        true,
                       ),
-                      const Spacer(),
-
-                      // Text Content
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            className,
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            stage,
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            grade,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            subject,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: const Color(0xFF7A1C9A),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      SizedBox(height: 8.h),
+                      _buildInfoRow(AppStrings.yearLabel.tr(), grade, false),
+                      SizedBox(height: 8.h),
+                      _buildInfoRow(
+                        AppStrings.studentCountLabel.tr(),
+                        studentsCount.toString(),
+                        false,
+                      ),
+                      SizedBox(height: 8.h),
+                      _buildInfoRow(
+                        AppStrings.semesterLabel.tr(),
+                        semester,
+                        false,
                       ),
                     ],
                   ),
@@ -116,6 +87,33 @@ class HomeClassItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, bool isBold) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Text(
+          '$label :- ',
+          style: TextStyle(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w400,
+              color: isBold ? Colors.black : Colors.black87,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -29,6 +29,8 @@ class EvaluationValues {
     'primary_weekly': 5,
     'primary_performance': 10,
     'primary_attendance': 5,
+    'first_month_exam': 15,
+    'second_month_exam': 15,
   };
 
   static const Map<String, int> secondaryEvaluationScores = {
@@ -36,6 +38,8 @@ class EvaluationValues {
     'weekly_review': 20,
     'homework_book': 10,
     'attendance_and_diligence': 10,
+    'first_month_exam': 15,
+    'second_month_exam': 15,
   };
 
   static const Map<String, int> highSchoolEvaluationScores = {

@@ -58,12 +58,12 @@ class StudentsEmptyState extends StatelessWidget {
               text: AppStrings.addStudentManually.tr(),
             ),
             SizedBox(height: 16.h),
-            // Attach Excel Button
-            AppButton(
-              onPressed: onAttachExcel,
-              text: AppStrings.addStudentsExcel.tr(),
-              outlined: true,
-            ),
+            // // Attach Excel Button
+            // AppButton(
+            //   onPressed: onAttachExcel,
+            //   text: AppStrings.addStudentsExcel.tr(),
+            //   outlined: true,
+            // ),
           ],
         ),
       ),

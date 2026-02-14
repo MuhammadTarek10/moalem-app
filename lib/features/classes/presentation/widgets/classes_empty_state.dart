@@ -57,13 +57,13 @@ class ClassesEmptyState extends StatelessWidget {
               onPressed: onAddManually,
               text: AppStrings.addClassManually.tr(),
             ),
-            SizedBox(height: 16.h),
-            // Attach Excel Button
-            AppButton(
-              onPressed: onAttachExcel,
-              text: AppStrings.attachExcelFile.tr(),
-              outlined: true,
-            ),
+            // SizedBox(height: 16.h),
+            // // Attach Excel Button
+            // AppButton(
+            //   onPressed: onAttachExcel,
+            //   text: AppStrings.attachExcelFile.tr(),
+            //   outlined: true,
+            // ),
           ],
         ),
       ),

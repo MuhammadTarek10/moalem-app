@@ -95,9 +95,11 @@ class QrPrintController extends StateNotifier<QrPrintState> {
     state = state.copyWith(isExportingPdf: true);
     try {
       final students = state.students.asData?.value ?? [];
-      final selectedStudents = students
-          .where((s) => state.selectedStudentIds.contains(s.id))
-          .toList();
+      final selectedStudents =
+          students
+              .where((s) => state.selectedStudentIds.contains(s.id))
+              .toList()
+            ..sort((a, b) => a.number.compareTo(b.number));
 
       if (selectedStudents.isEmpty) return;
 

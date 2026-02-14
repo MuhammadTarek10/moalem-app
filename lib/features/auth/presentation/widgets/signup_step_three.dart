@@ -17,11 +17,13 @@ class SignupStepThree extends StatelessWidget {
     required this.formData,
     required this.onDataChanged,
     required this.formKey,
+    this.autovalidateMode = AutovalidateMode.disabled,
   });
 
   final SignupFormData formData;
   final ValueChanged<SignupFormData> onDataChanged;
   final GlobalKey<FormState> formKey;
+  final AutovalidateMode autovalidateMode;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,7 @@ class SignupStepThree extends StatelessWidget {
 
     return Form(
       key: formKey,
+      autovalidateMode: autovalidateMode,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

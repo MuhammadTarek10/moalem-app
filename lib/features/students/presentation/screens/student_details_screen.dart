@@ -159,19 +159,19 @@ class StudentDetailsScreen extends ConsumerWidget {
     StudentDetailsState state,
     StudentDetailsController controller,
   ) {
+    final group = state.data.value?.classInfo.evaluationGroup;
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       color: Colors.white,
       child: Row(
         children: [
-          // Period Number Dropdown
+          // Period Number Dropdown (Month or Week)
           Expanded(
             child: _buildDropdown(
               context,
               state.periodNumber.toString(),
-              // Period Number Dropdown
-              state.data.value?.classInfo.evaluationGroup ==
-                      EvaluationGroup.high
+              group == EvaluationGroup.high
                   ? [
                       DropdownMenuItem(
                         value: 1,
@@ -186,7 +186,20 @@ class StudentDetailsScreen extends ConsumerWidget {
                         child: Text(AppStrings.april.tr()),
                       ),
                     ]
-                  : List.generate(12, (index) => index + 1)
+                  : (state.periodType == PeriodType.monthly &&
+                        (group == EvaluationGroup.primary ||
+                            group == EvaluationGroup.secondary))
+                  ? [
+                      DropdownMenuItem(
+                        value: 2,
+                        child: Text(AppStrings.march.tr()),
+                      ),
+                      DropdownMenuItem(
+                        value: 3,
+                        child: Text(AppStrings.april.tr()),
+                      ),
+                    ]
+                  : List.generate(18, (index) => index + 1)
                         .map(
                           (n) => DropdownMenuItem(
                             value: n,
@@ -200,26 +213,56 @@ class StudentDetailsScreen extends ConsumerWidget {
             ),
           ),
           SizedBox(width: 12.w),
-          // Period Type Dropdown
+          // Period Type Dropdown (Editable for Primary and Secondary)
           Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLighter,
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Text(
-                state.data.value?.classInfo.evaluationGroup ==
-                        EvaluationGroup.high
-                    ? AppStrings.monthly.tr()
-                    : _getPeriodTypeLabel(state.periodType),
-                style: context.bodyMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
+            child:
+                (group == EvaluationGroup.primary ||
+                    group == EvaluationGroup.secondary)
+                ? _buildDropdown<PeriodType>(
+                    context,
+                    _getPeriodTypeLabel(state.periodType),
+                    [
+                      DropdownMenuItem(
+                        value: PeriodType.weekly,
+                        child: Text(AppStrings.weekly.tr()),
+                      ),
+                      DropdownMenuItem(
+                        value: PeriodType.monthly,
+                        child: Text(AppStrings.monthly.tr()),
+                      ),
+                    ],
+                    (value) {
+                      if (value != null) {
+                        controller.changePeriodType(value);
+                        // If switching to monthly, set to Feb if currently outside range
+                        if (value == PeriodType.monthly &&
+                            (state.periodNumber < 2 ||
+                                state.periodNumber > 3)) {
+                          controller.changePeriodNumber(2);
+                        }
+                      }
+                    },
+                  )
+                : Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 10.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryLighter,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      group == EvaluationGroup.high
+                          ? AppStrings.monthly.tr()
+                          : _getPeriodTypeLabel(state.periodType),
+                      style: context.bodyMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
           ),
           SizedBox(width: 12.w),
           // Grades Label
@@ -613,6 +656,8 @@ class StudentDetailsScreen extends ConsumerWidget {
         return AppStrings.primaryWeekly.tr();
       case 'primary_performance':
         return AppStrings.primaryPerformance.tr();
+      case 'primary_attendance':
+        return AppStrings.primaryAttendance.tr();
       case 'weekly_review_w1':
         return AppStrings.week1Label.tr();
       case 'weekly_review_w2':

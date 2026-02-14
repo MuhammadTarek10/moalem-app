@@ -117,14 +117,38 @@ class StudentRepositoryImpl implements StudentRepository {
     }
 
     // Get only the evaluations that are relevant for this evaluation group
-    final evaluationIds = evaluationScoresMap.keys.toList();
-    final placeholders = evaluationIds.map((_) => '?').join(',');
+    List<String> evaluationIds = evaluationScoresMap.keys.toList();
 
-    final evaluationsResult = await db.query(
-      _evaluationsTable,
-      where: 'name IN ($placeholders) AND deleted_at IS NULL',
-      whereArgs: evaluationIds,
-    );
+    // CUSTOM FILTERING FOR EACH PERIOD TYPE
+    if (classInfo.evaluationGroup == EvaluationGroup.primary ||
+        classInfo.evaluationGroup == EvaluationGroup.secondary) {
+      if (periodType == PeriodType.monthly) {
+        // In Monthly mode, only show the relevant exam
+        if (periodNumber == 2) {
+          evaluationIds = ['first_month_exam'];
+        } else if (periodNumber == 3) {
+          evaluationIds = ['second_month_exam'];
+        } else {
+          evaluationIds = []; // No monthly exam for other months (Feb=1)
+        }
+      } else if (periodType == PeriodType.weekly) {
+        // In Weekly mode, hide monthly exams
+        evaluationIds.remove('first_month_exam');
+        evaluationIds.remove('second_month_exam');
+      }
+    }
+
+    final placeholders = evaluationIds.isEmpty
+        ? 'NULL'
+        : evaluationIds.map((_) => '?').join(',');
+
+    final evaluationsResult = evaluationIds.isEmpty
+        ? []
+        : await db.query(
+            _evaluationsTable,
+            where: 'name IN ($placeholders) AND deleted_at IS NULL',
+            whereArgs: evaluationIds,
+          );
 
     final evaluations = evaluationsResult.map((map) {
       final evaluationName = map['name'] as String;
@@ -146,11 +170,20 @@ class StudentRepositoryImpl implements StudentRepository {
       return indexA.compareTo(indexB);
     });
 
+    // Map UI period numbers to database period numbers for monthly exams
+    int scorePeriodNumber = periodNumber;
+    if (periodType == PeriodType.monthly &&
+        (classInfo.evaluationGroup == EvaluationGroup.primary ||
+            classInfo.evaluationGroup == EvaluationGroup.secondary)) {
+      if (periodNumber == 2) scorePeriodNumber = 1; // March -> First exam
+      if (periodNumber == 3) scorePeriodNumber = 2; // April -> Second exam
+    }
+
     // Get scores for this student, period type, and period number
     final scoresResult = await db.query(
       _studentsScoresTable,
       where: 'student_id = ? AND period_type = ? AND period_number = ?',
-      whereArgs: [studentId, periodType.name, periodNumber],
+      whereArgs: [studentId, periodType.name, scorePeriodNumber],
     );
 
     final Map<String, StudentScoreEntity> scores = {};
@@ -202,6 +235,124 @@ class StudentRepositoryImpl implements StudentRepository {
   }
 
   @override
+  Future<List<StudentScoreEntity>> getScoresByClassAndEvaluation(
+    String classId,
+    String evaluationId,
+    PeriodType periodType,
+    int periodNumber,
+  ) async {
+    final db = await _databaseService.database;
+
+    // High School Logic (Virtual IDs like hv_wk1_xyz)
+    if (evaluationId.startsWith('hv_')) {
+      return _getHighSchoolScoresForEvaluation(
+        db,
+        classId,
+        evaluationId,
+        periodNumber, // This is the Month (1, 2, 3)
+      );
+    }
+
+    var queryPeriodType = periodType;
+    var queryPeriodNumber = periodNumber;
+
+    // Standard Logic Mapping
+    final evalResult = await db.query(
+      _evaluationsTable,
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [evaluationId],
+    );
+
+    if (evalResult.isNotEmpty) {
+      final name = evalResult.first['name'] as String;
+      if (name == 'first_month_exam') {
+        queryPeriodType = PeriodType.monthly;
+        queryPeriodNumber = 1;
+      } else if (name == 'second_month_exam') {
+        queryPeriodType = PeriodType.monthly;
+        queryPeriodNumber = 2;
+      }
+    }
+
+    final scoresResult = await db.rawQuery(
+      '''
+      SELECT s.* 
+      FROM $_studentsScoresTable s
+      INNER JOIN $_tableName st ON s.student_id = st.id
+      WHERE st.class_id = ? 
+      AND s.evaluation_id = ? 
+      AND s.period_type = ? 
+      AND s.period_number = ?
+      AND st.deleted_at IS NULL
+    ''',
+      [classId, evaluationId, queryPeriodType.name, queryPeriodNumber],
+    );
+
+    return scoresResult.map((map) => StudentScoreEntity.fromMap(map)).toList();
+  }
+
+  Future<List<StudentScoreEntity>> _getHighSchoolScoresForEvaluation(
+    Database db,
+    String classId,
+    String virtualEvalId,
+    int month,
+  ) async {
+    // Parse Virtual ID: hv_type_realId
+    final parts = virtualEvalId.split('_');
+    final type = parts[1]; // beh, book, wk1...wk4, ex1, ex2
+    final realEvalId = parts.sublist(2).join('_');
+
+    // Calculate Target Period
+    PeriodType targetPeriodType = PeriodType.weekly;
+    int targetPeriodNumber = -1;
+
+    if (type == 'ex1') {
+      targetPeriodType = PeriodType.monthly;
+      targetPeriodNumber = 1;
+    } else if (type == 'ex2') {
+      targetPeriodType = PeriodType.monthly;
+      targetPeriodNumber = 2;
+    } else {
+      // Weekly items (beh, book, wkX)
+      // We need to determine WHICH week based on Month + Type
+      final startWeek = (month - 1) * 4 + 1; // Month 1 -> 1, Month 2 -> 5...
+
+      if (type.startsWith('wk')) {
+        // hv_wk1_... -> offset 0
+        final offset = int.parse(type.substring(2)) - 1;
+        targetPeriodNumber = startWeek + offset;
+      } else if (type == 'beh' || type == 'book') {
+        // Monthly items stored in all 4 weeks. querying first week is enough.
+        targetPeriodNumber = startWeek;
+      }
+    }
+
+    if (targetPeriodNumber == -1) return [];
+
+    final scoresResult = await db.rawQuery(
+      '''
+      SELECT s.* 
+      FROM $_studentsScoresTable s
+      INNER JOIN $_tableName st ON s.student_id = st.id
+      WHERE st.class_id = ? 
+      AND s.evaluation_id = ? 
+      AND s.period_type = ? 
+      AND s.period_number = ?
+      AND st.deleted_at IS NULL
+    ''',
+      [classId, realEvalId, targetPeriodType.name, targetPeriodNumber],
+    );
+
+    return scoresResult.map((map) {
+      // Return with the VIRTUAL ID so the controller can match it
+      return StudentScoreEntity.fromMap(
+        map,
+      ).copyWith(evaluationId: virtualEvalId);
+    }).toList();
+  }
+
+  @override
   Future<void> upsertStudentScore(StudentScoreEntity score) async {
     final db = await _databaseService.database;
 
@@ -210,7 +361,31 @@ class StudentRepositoryImpl implements StudentRepository {
       return;
     }
 
-    await _performStandardUpsert(score, db);
+    // Map exams to their logically associated months for consistency in reports
+    final evalResult = await db.query(
+      _evaluationsTable,
+      columns: ['name'],
+      where: 'id = ?',
+      whereArgs: [score.evaluationId],
+    );
+
+    StudentScoreEntity finalScore = score;
+    if (evalResult.isNotEmpty) {
+      final String name = evalResult.first['name'] as String;
+      if (name == 'first_month_exam') {
+        finalScore = score.copyWith(
+          periodType: PeriodType.monthly,
+          periodNumber: 1,
+        );
+      } else if (name == 'second_month_exam') {
+        finalScore = score.copyWith(
+          periodType: PeriodType.monthly,
+          periodNumber: 2,
+        );
+      }
+    }
+
+    await _performStandardUpsert(finalScore, db);
   }
 
   Future<void> _performStandardUpsert(
@@ -307,7 +482,7 @@ class StudentRepositoryImpl implements StudentRepository {
     }
 
     // Exam (Depending on Month)
-    if (month == 1 && evEx1 != null) {
+    if (month == 2 && evEx1 != null) {
       virtualEvals.add(
         EvaluationEntity.fromMap({
           ...evEx1,
@@ -315,7 +490,7 @@ class StudentRepositoryImpl implements StudentRepository {
           'max_score': 15,
         }),
       );
-    } else if (month == 2 && evEx2 != null) {
+    } else if (month == 3 && evEx2 != null) {
       virtualEvals.add(
         EvaluationEntity.fromMap({
           ...evEx2,
@@ -343,10 +518,17 @@ class StudentRepositoryImpl implements StudentRepository {
     final startWeek = (month - 1) * 4 + 1;
     final endWeek = startWeek + 3;
 
-    final scoresResult = await db.query(
-      _studentsScoresTable,
-      where: 'student_id = ? AND period_number BETWEEN ? AND ?',
-      whereArgs: [student.id, startWeek, endWeek],
+    final scoresResult = await db.rawQuery(
+      '''
+      SELECT * FROM $_studentsScoresTable 
+      WHERE student_id = ? 
+      AND (
+        (period_number BETWEEN ? AND ?) OR
+        (period_number = 1 AND period_type = 'monthly') OR
+        (period_number = 2 AND period_type = 'monthly')
+      )
+      ''',
+      [student.id, startWeek, endWeek],
     );
 
     final Map<String, StudentScoreEntity> scoresMap = {};
@@ -417,16 +599,34 @@ class StudentRepositoryImpl implements StudentRepository {
         targetWeeks.add(startWeek + i);
       }
     } else if (type.startsWith('wk')) {
-      // wk1 -> offset 0... wait.
+      // wk1 -> offset 0
       // wk1 -> weekOffset 1.
       final offset = int.parse(type.substring(2)) - 1;
       targetWeeks.add(startWeek + offset);
-    } else if (type == 'ex1' || type == 'ex2') {
-      // Save to Week 1
-      targetWeeks.add(startWeek);
+    }
+    if (type == 'ex1') {
+      // Exam 1 physically belongs to Month 1 (Monthly)
+      final scoreToSave = score.copyWith(
+        evaluationId: realEvalId,
+        periodType: PeriodType.monthly,
+        periodNumber: 1,
+        id: '',
+      );
+      await _performStandardUpsert(scoreToSave, db);
+      return;
+    } else if (type == 'ex2') {
+      // Exam 2 physically belongs to Month 2 (Monthly)
+      final scoreToSave = score.copyWith(
+        evaluationId: realEvalId,
+        periodType: PeriodType.monthly,
+        periodNumber: 2,
+        id: '',
+      );
+      await _performStandardUpsert(scoreToSave, db);
+      return;
     }
 
-    // Perform Upserts
+    // Perform Upserts for weekly items
     for (final week in targetWeeks) {
       final realScore = score.copyWith(
         evaluationId: realEvalId,

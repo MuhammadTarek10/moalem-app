@@ -55,20 +55,25 @@ class StudentsController
 
   Future<void> addStudent({required String name, required int number}) async {
     try {
-      final newStudent = await _addStudentUseCase(
+      final result = await _addStudentUseCase(
         classId: _classId,
         name: name,
         number: number,
       );
 
-      state.whenData((students) {
-        final updatedList = [...students, newStudent];
-        updatedList.sort((a, b) => a.number.compareTo(b.number));
-        state = AsyncValue.data(updatedList);
-      });
+      result.fold(
+        (failure) => state = AsyncValue.error(failure, StackTrace.current),
+        (newStudent) {
+          state.whenData((students) {
+            final updatedList = [...students, newStudent];
+            updatedList.sort((a, b) => a.number.compareTo(b.number));
+            state = AsyncValue.data(updatedList);
+          });
 
-      // Refresh classes list to update student count on cards
-      _ref.read(classesControllerProvider.notifier).reloadClasses();
+          // Refresh classes list to update student count on cards
+          _ref.read(classesControllerProvider.notifier).reloadClasses();
+        },
+      );
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }

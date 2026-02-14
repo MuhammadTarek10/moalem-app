@@ -19,7 +19,6 @@ class PrintState {
   final AsyncValue<PrintDataEntity?> printData;
   final PeriodType periodType;
   final int periodNumber;
-  final int weekGroup; // 1 for weeks 1-5, 2 for weeks 6-10, 3 for weeks 11-15
   final bool isExportingExcel;
   final bool isExportingPdf;
   final bool isExportingEmptySheet;
@@ -33,20 +32,11 @@ class PrintState {
     this.printData = const AsyncValue.loading(),
     this.periodType = PeriodType.weekly,
     this.periodNumber = 1,
-    this.weekGroup = 1, // Default to page 1 (weeks 1-5)
     this.isExportingExcel = false,
     this.isExportingPdf = false,
     this.isExportingEmptySheet = false,
     this.exportMessage,
   });
-
-  /// Get the week range label for the current week group
-  String get weekGroupLabel {
-    if (weekGroup == 0) return 'جميع الأسابيع (1-15)';
-    final startWeek = (weekGroup - 1) * 5 + 1;
-    final endWeek = startWeek + 4;
-    return 'الأسابيع $startWeek - $endWeek';
-  }
 
   PrintState copyWith({
     AsyncValue<List<ClassEntity>>? classes,
@@ -56,7 +46,6 @@ class PrintState {
     AsyncValue<PrintDataEntity?>? printData,
     PeriodType? periodType,
     int? periodNumber,
-    int? weekGroup,
     bool? isExportingExcel,
     bool? isExportingPdf,
     bool? isExportingEmptySheet,
@@ -70,7 +59,6 @@ class PrintState {
       printData: printData ?? this.printData,
       periodType: periodType ?? this.periodType,
       periodNumber: periodNumber ?? this.periodNumber,
-      weekGroup: weekGroup ?? this.weekGroup,
       isExportingExcel: isExportingExcel ?? this.isExportingExcel,
       isExportingPdf: isExportingPdf ?? this.isExportingPdf,
       isExportingEmptySheet:
@@ -113,7 +101,6 @@ class PrintController extends StateNotifier<PrintState> {
           printType: printTypeString == 'attendance'
               ? PrintType.attendance
               : PrintType.scores,
-          weekGroup: printTypeString == 'attendance' ? 0 : 1,
         ),
       ) {
     loadClasses();
@@ -173,13 +160,6 @@ class PrintController extends StateNotifier<PrintState> {
     await loadPrintData();
   }
 
-  /// Change week group (for scores - 1 for weeks 1-5, 2 for weeks 6-10, etc.)
-  Future<void> changeWeekGroup(int group) async {
-    if (state.weekGroup == group) return;
-    state = state.copyWith(weekGroup: group);
-    await loadPrintData();
-  }
-
   /// Load print data based on type
   Future<void> loadPrintData() async {
     final classId = state.selectedClassId;
@@ -190,16 +170,16 @@ class PrintController extends StateNotifier<PrintState> {
       PrintDataEntity? printData;
 
       if (state.printType == PrintType.scores) {
-        // Use multi-week scores report for scores
+        // Use multi-week scores report for scores - always all weeks (0)
         printData = await _generateMultiWeekScoresReportUseCase(
           classId: classId,
-          weekGroup: state.weekGroup,
+          weekGroup: 0,
         );
       } else if (state.printType == PrintType.attendance) {
-        // Use multi-week attendance report
+        // Use multi-week attendance report - always all weeks (0)
         printData = await _generateMultiWeekAttendanceReportUseCase(
           classId: classId,
-          weekGroup: state.weekGroup,
+          weekGroup: 0,
         );
       }
 
@@ -222,10 +202,10 @@ class PrintController extends StateNotifier<PrintState> {
         isExportingExcel: false,
         exportMessage: 'تم تصدير Excel بنجاح',
       );
-    } catch (e) {
+    } catch (e, stack) {
       state = state.copyWith(
         isExportingExcel: false,
-        exportMessage: 'فشل تصدير Excel: $e',
+        exportMessage: 'فشل تصدير Excel: $e\n$stack',
       );
     }
   }
@@ -258,7 +238,7 @@ class PrintController extends StateNotifier<PrintState> {
 
     state = state.copyWith(isExportingEmptySheet: true, exportMessage: null);
     try {
-      // await _excelExportService.exportEmptyAttendanceSheet(printData);
+      await _excelExportService.exportEmptyAttendanceSheet(printData);
       state = state.copyWith(
         isExportingEmptySheet: false,
         exportMessage: 'تم تصدير كشف الغياب الفارغ بنجاح',

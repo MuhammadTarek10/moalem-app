@@ -53,7 +53,7 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
     EvaluationGroup evaluationGroup = EvaluationGroup.prePrimary,
   }) async {
     try {
-      final newClass = await _addClassUseCase(
+      final result = await _addClassUseCase(
         name: name,
         grade: grade,
         subject: subject,
@@ -62,9 +62,14 @@ class ClassesController extends StateNotifier<AsyncValue<List<ClassEntity>>> {
         evaluationGroup: evaluationGroup,
       );
 
-      state.whenData((classes) {
-        state = AsyncValue.data([newClass, ...classes]);
-      });
+      result.fold(
+        (failure) => state = AsyncValue.error(failure, StackTrace.current),
+        (newClass) {
+          state.whenData((classes) {
+            state = AsyncValue.data([newClass, ...classes]);
+          });
+        },
+      );
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }

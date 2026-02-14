@@ -25,6 +25,7 @@ class ChipInputField extends StatefulWidget {
 
 class _ChipInputFieldState extends State<ChipInputField> {
   final _textController = TextEditingController();
+  final _formFieldKey = GlobalKey<FormFieldState<List<String>>>();
 
   void _addItem() {
     final text = _textController.text.trim();
@@ -47,8 +48,20 @@ class _ChipInputFieldState extends State<ChipInputField> {
   }
 
   @override
+  void didUpdateWidget(covariant ChipInputField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedItems != oldWidget.selectedItems) {
+      // Sync the FormField state when the items change from parent
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _formFieldKey.currentState?.didChange(widget.selectedItems);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FormField<List<String>>(
+      key: _formFieldKey,
       initialValue: widget.selectedItems,
       validator: widget.validator,
       builder: (state) {

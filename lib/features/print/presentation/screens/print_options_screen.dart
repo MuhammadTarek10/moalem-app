@@ -80,20 +80,6 @@ class PrintOptionsScreen extends ConsumerWidget {
               // Class selector dropdown
               _buildClassSelector(context, state, controller, classes),
 
-              // Page selector for PrePrimary (if applicable)
-              // Show page selector for PrePrimary (1-2 ابتدائي)
-              if (state.printData.hasValue &&
-                  state.printType != PrintType.attendance &&
-                  state.printData.value?.classEntity.evaluationGroup.name !=
-                      'high')
-                _buildPageSelector(context, state, controller),
-
-              // Show month selector for High School (ثانوي)
-              if (state.printData.hasValue &&
-                  state.printData.value?.classEntity.evaluationGroup.name ==
-                      'high')
-                _buildMonthSelector(context, state, controller),
-
               // Data preview
               Expanded(
                 child: state.printData.when(
@@ -197,127 +183,18 @@ class PrintOptionsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPageSelector(
-    BuildContext context,
-    PrintState state,
-    PrintController controller,
-  ) {
-    final pages = [
-      {'label': 'جميع الأسابيع (1-18)', 'value': 0},
-      {'label': 'الصفحة 1 (أسابيع 1-5)', 'value': 1},
-      {'label': 'الصفحة 2 (أسابيع 6-10)', 'value': 2},
-      {'label': 'الصفحة 3 (أسابيع 11-15)', 'value': 3},
-      {'label': 'الصفحة 4 (أسابيع 16-18)', 'value': 4},
-    ];
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'اختر الصفحة للتصدير',
-            style: context.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: 8.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: pages.map((page) {
-              final isSelected = state.weekGroup == page['value'];
-              return ChoiceChip(
-                label: Text(page['label'] as String),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) {
-                    controller.changeWeekGroup(page['value'] as int);
-                  }
-                },
-                selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                labelStyle: context.bodySmall.copyWith(
-                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-                side: BorderSide(
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.inactiveBorder,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build month selector for High School (ثانوي) - 3 months
-  Widget _buildMonthSelector(
-    BuildContext context,
-    PrintState state,
-    PrintController controller,
-  ) {
-    final months = [
-      {'label': 'شهر فبراير (أسابيع 1-4)', 'value': 1},
-      {'label': 'شهر مارس (أسابيع 5-8)', 'value': 2},
-      {'label': 'شهر أبريل (أسابيع 9-12)', 'value': 3},
-    ];
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'اختر الشهر للتصدير',
-            style: context.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: 8.h),
-          Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: months.map((month) {
-              final isSelected = state.weekGroup == month['value'];
-              return ChoiceChip(
-                label: Text(month['label'] as String),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) {
-                    controller.changeWeekGroup(month['value'] as int);
-                  }
-                },
-                selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                labelStyle: context.bodySmall.copyWith(
-                  color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-                side: BorderSide(
-                  color: isSelected
-                      ? AppColors.primary
-                      : AppColors.inactiveBorder,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDataPreview(
     BuildContext context,
-    printData,
+    PrintDataEntity printData,
     AsyncValue userAsyncValue,
   ) {
     // Get administration from user, fallback to printData if user not available
     final administration =
-        userAsyncValue.whenOrNull(
+        (userAsyncValue.whenOrNull(
           data: (user) =>
-              user.educationalAdministration ?? printData.administration,
+              (user as dynamic).educationalAdministration as String?,
         ) ??
-        printData.administration;
+        printData.administration);
 
     return SingleChildScrollView(
       child: Column(
@@ -372,7 +249,7 @@ class PrintOptionsScreen extends ConsumerWidget {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
                 if (printData.studentsData.length > 5) ...[
                   SizedBox(height: 8.h),
                   Text(

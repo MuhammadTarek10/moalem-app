@@ -18,6 +18,14 @@ abstract class StudentRepository {
     int periodNumber,
   );
 
+  /// Gets scores for a specific class, evaluation, and period
+  Future<List<StudentScoreEntity>> getScoresByClassAndEvaluation(
+    String classId,
+    String evaluationId,
+    PeriodType periodType,
+    int periodNumber,
+  );
+
   /// Upserts a student score (creates or updates)
   Future<void> upsertStudentScore(StudentScoreEntity score);
 

@@ -32,7 +32,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   String _email = '';
   String _password = '';
   bool _isPasswordVisible = false;
-  bool _rememberMe = false;
+  final bool _rememberMe = false;
 
   void _onSignIn() {
     if (_formKey.currentState!.validate()) {
@@ -136,45 +136,45 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     ),
                   ),
                   SizedBox(height: 12.h),
-                  // Remember Me & Forgot Password
-                  Row(
-                    children: [
-                      // Checkbox
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (value) {
-                          setState(() {
-                            _rememberMe = value ?? false;
-                          });
-                        },
-                        activeColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4.r),
-                        ),
-                      ),
-                      Text(
-                        AppStrings.rememberMe.tr(),
-                        style: context.bodySmall,
-                      ),
-                      const Spacer(),
-                      // Forgot Password
-                      TextButton(
-                        onPressed: () {
-                          // Navigate to forgot password
-                        },
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          AppStrings.forgotPassword.tr(),
-                          style: context.bodySmall,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 32.h),
+                  // // Remember Me & Forgot Password
+                  // Row(
+                  //   children: [
+                  //     // Checkbox
+                  //     Checkbox(
+                  //       value: _rememberMe,
+                  //       onChanged: (value) {
+                  //         setState(() {
+                  //           _rememberMe = value ?? false;
+                  //         });
+                  //       },
+                  //       activeColor: AppColors.primary,
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(4.r),
+                  //       ),
+                  //     ),
+                  //     Text(
+                  //       AppStrings.rememberMe.tr(),
+                  //       style: context.bodySmall,
+                  //     ),
+                  //     const Spacer(),
+                  //     // Forgot Password
+                  //     TextButton(
+                  //       onPressed: () {
+                  //         // Navigate to forgot password
+                  //       },
+                  //       style: TextButton.styleFrom(
+                  //         padding: EdgeInsets.zero,
+                  //         minimumSize: Size.zero,
+                  //         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  //       ),
+                  //       child: Text(
+                  //         AppStrings.forgotPassword.tr(),
+                  //         style: context.bodySmall,
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                  // SizedBox(height: 32.h),
                   // Sign In Button
                   AppButton(
                     text: AppStrings.signInButton.tr(),

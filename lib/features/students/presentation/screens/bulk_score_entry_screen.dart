@@ -252,28 +252,54 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                     Expanded(
                       child: _buildDropdown<int>(
                         value: state.periodNumber,
-                        items: List.generate(12, (i) => i + 1),
+                        items: _getPeriodNumberItems(state),
                         onChanged: (value) {
                           if (value != null) {
                             controller.changePeriodNumber(value);
                           }
                         },
-                        displayText: (n) => n.toString(),
+                        displayText: (n) => _getPeriodNumberText(n, state),
                         hint: AppStrings.selectPeriod.tr(),
                       ),
                     ),
                     SizedBox(width: 12.w),
-                    // Period type dropdown (fixed to weekly for now)
+                    // Period type dropdown
                     Expanded(
-                      child: _buildDropdown<PeriodType>(
-                        value: state.periodType,
-                        items: const [PeriodType.weekly],
-                        onChanged: (value) {
-                          if (value != null) controller.changePeriodType(value);
-                        },
-                        displayText: (type) => _getPeriodTypeText(type),
-                        hint: '',
-                      ),
+                      child: _isPrimaryOrPrep(state.classInfo?.evaluationGroup)
+                          ? _buildDropdown<PeriodType>(
+                              value: state.periodType,
+                              items: const [
+                                PeriodType.weekly,
+                                PeriodType.monthly,
+                              ],
+                              onChanged: (value) {
+                                if (value != null)
+                                  controller.changePeriodType(value);
+                              },
+                              displayText: (type) => _getPeriodTypeText(type),
+                              hint: '',
+                            )
+                          : Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12.w,
+                                vertical: 12.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryLighter,
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                state.classInfo?.evaluationGroup ==
+                                        EvaluationGroup.high
+                                    ? AppStrings.monthly.tr()
+                                    : _getPeriodTypeText(state.periodType),
+                                style: context.bodyMedium.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -346,39 +372,38 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
                   ),
           ),
           // Save button
-          if (state.selectedCount > 0)
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: () =>
-                    _showSaveConfirmationDialog(context, controller, state),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  minimumSize: Size(double.infinity, 48.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
                 ),
-                child: Text(
-                  AppStrings.saveButton.tr(),
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () =>
+                  _showSaveConfirmationDialog(context, controller, state),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                minimumSize: Size(double.infinity, 48.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+              child: Text(
+                AppStrings.saveButton.tr(),
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ),
+          ),
         ],
       ),
     );
@@ -429,10 +454,10 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
   ) {
     return Row(
       children: [
-        // Increment button
+        // Decrement button
         _buildScoreButton(
-          icon: Icons.add,
-          onPressed: () => controller.setMaxScoreForSelected(),
+          icon: Icons.remove,
+          onPressed: () => controller.decrementSelectedScores(),
           color: AppColors.primary.withValues(alpha: 0.1),
           iconColor: AppColors.primary,
         ),
@@ -445,7 +470,7 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Text(
-            '${state.currentMaxScore ?? 0}',
+            '${state.bulkScore}',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -454,10 +479,10 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
           ),
         ),
         SizedBox(width: 8.w),
-        // Decrement button
+        // Increment button
         _buildScoreButton(
           icon: Icons.add,
-          onPressed: () => controller.setMaxScoreForSelected(),
+          onPressed: () => controller.incrementSelectedScores(),
           color: AppColors.primary.withValues(alpha: 0.1),
           iconColor: AppColors.primary,
         ),
@@ -649,9 +674,11 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
           textAlign: TextAlign.right,
         ),
         content: Text(
-          AppStrings.saveScoresMessage.tr(
-            args: [state.selectedCount.toString()],
-          ),
+          state.selectedCount > 0
+              ? AppStrings.saveScoresMessage.tr(
+                  args: [state.selectedCount.toString()],
+                )
+              : 'هل تريد حفظ الدرجات لكل الطلاب؟'.tr(),
           textAlign: TextAlign.right,
         ),
         actions: [
@@ -712,6 +739,14 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
         return AppStrings.primaryPerformance.tr();
       case 'primary_attendance':
         return AppStrings.primaryAttendance.tr();
+      case 'weekly_review_w1':
+        return AppStrings.week1Label.tr();
+      case 'weekly_review_w2':
+        return AppStrings.week2Label.tr();
+      case 'weekly_review_w3':
+        return AppStrings.week3Label.tr();
+      case 'weekly_review_w4':
+        return AppStrings.week4Label.tr();
       default:
         return name;
     }
@@ -726,5 +761,51 @@ class _BulkScoreEntryScreenState extends ConsumerState<BulkScoreEntryScreen> {
       case PeriodType.semester:
         return AppStrings.semester.tr();
     }
+  }
+
+  bool _isPrimaryOrPrep(EvaluationGroup? group) {
+    return group == EvaluationGroup.primary ||
+        group == EvaluationGroup.secondary;
+  }
+
+  List<int> _getPeriodNumberItems(BulkScoreEntryState state) {
+    final group = state.classInfo?.evaluationGroup;
+    if (group == EvaluationGroup.high) {
+      return [1, 2, 3]; // Feb, Mar, Apr
+    } else if (state.periodType == PeriodType.monthly &&
+        _isPrimaryOrPrep(group)) {
+      return [2, 3]; // Mar, Apr
+    } else {
+      return List.generate(18, (index) => index + 1);
+    }
+  }
+
+  String _getPeriodNumberText(int number, BulkScoreEntryState state) {
+    final group = state.classInfo?.evaluationGroup;
+    if (group == EvaluationGroup.high) {
+      switch (number) {
+        case 1:
+          return AppStrings.february.tr();
+        case 2:
+          return AppStrings.march.tr();
+        case 3:
+          return AppStrings.april.tr();
+        default:
+          return number.toString();
+      }
+    } else if (state.periodType == PeriodType.monthly &&
+        _isPrimaryOrPrep(group)) {
+      switch (number) {
+        case 1:
+          return AppStrings.february.tr();
+        case 2:
+          return AppStrings.march.tr();
+        case 3:
+          return AppStrings.april.tr();
+        default:
+          return number.toString();
+      }
+    }
+    return number.toString();
   }
 }
