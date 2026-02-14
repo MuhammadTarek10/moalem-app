@@ -48,7 +48,7 @@ class HomeHeader extends StatelessWidget {
                     ),
                     // SizedBox(height: 4.h),
                     Text(
-                      '${AppStrings.yourIdLabel.tr()}: ${user?.id ?? ''}',
+                      AppStrings.yourIdLabel.tr(),
                       style: TextStyle(
                         fontSize: 20.sp,
                         color: Colors.white.withValues(alpha: 0.8),

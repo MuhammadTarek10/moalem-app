@@ -117,11 +117,7 @@ class ProfileDetailsScreen extends ConsumerWidget {
                     label: AppStrings.schoolLabel.tr(),
                     value: user.schools.join(', '),
                   ),
-                  _buildInfoItem(
-                    icon: Icons.grade_outlined,
-                    label: AppStrings.gradeLabel.tr(),
-                    value: user.grades.join(', '),
-                  ),
+
                   _buildInfoItem(
                     icon: Icons.book_outlined,
                     label: AppStrings.subjectLabel.tr(),

@@ -29,7 +29,7 @@ class StudentRepositoryImpl implements StudentRepository {
       _tableName,
       where: 'class_id = ? AND deleted_at IS NULL',
       whereArgs: [classId],
-      orderBy: 'number ASC',
+      orderBy: 'CAST(number AS INTEGER) ASC',
     );
     return result.map((map) => StudentEntity.fromMap(map)).toList();
   }
